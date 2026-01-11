@@ -1,1 +1,2 @@
-web: python -c "import os; port = os.environ.get('PORT', '8000'); import subprocess; subprocess.run(['uvicorn', 'app.main:app', '--host', '0.0.0.0', '--port', port])"
+web: sh -c 'uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}'
+

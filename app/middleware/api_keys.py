@@ -102,5 +102,10 @@ async def require_api_key(
 
 
 # Pre-generate a demo key for testing
-DEMO_KEY = generate_api_key("demo_user")
-print(f"🔑 Demo API Key: {DEMO_KEY['key']}")
+try:
+    DEMO_KEY = generate_api_key("demo_user")
+    print(f"🔑 Demo API Key: {DEMO_KEY['key']}")
+except Exception as e:
+    print(f"Warning: Could not generate demo key: {e}")
+    DEMO_KEY = {"key": "demo_unavailable", "key_id": "n/a"}
+
