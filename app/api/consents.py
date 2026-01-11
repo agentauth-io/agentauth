@@ -3,14 +3,51 @@ Consents API - POST /v1/consents
 
 Create user consents and get delegation tokens.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.models.database import get_db
+from app.models.consent import Consent
 from app.schemas.consent import ConsentCreate, ConsentResponse
 from app.services.consent_service import consent_service
 
 router = APIRouter(prefix="/v1/consents", tags=["Consents"])
+
+
+@router.get(
+    "",
+    summary="List all consents",
+    description="List all active consents (for dashboard monitoring).",
+)
+async def list_consents(
+    limit: int = Query(default=50, le=100),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all consents for dashboard monitoring."""
+    try:
+        result = await db.execute(
+            select(Consent).order_by(Consent.created_at.desc()).limit(limit)
+        )
+        consents = result.scalars().all()
+        
+        return {
+            "consents": [
+                {
+                    "id": c.consent_id,
+                    "user_id": c.user_id,
+                    "agent_id": c.agent_id,
+                    "intent": c.intent_description,
+                    "constraints": c.constraints,
+                    "is_active": c.is_active,
+                    "created_at": c.created_at.isoformat() if c.created_at else None,
+                }
+                for c in consents
+            ],
+            "total": len(consents),
+        }
+    except Exception as e:
+        return {"consents": [], "total": 0, "error": str(e)}
 
 
 @router.post(
