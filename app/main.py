@@ -148,3 +148,16 @@ async def demo():
     )
 
 
+@app.get("/landing", response_class=HTMLResponse, tags=["Landing"])
+async def landing():
+    """Serve the landing page."""
+    landing_path = Path(__file__).parent.parent / "landing.html"
+    if landing_path.exists():
+        return landing_path.read_text()
+    return HTMLResponse(
+        content="<h1>Landing page not found</h1>",
+        status_code=404
+    )
+
+
+
