@@ -277,6 +277,19 @@ uvicorn app.main:app --reload
 
 ---
 
+## Monitoring
+
+### Terminal Dashboard
+
+```bash
+source venv/bin/activate
+python dashboard.py
+```
+
+Real-time monitoring of consents and authorizations.
+
+---
+
 ## Security
 
 - **JWT Tokens:** All delegation tokens use RS256/HS256 signing
