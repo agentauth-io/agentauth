@@ -14,6 +14,7 @@ COPY app/ app/
 COPY alembic/ alembic/
 COPY alembic.ini .
 COPY server.py .
+COPY demo.html .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -e .

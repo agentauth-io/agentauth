@@ -4,8 +4,10 @@ AgentAuth - Main Application Entry Point
 The authorization layer for AI agent purchases.
 """
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from app.config import get_settings
 from app.api import consents_router, authorize_router, verify_router
@@ -132,4 +134,17 @@ async def get_demo_key():
         "key_id": DEMO_KEY["key_id"],
         "message": "Use this key for testing. In production, generate your own.",
     }
+
+
+@app.get("/demo", response_class=HTMLResponse, tags=["Demo"])
+async def demo():
+    """Serve the demo UI."""
+    demo_path = Path(__file__).parent.parent / "demo.html"
+    if demo_path.exists():
+        return demo_path.read_text()
+    return HTMLResponse(
+        content="<h1>Demo not found</h1><p>demo.html not available</p>",
+        status_code=404
+    )
+
 
