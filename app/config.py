@@ -25,6 +25,18 @@ class Settings(BaseSettings):
     # JWT settings
     jwt_algorithm: str = "HS256"
     
+    # Stripe settings (use test keys in development)
+    stripe_secret_key: str = ""
+    stripe_publishable_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_pro: str = ""
+    stripe_price_enterprise: str = ""
+    
+    # Admin panel settings
+    admin_password: str = "agentauth2026"  # Change in production!
+    admin_jwt_secret: str = "admin-secret-change-in-production"
+    admin_token_expiry: int = 3600  # 1 hour
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

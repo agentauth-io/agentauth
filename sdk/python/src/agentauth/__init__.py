@@ -17,7 +17,10 @@ from agentauth.exceptions import (
     VerificationFailed,
 )
 
-__version__ = "0.1.0"
+# Framework integrations (optional dependencies)
+from agentauth import integrations
+
+__version__ = "0.2.0"
 __all__ = [
     "AgentAuth",
     "AsyncAgentAuth",
@@ -29,4 +32,6 @@ __all__ = [
     "AuthorizationDenied",
     "InvalidToken",
     "VerificationFailed",
+    "integrations",
 ]
+

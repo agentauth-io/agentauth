@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 
 from app.config import get_settings
-from app.api import consents_router, authorize_router, verify_router
+from app.api import consents_router, authorize_router, verify_router, payments_router, dashboard_router, admin_router, limits_router, rules_router, analytics_router, webhooks_router
 from app.models.database import init_db
 from app.middleware import RateLimitMiddleware, generate_api_key, DEMO_KEY
 
@@ -55,12 +55,22 @@ app = FastAPI(
        - Merchant verifies authorization code
        - Returns consent proof for chargeback defense
     
+    ### Spending Controls
+    
+    4. **Limits** (`/v1/limits`)
+       - Set daily, monthly, per-transaction limits
+       - View current usage
+    
+    5. **Rules** (`/v1/rules`)
+       - Merchant whitelists/blacklists
+       - Category controls
+    
     ### Authentication
     
     Use `X-API-Key` header or `Authorization: Bearer aa_live_xxx` for authenticated requests.
     Get an API key from `POST /v1/api-keys`.
     """,
-    version="0.1.0",
+    version="0.2.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
@@ -89,6 +99,14 @@ app.add_middleware(
 app.include_router(consents_router)
 app.include_router(authorize_router)
 app.include_router(verify_router)
+app.include_router(payments_router)
+app.include_router(dashboard_router)
+app.include_router(admin_router)
+app.include_router(limits_router)
+app.include_router(rules_router)
+app.include_router(analytics_router)
+app.include_router(webhooks_router)
+
 
 
 @app.get("/", tags=["Root"])

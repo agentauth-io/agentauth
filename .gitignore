@@ -63,3 +63,6 @@ logs/
 # Database
 *.db
 *.sqlite3
+
+# Local Netlify folder
+.netlify

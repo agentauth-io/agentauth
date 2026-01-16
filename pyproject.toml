@@ -33,6 +33,7 @@ dependencies = [
     "alembic>=1.13.0",
     "python-dotenv>=1.0.0",
     "httpx>=0.26.0",
+    "stripe>=7.0.0",
 ]
 
 [project.optional-dependencies]
