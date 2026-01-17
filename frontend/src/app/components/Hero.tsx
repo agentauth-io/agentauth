@@ -62,24 +62,15 @@ export function Hero() {
         >
           <div className="text-2xl text-white">AgentAuth</div>
           <div className="flex items-center gap-8">
-            <a href="#" className="text-gray-400 hover:text-white transition-colors">
+            <a href="#docs" className="text-gray-400 hover:text-white transition-colors">
               Docs
             </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors">
-              API
+            <a href="#demo" className="text-gray-400 hover:text-white transition-colors">
+              Demo
             </a>
             <a href="#pricing" className="text-gray-400 hover:text-white transition-colors">
               Pricing
             </a>
-            {localStorage.getItem('agentauth-beta-access') === 'true' ? (
-              <a href="#portal" className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:from-purple-500 hover:to-blue-500 transition-all">
-                Dashboard
-              </a>
-            ) : (
-              <a href="#portal" className="text-gray-400 hover:text-white transition-colors">
-                Sign In
-              </a>
-            )}
           </div>
         </motion.nav>
 
