@@ -433,32 +433,6 @@ export function DemoStore({ onBack }: DemoStoreProps) {
                     </motion.div>
                 </div>
 
-                {/* CTA */}
-                <motion.div
-                    className="mt-12 text-center"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                >
-                    <p className="text-gray-500 mb-4">Ready to add AgentAuth to your AI agents?</p>
-                    <div className="flex items-center justify-center gap-4">
-                        <a
-                            href="#portal"
-                            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
-                        >
-                            Get API Keys
-                        </a>
-                        <a
-                            href="https://github.com/Ashok-kumar290/agentauth"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-6 py-3 bg-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-colors"
-                        >
-                            View on GitHub
-                        </a>
-                    </div>
-                </motion.div>
-
                 {/* Back link */}
                 {onBack && (
                     <div className="text-center mt-8">
