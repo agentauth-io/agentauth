@@ -1,15 +1,7 @@
-# Netlify configuration for AgentAuth frontend
+# Netlify configuration - simple static site deploy
 [build]
-  base = "frontend"
-  command = "npm install && npm run build"
-  publish = "dist"
-
-[build.environment]
-  NODE_VERSION = "18"
-
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
+  publish = "public"
+  command = "echo 'Deploying pre-built static files'"
 
 # Handle SPA routing
 [[redirects]]
