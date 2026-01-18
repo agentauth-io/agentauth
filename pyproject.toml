@@ -41,6 +41,8 @@ dependencies = [
     "opentelemetry-instrumentation-fastapi>=0.41b0",
     "opentelemetry-instrumentation-httpx>=0.41b0",
     "opentelemetry-instrumentation-sqlalchemy>=0.41b0",
+    # Cryptography for Biscuit/UCAN Ed25519 signatures
+    "cryptography>=42.0.0",
 ]
 
 [project.optional-dependencies]
