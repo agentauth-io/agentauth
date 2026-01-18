@@ -9,6 +9,7 @@ Tests the complete flow:
 import pytest
 from httpx import AsyncClient, ASGITransport
 from datetime import datetime
+import uuid
 
 from app.main import app
 
@@ -166,7 +167,6 @@ class TestConsentFlow:
     """Test consent creation endpoint (requires database)."""
     
     @pytest.mark.anyio
-    @pytest.mark.skip(reason="Requires database connection")
     async def test_create_consent(self, client: AsyncClient):
         """Test creating a consent."""
         response = await client.post(
@@ -199,15 +199,15 @@ class TestFullFlow:
     """Test the complete consent → authorize → verify flow."""
     
     @pytest.mark.anyio
-    @pytest.mark.skip(reason="Requires database connection")
     async def test_full_flow(self, client: AsyncClient):
         """Test complete flow: consent → authorize → verify."""
         
         # Step 1: Create consent
+        test_user = f"user_flow_{uuid.uuid4().hex[:8]}"
         consent_response = await client.post(
             "/v1/consents",
             json={
-                "user_id": "user_flow_test",
+                "user_id": test_user,
                 "intent": {"description": "Buy flight to NYC"},
                 "constraints": {"max_amount": 500, "currency": "USD"},
                 "options": {"expires_in_seconds": 3600},
@@ -254,15 +254,15 @@ class TestFullFlow:
         assert verify_data["consent_proof"] is not None
     
     @pytest.mark.anyio
-    @pytest.mark.skip(reason="Requires database connection")
     async def test_denial_over_limit(self, client: AsyncClient):
         """Test that over-limit transactions are denied."""
         
         # Create consent with $500 limit
+        test_user = f"user_deny_{uuid.uuid4().hex[:8]}"
         consent_response = await client.post(
             "/v1/consents",
             json={
-                "user_id": "user_deny_test",
+                "user_id": test_user,
                 "intent": {"description": "Buy flight"},
                 "constraints": {"max_amount": 500, "currency": "USD"},
                 "options": {"expires_in_seconds": 3600},

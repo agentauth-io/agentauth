@@ -5,8 +5,19 @@
 
 [functions]
   node_bundler = "esbuild"
+  included_files = ["netlify/functions/**"]
 
+[build.environment]
+  NODE_VERSION = "18"
+
+# API routes
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
+  status = 200
+
+# SPA fallback - must be last
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
   status = 200
