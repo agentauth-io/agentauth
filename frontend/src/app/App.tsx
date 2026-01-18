@@ -117,29 +117,29 @@ export default function App() {
 
   if (currentPage === "nucleus") {
     if (isAuthenticated) {
-      return <Dashboard onLogout={() => { localStorage.removeItem("admin_token"); localStorage.removeItem("admin_expires"); setIsAuthenticated(false); window.location.hash = ""; }} />;
+      return <Dashboard onLogout={() => { localStorage.removeItem("admin_token"); localStorage.removeItem("admin_expires"); setIsAuthenticated(false); history.replaceState(null, "", "/"); }} />;
     }
-    return <AdminLogin onAuthenticated={handleAdminAuth} onBack={() => { window.location.hash = ""; setCurrentPage("home"); }} />;
+    return <AdminLogin onAuthenticated={handleAdminAuth} onBack={() => { history.replaceState(null, "", "/"); setCurrentPage("home"); }} />;
   }
 
   if (currentPage === "portal") {
-    return <DeveloperPortal onClose={() => { window.location.hash = ""; setCurrentPage("home"); }} />;
+    return <DeveloperPortal onClose={() => { history.replaceState(null, "", "/"); setCurrentPage("home"); }} />;
   }
 
   if (currentPage === "demo") {
-    return <DemoStore onBack={() => { window.location.hash = ""; setCurrentPage("home"); }} />;
+    return <DemoStore onBack={() => { history.replaceState(null, "", "/"); setCurrentPage("home"); }} />;
   }
 
   if (currentPage === "docs") {
-    return <Docs onBack={() => { window.location.hash = ""; setCurrentPage("home"); }} />;
+    return <Docs onBack={() => { history.replaceState(null, "", "/"); setCurrentPage("home"); }} />;
   }
 
   if (currentPage === "yc") {
-    return <YCDemo onBack={() => { window.location.hash = ""; setCurrentPage("home"); }} />;
+    return <YCDemo onBack={() => { history.replaceState(null, "", "/"); setCurrentPage("home"); }} />;
   }
 
   if (currentPage === "contact") {
-    return <Contact onBack={() => { window.location.hash = ""; setCurrentPage("home"); }} />;
+    return <Contact onBack={() => { history.replaceState(null, "", "/"); setCurrentPage("home"); }} />;
   }
 
   return (
