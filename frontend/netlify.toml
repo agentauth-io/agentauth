@@ -5,18 +5,15 @@
 
 [functions]
   node_bundler = "esbuild"
-  included_files = ["netlify/functions/**"]
 
 [build.environment]
   NODE_VERSION = "18"
 
-# API routes
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+# Netlify functions are automatically available at /.netlify/functions/*
+# No redirects needed for functions - they take priority
 
-# SPA fallback - must be last
+# SPA fallback for client-side routing
+# force = false means existing files/functions take precedence
 [[redirects]]
   from = "/*"
   to = "/index.html"
