@@ -246,7 +246,75 @@ const DOCS_CONTENT: Record<string, { title: string; description: string; content
     quickstart: {
         title: "Quick Start",
         description: "Get up and running with AgentAuth in under 5 minutes.",
-        content: null // Will use code examples
+        content: (
+            <div className="space-y-8">
+                {/* Time to first API call badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/20 rounded-full">
+                    <Zap className="w-4 h-4 text-green-400" />
+                    <span className="text-green-400 text-sm font-medium">Time to first API call: ~5 minutes</span>
+                </div>
+
+                {/* Step 1: Install */}
+                <div className="p-6 bg-white/5 border border-white/10 rounded-xl">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="w-8 h-8 rounded-full bg-purple-500/30 flex items-center justify-center text-purple-400 font-bold">1</span>
+                        <h3 className="text-xl font-semibold text-white">Install the SDK</h3>
+                        <span className="text-gray-500 text-sm">~30 seconds</span>
+                    </div>
+                    <div className="bg-[#0d0d12] rounded-lg p-4 font-mono text-sm">
+                        <span className="text-gray-500">$</span> <span className="text-green-400">pip install agentauth</span>
+                    </div>
+                </div>
+
+                {/* Step 2: Get API Key */}
+                <div className="p-6 bg-white/5 border border-white/10 rounded-xl">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="w-8 h-8 rounded-full bg-purple-500/30 flex items-center justify-center text-purple-400 font-bold">2</span>
+                        <h3 className="text-xl font-semibold text-white">Get Your API Key</h3>
+                        <span className="text-gray-500 text-sm">~1 minute</span>
+                    </div>
+                    <p className="text-gray-400 mb-3">Sign up at <a href="#" className="text-purple-400 hover:underline">agentauth.in</a> to get your API key.</p>
+                    <div className="bg-[#0d0d12] rounded-lg p-4 font-mono text-sm">
+                        <span className="text-gray-500"># Set your environment variable</span><br />
+                        <span className="text-cyan-400">export</span> <span className="text-white">AGENTAUTH_API_KEY=</span><span className="text-yellow-400">"aa_live_..."</span>
+                    </div>
+                </div>
+
+                {/* Step 3: Initialize */}
+                <div className="p-6 bg-white/5 border border-white/10 rounded-xl">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="w-8 h-8 rounded-full bg-purple-500/30 flex items-center justify-center text-purple-400 font-bold">3</span>
+                        <h3 className="text-xl font-semibold text-white">Create a Consent</h3>
+                        <span className="text-gray-500 text-sm">~2 minutes</span>
+                    </div>
+                    <p className="text-gray-400 mb-3">The user creates a consent with spending limits:</p>
+                </div>
+
+                {/* Step 4: Authorize */}
+                <div className="p-6 bg-white/5 border border-white/10 rounded-xl">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="w-8 h-8 rounded-full bg-purple-500/30 flex items-center justify-center text-purple-400 font-bold">4</span>
+                        <h3 className="text-xl font-semibold text-white">Authorize a Transaction</h3>
+                        <span className="text-gray-500 text-sm">~1 minute</span>
+                    </div>
+                    <p className="text-gray-400 mb-3">Your AI agent requests authorization before each purchase:</p>
+                </div>
+
+                {/* What's Next */}
+                <div className="p-6 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/20 rounded-xl">
+                    <h3 className="text-lg font-semibold text-white mb-3">🎉 You're ready!</h3>
+                    <p className="text-gray-400 mb-4">That's it! Your AI agent can now make authorized purchases within user-defined limits.</p>
+                    <div className="flex flex-wrap gap-3">
+                        <a href="#demo" className="px-4 py-2 bg-purple-500/20 text-purple-400 rounded-lg text-sm hover:bg-purple-500/30 transition-colors">
+                            Try the Demo →
+                        </a>
+                        <a href="#" className="px-4 py-2 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 transition-colors">
+                            View Full API Reference
+                        </a>
+                    </div>
+                </div>
+            </div>
+        )
     },
     authentication: {
         title: "Authentication",
@@ -383,8 +451,8 @@ export function Docs({ onBack }: DocsProps) {
                                                     setSidebarOpen(false);
                                                 }}
                                                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${activeSection === item.id
-                                                        ? "bg-purple-500/20 text-purple-400 font-medium"
-                                                        : "text-gray-400 hover:text-white hover:bg-white/5"
+                                                    ? "bg-purple-500/20 text-purple-400 font-medium"
+                                                    : "text-gray-400 hover:text-white hover:bg-white/5"
                                                     }`}
                                             >
                                                 {item.title}
@@ -439,8 +507,8 @@ export function Docs({ onBack }: DocsProps) {
                                             key={index}
                                             onClick={() => setActiveCodeTab(index)}
                                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeCodeTab === index
-                                                    ? "bg-purple-500/20 text-purple-400"
-                                                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                                                ? "bg-purple-500/20 text-purple-400"
+                                                : "text-gray-400 hover:text-white hover:bg-white/5"
                                                 }`}
                                         >
                                             {example.language.toUpperCase()}
