@@ -30,41 +30,39 @@ export function CheckoutModal({
 
         try {
             // For free tier, just register
-            if (planId === "free") {
-                // Simulate API call
+            if (planId === "free" || planId === "community") {
+                // Simulate API call for free tier
                 await new Promise((resolve) => setTimeout(resolve, 1000));
                 setSuccess(true);
                 return;
             }
 
-            // For paid tiers, create subscription via API
-            const response = await fetch("/api/payments/subscribe", {
+            // For paid tiers, call Netlify function to create Stripe checkout session
+            const response = await fetch("/.netlify/functions/checkout", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     email,
-                    name,
-                    price_id: planId,
+                    plan: planId, // startup, pro, enterprise
+                    userId: `user_${Date.now()}`,
+                    successUrl: `${window.location.origin}/portal?checkout=success`,
+                    cancelUrl: `${window.location.origin}/pricing?checkout=canceled`,
                 }),
             });
 
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.detail || "Failed to create subscription");
-            }
-
             const data = await response.json();
 
-            // If we have a client_secret, redirect to Stripe checkout
-            // In a real implementation, you'd use Stripe.js Elements here
-            if (data.client_secret) {
-                // For now, show success - in production, integrate Stripe Elements
-                console.log("Stripe client secret:", data.client_secret);
-                setSuccess(true);
+            if (!response.ok) {
+                throw new Error(data.error || data.detail || "Failed to create checkout session");
+            }
+
+            // Redirect to Stripe Checkout
+            if (data.checkout_url) {
+                window.location.href = data.checkout_url;
             } else {
-                setSuccess(true);
+                throw new Error("No checkout URL returned");
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "Something went wrong");
@@ -72,6 +70,7 @@ export function CheckoutModal({
             setIsLoading(false);
         }
     };
+
 
     const handleClose = () => {
         if (!isLoading) {
