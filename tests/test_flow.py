@@ -10,8 +10,19 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 from datetime import datetime
 import uuid
+import asyncio
 
 from app.main import app
+
+
+# Configure pytest-asyncio to use function-scoped event loops
+# This ensures each test gets a fresh event loop for proper isolation
+@pytest.fixture(scope="function")
+def event_loop():
+    """Create an event loop for each test function."""
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest.fixture
@@ -21,10 +32,11 @@ def anyio_backend():
 
 @pytest.fixture
 async def client():
-    """Create async test client."""
+    """Create async test client with fresh ASGI app instance."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
 
 
 class TestHealthCheck:
