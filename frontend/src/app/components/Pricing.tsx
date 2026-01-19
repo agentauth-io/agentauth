@@ -99,17 +99,63 @@ const cardVariants = {
 
 interface PricingProps {
     onSelectPlan?: (planId: string) => void;
+    userEmail?: string;
+    userId?: string;
 }
 
-export function Pricing({ onSelectPlan }: PricingProps) {
+export function Pricing({ onSelectPlan, userEmail, userId }: PricingProps) {
     const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleSelectPlan = (planId: string) => {
+    const handleSelectPlan = async (planId: string) => {
+        setError(null);
+
+        // Enterprise goes to contact
         if (planId === "enterprise") {
-            // Open contact form or email
             window.location.href = "mailto:hello@agentauth.in?subject=Enterprise%20Inquiry";
             return;
         }
+
+        // Community (free) plan - just notify
+        if (planId === "community") {
+            if (onSelectPlan) onSelectPlan(planId);
+            return;
+        }
+
+        // Paid plans - redirect to Stripe Checkout
+        if (!userEmail || !userId) {
+            setError("Please sign in to upgrade your plan");
+            return;
+        }
+
+        setIsLoading(planId);
+
+        try {
+            const response = await fetch(`/api/billing/checkout?user_id=${userId}&email=${encodeURIComponent(userEmail)}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    plan: planId,
+                    success_url: `${window.location.origin}/portal?checkout=success`,
+                    cancel_url: `${window.location.origin}/pricing?checkout=canceled`,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.checkout_url) {
+                // Redirect to Stripe Checkout
+                window.location.href = data.checkout_url;
+            } else {
+                setError(data.detail || data.error || "Failed to start checkout");
+            }
+        } catch (err) {
+            setError("Network error. Please try again.");
+        } finally {
+            setIsLoading(null);
+        }
+
         if (onSelectPlan) {
             onSelectPlan(planId);
         }
@@ -246,16 +292,26 @@ export function Pricing({ onSelectPlan }: PricingProps) {
                                 {/* CTA Button */}
                                 <motion.button
                                     onClick={() => handleSelectPlan(tier.id)}
+                                    disabled={isLoading === tier.id}
                                     className={`w-full py-3 px-6 rounded-xl font-semibold text-sm transition-all ${tier.popular
-                                        ? "bg-white text-black hover:bg-gray-100"
-                                        : "bg-white/10 text-white hover:bg-white/20 border border-white/10"
+                                        ? "bg-white text-black hover:bg-gray-100 disabled:bg-gray-300"
+                                        : "bg-white/10 text-white hover:bg-white/20 border border-white/10 disabled:opacity-50"
                                         }`}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
+                                    whileHover={isLoading !== tier.id ? { scale: 1.02 } : {}}
+                                    whileTap={isLoading !== tier.id ? { scale: 0.98 } : {}}
                                 >
-                                    {tier.cta}
+                                    {isLoading === tier.id ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                            </svg>
+                                            Processing...
+                                        </span>
+                                    ) : tier.cta}
                                 </motion.button>
                             </motion.div>
+
                         </motion.div>
                     ))}
                 </motion.div>
