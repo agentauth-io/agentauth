@@ -132,15 +132,19 @@ export function Pricing({ onSelectPlan, userEmail, userId }: PricingProps) {
         setIsLoading(planId);
 
         try {
-            const response = await fetch(`/api/billing/checkout?user_id=${userId}&email=${encodeURIComponent(userEmail)}`, {
+            // Call Netlify function for checkout
+            const response = await fetch("/.netlify/functions/checkout", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     plan: planId,
-                    success_url: `${window.location.origin}/portal?checkout=success`,
-                    cancel_url: `${window.location.origin}/pricing?checkout=canceled`,
+                    email: userEmail,
+                    userId: userId,
+                    successUrl: `${window.location.origin}/portal?checkout=success`,
+                    cancelUrl: `${window.location.origin}/pricing?checkout=canceled`,
                 }),
             });
+
 
             const data = await response.json();
 
