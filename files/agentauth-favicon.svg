@@ -1,0 +1,6 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lock Icon - optimized for small sizes -->
+  <rect x="4" y="12" width="24" height="18" rx="3" stroke="#ffffff" stroke-width="2" fill="none"/>
+  <path d="M9 12V9C9 5.13 12.13 2 16 2C19.87 2 23 5.13 23 9V12" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="16" cy="21" r="2.5" fill="#ffffff"/>
+</svg>

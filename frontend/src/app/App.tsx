@@ -19,9 +19,10 @@ import { Contact } from "./components/Contact";
 import { supabase } from "../lib/supabase";
 
 const PLAN_DETAILS: Record<string, { name: string; price: number }> = {
-  free: { name: "Free", price: 0 },
-  pro: { name: "Pro", price: 49 },
-  enterprise: { name: "Enterprise", price: 199 },
+  community: { name: "Community", price: 0 },
+  startup: { name: "Startup", price: 49 },
+  pro: { name: "Pro", price: 199 },
+  enterprise: { name: "Enterprise", price: 999 },
 };
 
 const isAdminAuthenticated = (): boolean => {
@@ -85,9 +86,10 @@ function HomePage() {
           onClose={handleCloseModal}
           planId={selectedPlan}
           planName={PLAN_DETAILS[selectedPlan]?.name || ""}
-          onPaymentSuccess={handlePaymentSuccess}
+          price={PLAN_DETAILS[selectedPlan]?.price || 0}
         />
       )}
+
     </div>
   );
 }
