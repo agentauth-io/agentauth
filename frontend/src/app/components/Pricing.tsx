@@ -240,14 +240,14 @@ export function Pricing({ onSelectPlan, userEmail, userId }: PricingProps) {
                             >
                                 {/* Glow effect for popular */}
                                 {tier.popular && (
-                                    <div className="absolute inset-0 opacity-30">
+                                    <div className="absolute inset-0 opacity-30 pointer-events-none">
                                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-white/10 blur-3xl" />
                                     </div>
                                 )}
 
                                 {/* Hover glow */}
                                 <motion.div
-                                    className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent"
+                                    className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent pointer-events-none"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: hoveredCard === tier.id ? 1 : 0 }}
                                     transition={{ duration: 0.3 }}
