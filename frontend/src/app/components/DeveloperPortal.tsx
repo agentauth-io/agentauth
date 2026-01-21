@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
-import { Key, Copy, Trash2, Plus, LogOut, Check, Eye, EyeOff, Mail, Lock, Loader2, ExternalLink, User, Building, Github, Settings, Clock, Sparkles } from "lucide-react";
+import { Key, Copy, Trash2, Plus, LogOut, Check, Eye, EyeOff, Mail, Lock, Loader2, ExternalLink, User, Building, Github, Settings, Clock, Sparkles, CheckCircle2 } from "lucide-react";
 import { supabase, signIn, signUp, signOut, signInWithGoogle, signInWithGithub, getLocalApiKeys, saveLocalApiKeys, checkBetaAccess, setBetaAccessLocal, clearBetaAccessLocal, type ApiKey } from "../../lib/supabase";
 
 interface DeveloperPortalProps {
@@ -11,7 +11,7 @@ export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [hasBetaAccess, setHasBetaAccess] = useState<boolean | null>(null);
-  const [view, setView] = useState<"login" | "signup" | "verify" | "settings">("login");
+  const [view, setView] = useState<"login" | "signup" | "verify" | "settings" | "forgot" | "checkout-success">("login");
   const mountedRef = useRef(true);
 
   const [email, setEmail] = useState("");
@@ -21,6 +21,7 @@ export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [showNewKeyModal, setShowNewKeyModal] = useState(false);
@@ -34,6 +35,15 @@ export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
     const initAuth = async () => {
       try {
         const hash = window.location.hash;
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Detect checkout success - show special success view
+        if (urlParams.get("checkout") === "success") {
+          setView("checkout-success");
+          // Clean up URL
+          window.history.replaceState(null, "", "/portal");
+        }
+
         if (hash.includes("access_token")) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
@@ -113,6 +123,29 @@ export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
   const handleGithubLogin = async () => { setError(""); const { error } = await signInWithGithub(); if (error) setError(error.message); };
   const handleLogout = async () => { await signOut(); setUser(null); setHasBetaAccess(null); setApiKeys([]); setView("login"); clearBetaAccessLocal(); };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!email) {
+      setError("Please enter your email address");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: "https://agentauth.in/portal",
+      });
+      if (error) {
+        setError(error.message);
+      } else {
+        setResetEmailSent(true);
+      }
+    } catch (err) {
+      setError("Failed to send password reset email");
+    }
+    setIsLoading(false);
+  };
+
   const handleCreateKey = async () => {
     const randomPart = Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b => b.toString(16).padStart(2, '0')).join('');
     const fullKey = `aa_${newKeyEnv}_${randomPart}`;
@@ -171,6 +204,117 @@ export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
     );
   }
 
+  // Checkout Success View - shown when user returns from Stripe payment
+  if (view === "checkout-success") {
+    return (
+      <section className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-[#0A0A0F] via-[#12121A] to-[#0A0A0F]">
+        <motion.div className="w-full max-w-md text-center" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-3xl p-8 backdrop-blur-xl">
+            <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 className="w-10 h-10 text-green-400" />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Payment Successful! 🎉</h1>
+            <p className="text-gray-400 mb-6">Your subscription is now active. Welcome to AgentAuth!</p>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 text-left">
+              <p className="text-white font-medium mb-2">Next Steps:</p>
+              <ol className="text-gray-400 text-sm space-y-2">
+                <li className="flex gap-2"><span className="text-green-400">1.</span> Check your email for a welcome message with login link</li>
+                <li className="flex gap-2"><span className="text-green-400">2.</span> Or set your password below to access your dashboard</li>
+              </ol>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => setView("forgot")}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-xl font-medium hover:opacity-90 transition-opacity"
+              >
+                Set My Password
+              </button>
+              <button
+                onClick={() => setView("login")}
+                className="w-full bg-white/5 hover:bg-white/10 text-gray-400 py-3 rounded-xl flex items-center justify-center gap-2"
+              >
+                <Mail className="w-4 h-4" /> I Have the Email Link
+              </button>
+            </div>
+          </div>
+          {onClose && <button onClick={onClose} className="mt-6 text-gray-400 hover:text-white text-sm">← Back</button>}
+        </motion.div>
+      </section>
+    );
+  }
+
+  // Forgot Password / Set Password View
+  if (view === "forgot") {
+    if (resetEmailSent) {
+      return (
+        <section className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-[#0A0A0F] via-[#12121A] to-[#0A0A0F]">
+          <motion.div className="w-full max-w-md text-center" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-3xl p-8">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Mail className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Check your email</h2>
+              <p className="text-gray-400 mb-6">We've sent a password reset link to <span className="text-purple-400">{email}</span></p>
+              <p className="text-gray-500 text-sm mb-6">Click the link in the email to set your password and access your dashboard.</p>
+              <button onClick={() => { setView("login"); setResetEmailSent(false); }} className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-xl">Back to Sign In</button>
+            </div>
+          </motion.div>
+        </section>
+      );
+    }
+
+    return (
+      <section className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-[#0A0A0F] via-[#12121A] to-[#0A0A0F]">
+        <motion.div className="w-full max-w-md" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 rounded-full mb-4">
+              <Lock className="w-4 h-4 text-purple-400" />
+              <span className="text-purple-300 text-sm font-medium">Password Reset</span>
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent mb-2">Set Your Password</h1>
+            <p className="text-gray-400">Enter your email to receive a password reset link</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-3xl p-8 backdrop-blur-xl shadow-2xl">
+            {error && <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">⚠️ {error}</div>}
+
+            <form onSubmit={handlePasswordReset}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3.5 rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                  Send Reset Link
+                </button>
+              </div>
+            </form>
+
+            <p className="mt-6 text-center text-gray-400 text-sm">
+              Remember your password? <button onClick={() => setView("login")} className="text-purple-400 hover:underline">Sign in</button>
+            </p>
+          </div>
+          {onClose && <button onClick={onClose} className="mt-6 text-gray-400 hover:text-white text-sm mx-auto block">← Back</button>}
+        </motion.div>
+      </section>
+    );
+  }
+
+
   if (view === "settings" && user) {
     return (
       <section className="min-h-screen px-6 py-12 bg-gradient-to-br from-[#0A0A0F] via-[#12121A] to-[#0A0A0F]">
@@ -206,7 +350,17 @@ export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
                 <button type="submit" className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3.5 rounded-xl font-semibold">{view === "login" ? "Sign In" : "Create Account"}</button>
               </div>
             </form>
-            <p className="mt-6 text-center text-gray-400 text-sm">{view === "login" ? <>No account? <button onClick={() => setView("signup")} className="text-purple-400">Sign up</button></> : <>Have an account? <button onClick={() => setView("login")} className="text-purple-400">Sign in</button></>}</p>
+            <p className="mt-6 text-center text-gray-400 text-sm">
+              {view === "login" ? (
+                <>
+                  No account? <button onClick={() => setView("signup")} className="text-purple-400 hover:underline">Sign up</button>
+                  <span className="mx-2">•</span>
+                  <button onClick={() => setView("forgot")} className="text-purple-400 hover:underline">Forgot password?</button>
+                </>
+              ) : (
+                <>Have an account? <button onClick={() => setView("login")} className="text-purple-400 hover:underline">Sign in</button></>
+              )}
+            </p>
           </div>
           {onClose && <button onClick={onClose} className="mt-6 text-gray-400 hover:text-white text-sm mx-auto block">← Back</button>}
         </motion.div>
