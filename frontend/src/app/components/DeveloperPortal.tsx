@@ -57,6 +57,12 @@ export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
     mountedRef.current = true;
 
     const initAuth = async () => {
+      // Set a timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.warn('Auth initialization timed out');
+        if (mountedRef.current) setIsLoading(false);
+      }, 5000);
+
       try {
         const hash = window.location.hash;
 
@@ -64,7 +70,15 @@ export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
 
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        clearTimeout(timeoutId);
+
+        if (error) {
+          console.error('Session error:', error);
+          if (mountedRef.current) setIsLoading(false);
+          return;
+        }
+
         if (!mountedRef.current) return;
 
         if (session?.user) {
@@ -84,6 +98,7 @@ export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
         }
       } catch (err) {
         console.error('Auth init error:', err);
+        clearTimeout(timeoutId);
       }
       if (mountedRef.current) setIsLoading(false);
     };
