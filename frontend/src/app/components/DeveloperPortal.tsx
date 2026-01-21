@@ -256,12 +256,12 @@ export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
             </div>
 
             <div className="space-y-3">
-              <button
-                onClick={() => setView("forgot")}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-xl font-medium hover:opacity-90 transition-opacity"
+              <a
+                href="/reset-password"
+                className="block w-full text-center bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-xl font-medium hover:opacity-90 transition-opacity"
               >
                 Set My Password
-              </button>
+              </a>
               <button
                 onClick={() => setView("login")}
                 className="w-full bg-white/5 hover:bg-white/10 text-gray-400 py-3 rounded-xl flex items-center justify-center gap-2"
@@ -386,7 +386,7 @@ export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
                 <>
                   No account? <button onClick={() => setView("signup")} className="text-purple-400 hover:underline">Sign up</button>
                   <span className="mx-2">•</span>
-                  <button onClick={() => setView("forgot")} className="text-purple-400 hover:underline">Forgot password?</button>
+                  <a href="/reset-password" className="text-purple-400 hover:underline">Forgot password?</a>
                 </>
               ) : (
                 <>Have an account? <button onClick={() => setView("login")} className="text-purple-400 hover:underline">Sign in</button></>
