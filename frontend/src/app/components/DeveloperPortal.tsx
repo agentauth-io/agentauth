@@ -7,22 +7,35 @@ interface DeveloperPortalProps {
   onClose?: () => void;
 }
 
+// Detect checkout success at module load time (before React renders)
+const getInitialView = (): "login" | "signup" | "verify" | "settings" | "forgot" | "checkout-success" => {
+  if (typeof window !== 'undefined') {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("checkout") === "success") {
+      return "checkout-success";
+    }
+  }
+  return "login";
+};
+
+const INITIAL_VIEW = getInitialView();
+
 export function DeveloperPortal({ onClose }: DeveloperPortalProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [hasBetaAccess, setHasBetaAccess] = useState<boolean | null>(null);
-  const [view, setView] = useState<"login" | "signup" | "verify" | "settings" | "forgot" | "checkout-success">(() => {
-    // Detect checkout success SYNCHRONOUSLY during initial render
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("checkout") === "success") {
-        // Clean URL after a short delay to ensure state is set
-        setTimeout(() => window.history.replaceState(null, "", "/portal"), 100);
-        return "checkout-success";
-      }
+  const [view, setView] = useState<"login" | "signup" | "verify" | "settings" | "forgot" | "checkout-success">(INITIAL_VIEW);
+
+  // Fallback: also check on mount in case module-level detection missed it
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("checkout") === "success") {
+      setView("checkout-success");
+      // Clean URL after setting
+      setTimeout(() => window.history.replaceState(null, "", "/portal"), 100);
     }
-    return "login";
-  });
+  }, []);
+
   const mountedRef = useRef(true);
 
   const [email, setEmail] = useState("");
