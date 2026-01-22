@@ -1,5 +1,5 @@
 [build]
-  command = "npm install && npm run build"
+  command = "npm install && npx vite build"
   publish = "dist"
   functions = "netlify/functions"
 
@@ -7,7 +7,7 @@
   node_bundler = "esbuild"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
 
 # SPA fallback for client-side routing
 [[redirects]]
