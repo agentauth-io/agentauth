@@ -36,9 +36,17 @@ const isAdminAuthenticated = (): boolean => {
   catch { return false; }
 };
 
-// Process OAuth tokens on page load
+// Process OAuth tokens on page load (skip password recovery - that goes to SetPasswordPage)
 const processOAuthOnLoad = () => {
   const hash = window.location.hash;
+  const pathname = window.location.pathname;
+
+  // Skip OAuth processing for password recovery links
+  // These should be handled by SetPasswordPage, not auto-sign-in
+  if (hash.includes("type=recovery") || pathname === "/set-password") {
+    return false;
+  }
+
   if (hash.includes("access_token") && !sessionStorage.getItem("oauth_done")) {
     sessionStorage.setItem("oauth_done", "processing");
     const params = new URLSearchParams(hash.substring(1));
