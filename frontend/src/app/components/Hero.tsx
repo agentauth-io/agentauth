@@ -73,12 +73,6 @@ export function Hero() {
             <a href="#pricing" className="text-gray-400 hover:text-white transition-colors">
               Pricing
             </a>
-            <a
-              href="/portal"
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
-            >
-              Login
-            </a>
           </div>
         </motion.nav>
 
