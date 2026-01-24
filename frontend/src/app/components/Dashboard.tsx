@@ -51,8 +51,8 @@ const NavItem = ({ icon: Icon, label, active, onClick }: NavItemProps) => (
     <button
         onClick={onClick}
         className={`w-full flex items-center gap-3 px-5 py-2.5 text-sm transition-all ${active
-                ? "bg-white/5 text-white border-r-2 border-white"
-                : "text-gray-500 hover:bg-white/5 hover:text-white"
+            ? "bg-white/5 text-white border-r-2 border-white"
+            : "text-gray-500 hover:bg-white/5 hover:text-white"
             }`}
     >
         <Icon className="w-[18px] h-[18px] opacity-70" />
@@ -270,7 +270,8 @@ export function Dashboard() {
     const fetchData = async () => {
         try {
             setIsLoading(true);
-            const response = await fetch(`/.netlify/functions/get-stripe-transactions?period=${period}&limit=20`);
+            const apiBase = window.location.hostname === "localhost" ? "http://localhost:8000" : window.location.origin;
+            const response = await fetch(`${apiBase}/.netlify/functions/get-stripe-transactions?period=${period}&limit=20`);
             if (response.ok) {
                 const data = await response.json();
                 setStats(data);

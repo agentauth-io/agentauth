@@ -2,10 +2,10 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { Lock, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 
-// API base URL - use localhost for local dev, production URL otherwise
+// Version: 1.0.2 (Cache Busting)
 const API_BASE = window.location.hostname === "localhost"
     ? "http://localhost:8000"
-    : "https://agentauth.railway.app";
+    : window.location.origin;
 
 interface AdminLoginProps {
     onLoginSuccess?: (token: string) => void;
@@ -25,7 +25,10 @@ export function AdminLogin({ onLoginSuccess, onAuthenticated, onBack }: AdminLog
         setIsLoading(true);
 
         try {
-            const response = await fetch(`/.netlify/functions/admin-login`, {
+            const fetchUrl = `${API_BASE}/.netlify/functions/admin-login`;
+            console.log(`Authenticating with: ${fetchUrl}`);
+
+            const response = await fetch(fetchUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
