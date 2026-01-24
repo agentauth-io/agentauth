@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentAuth Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; }
+        .app { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 240px; background: #111; border-right: 1px solid #222; padding: 20px 0; display: flex; flex-direction: column; }
+        .logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 20px; border-bottom: 1px solid #222; margin-bottom: 20px; }
+        .logo svg { width: 28px; height: 28px; }
+        .logo span { font-size: 1.1rem; font-weight: 600; }
+        .logo .auth { color: #666; }
+
+        .nav-section { margin-bottom: 24px; }
+        .nav-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: #666; padding: 0 20px; margin-bottom: 8px; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 20px; color: #888; font-size: 0.9rem; cursor: pointer; transition: all 0.15s; }
+        .nav-item:hover { background: #1a1a1a; color: #fff; }
+        .nav-item.active { background: #1a1a1a; color: #fff; border-right: 2px solid #fff; }
+        .nav-item svg { width: 18px; height: 18px; opacity: 0.7; }
+
+        .sidebar-footer { margin-top: auto; padding: 20px; border-top: 1px solid #222; }
+        .plan-badge { display: flex; align-items: center; gap: 8px; background: #1a1a1a; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; }
+        .plan-name { color: #10b981; font-weight: 500; }
+        .plan-usage { font-size: 0.75rem; color: #666; margin-top: 4px; }
+
+        /* Main */
+        .main { flex: 1; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 32px; border-bottom: 1px solid #222; }
+        .header h1 { font-size: 1.2rem; font-weight: 600; }
+        .header-actions { display: flex; gap: 12px; }
+
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 500; cursor: pointer; border: none; font-family: inherit; transition: all 0.15s; }
+        .btn-primary { background: #fff; color: #000; }
+        .btn-primary:hover { background: #e5e5e5; }
+        .btn-secondary { background: #1a1a1a; color: #fff; border: 1px solid #333; }
+        .btn-secondary:hover { background: #222; }
+
+        .content { padding: 32px; }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        .stat-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; }
+        .stat-label { font-size: 0.8rem; color: #666; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .stat-value { font-size: 1.8rem; font-weight: 600; margin-bottom: 4px; }
+        .stat-change { font-size: 0.75rem; display: flex; align-items: center; gap: 4px; }
+        .stat-change.positive { color: #10b981; }
+        .stat-change.negative { color: #ef4444; }
+
+        /* Section */
+        .section { margin-bottom: 32px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .section-title { font-size: 1rem; font-weight: 600; }
+
+        /* Usage */
+        .usage-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; margin-bottom: 12px; }
+        .usage-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .usage-title { font-size: 0.9rem; font-weight: 500; }
+        .usage-value { font-size: 0.85rem; color: #888; }
+        .usage-bar { height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
+        .usage-fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); border-radius: 4px; }
+        .usage-fill.warning { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+        .usage-fill.danger { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+        /* Chart */
+        .chart-container { background: #111; border: 1px solid #222; border-radius: 12px; padding: 24px; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .chart-title { font-size: 0.95rem; font-weight: 500; }
+        .chart-period { display: flex; gap: 4px; }
+        .period-btn { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; background: transparent; color: #666; border: none; cursor: pointer; font-family: inherit; }
+        .period-btn.active { background: #1a1a1a; color: #fff; }
+        .chart { height: 180px; display: flex; align-items: flex-end; gap: 8px; padding-top: 20px; }
+        .chart-bar-container { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .chart-bar { width: 100%; background: linear-gradient(to top, #10b981, #059669); border-radius: 4px 4px 0 0; min-height: 4px; }
+        .chart-label { font-size: 0.7rem; color: #666; }
+
+        /* Table */
+        .table-container { background: #111; border: 1px solid #222; border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 16px; font-size: 0.75rem; font-weight: 500; color: #666; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #222; background: #0d0d0d; }
+        td { padding: 14px 16px; font-size: 0.85rem; border-bottom: 1px solid #1a1a1a; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: #1a1a1a; }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 500; }
+        .status-badge.authorized { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .status-badge.denied { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .status-badge.pending { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .mono { font-family: 'SF Mono', monospace; font-size: 0.8rem; color: #888; }
+
+        /* API Keys */
+        .api-key-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .api-key-info { display: flex; align-items: center; gap: 14px; }
+        .api-key-icon { width: 40px; height: 40px; background: #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .api-key-details h4 { font-size: 0.9rem; font-weight: 500; margin-bottom: 2px; }
+        .api-key-details p { font-size: 0.8rem; color: #666; }
+        .api-key-value { font-family: 'SF Mono', monospace; font-size: 0.85rem; color: #666; background: #1a1a1a; padding: 8px 12px; border-radius: 6px; }
+        .icon-btn { width: 36px; height: 36px; border-radius: 8px; background: #1a1a1a; border: 1px solid #333; color: #888; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: #222; color: #fff; }
+
+        /* Two Column */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+        /* Quick Actions */
+        .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
+        .quick-action { background: #111; border: 1px solid #222; border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.15s; }
+        .quick-action:hover { background: #1a1a1a; border-color: #333; }
+        .quick-action-icon { width: 40px; height: 40px; background: #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #10b981; }
+        .quick-action-text h4 { font-size: 0.85rem; font-weight: 500; margin-bottom: 2px; }
+        .quick-action-text p { font-size: 0.7rem; color: #666; }
+
+        @media (max-width: 1200px) { .stats-grid, .quick-actions { grid-template-columns: repeat(2, 1fr); } .two-col { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="logo">
+                <svg viewBox="0 0 32 32" fill="none"><rect x="4" y="12" width="24" height="18" rx="3" stroke="#fff" stroke-width="2" fill="none"/><path d="M9 12V9C9 5.13 12.13 2 16 2C19.87 2 23 5.13 23 9V12" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="21" r="2.5" fill="#fff"/></svg>
+                <span>Agent<span class="auth">Auth</span></span>
+            </div>
+
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-label">Overview</div>
+                    <a class="nav-item active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+                    <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Analytics</a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-label">Authorization</div>
+                    <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Transactions</a>
+                    <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Consents</a>
+                    <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Agents</a>
+                    <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>Audit Logs</a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-label">Developers</div>
+                    <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>API Keys</a>
+                    <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>Webhooks</a>
+                    <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>Documentation</a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-label">Settings</div>
+                    <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Team</a>
+                    <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Billing</a>
+                    <a class="nav-item"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-width="2" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings</a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="plan-badge">
+                    <svg width="16" height="16" fill="none" stroke="#10b981" viewBox="0 0 24 24"><path stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <div>
+                        <div class="plan-name">Pro Plan</div>
+                        <div class="plan-usage">37,284 / 50,000 MAA</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <h1>Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>Docs</button>
+                    <button class="btn btn-primary"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 4v16m8-8H4"/></svg>New API Key</button>
+                </div>
+            </header>
+
+            <div class="content">
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>Total Authorizations</div>
+                        <div class="stat-value">24,847</div>
+                        <div class="stat-change positive">↑ +12.5% from last month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Transaction Volume</div>
+                        <div class="stat-value">$1.2M</div>
+                        <div class="stat-change positive">↑ +8.2% from last month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>Approval Rate</div>
+                        <div class="stat-value">98.7%</div>
+                        <div class="stat-change positive">↑ +0.3% from last month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label"><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Avg Response Time</div>
+                        <div class="stat-value">8.3ms</div>
+                        <div class="stat-change positive">↓ -1.2ms improvement</div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <div class="quick-action">
+                        <div class="quick-action-icon"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div>
+                        <div class="quick-action-text"><h4>Create API Key</h4><p>Generate credentials</p></div>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg></div>
+                        <div class="quick-action-text"><h4>Configure Policy</h4><p>Set spending limits</p></div>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></div>
+                        <div class="quick-action-text"><h4>Setup Webhook</h4><p>Receive events</p></div>
+                    </div>
+                    <div class="quick-action">
+                        <div class="quick-action-icon"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+                        <div class="quick-action-text"><h4>View Logs</h4><p>Audit trail</p></div>
+                    </div>
+                </div>
+
+                <!-- Usage -->
+                <div class="section">
+                    <div class="section-header"><h2 class="section-title">Usage This Month</h2><span style="font-size:0.8rem;color:#666">Resets in 7 days</span></div>
+                    <div class="usage-card">
+                        <div class="usage-header"><span class="usage-title">Monthly Active Agents (MAA)</span><span class="usage-value">37,284 / 50,000</span></div>
+                        <div class="usage-bar"><div class="usage-fill warning" style="width:74.5%"></div></div>
+                    </div>
+                    <div class="usage-card">
+                        <div class="usage-header"><span class="usage-title">API Requests</span><span class="usage-value">847,293 / 1,000,000</span></div>
+                        <div class="usage-bar"><div class="usage-fill danger" style="width:84.7%"></div></div>
+                    </div>
+                    <div class="usage-card">
+                        <div class="usage-header"><span class="usage-title">Webhook Deliveries</span><span class="usage-value">12,384 / 100,000</span></div>
+                        <div class="usage-bar"><div class="usage-fill" style="width:12.4%"></div></div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="section">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <span class="chart-title">Authorization Activity</span>
+                            <div class="chart-period"><button class="period-btn">24h</button><button class="period-btn active">7d</button><button class="period-btn">30d</button><button class="period-btn">90d</button></div>
+                        </div>
+                        <div class="chart">
+                            <div class="chart-bar-container"><div class="chart-bar" style="height:65%"></div><span class="chart-label">Mon</span></div>
+                            <div class="chart-bar-container"><div class="chart-bar" style="height:80%"></div><span class="chart-label">Tue</span></div>
+                            <div class="chart-bar-container"><div class="chart-bar" style="height:45%"></div><span class="chart-label">Wed</span></div>
+                            <div class="chart-bar-container"><div class="chart-bar" style="height:90%"></div><span class="chart-label">Thu</span></div>
+                            <div class="chart-bar-container"><div class="chart-bar" style="height:70%"></div><span class="chart-label">Fri</span></div>
+                            <div class="chart-bar-container"><div class="chart-bar" style="height:55%"></div><span class="chart-label">Sat</span></div>
+                            <div class="chart-bar-container"><div class="chart-bar" style="height:40%"></div><span class="chart-label">Sun</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Two Column -->
+                <div class="two-col">
+                    <!-- API Keys -->
+                    <div class="section">
+                        <div class="section-header"><h2 class="section-title">API Keys</h2><button class="btn btn-secondary" style="padding:6px 12px;font-size:0.8rem">+ New</button></div>
+                        <div class="api-key-card">
+                            <div class="api-key-info">
+                                <div class="api-key-icon"><svg width="18" height="18" fill="none" stroke="#10b981" viewBox="0 0 24 24"><path stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div>
+                                <div class="api-key-details"><h4>Production Key</h4><p>Created Jan 15, 2026</p></div>
+                            </div>
+                            <div class="api-key-value">aa_live_****...k8Jx</div>
+                            <button class="icon-btn"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
+                        </div>
+                        <div class="api-key-card">
+                            <div class="api-key-info">
+                                <div class="api-key-icon"><svg width="18" height="18" fill="none" stroke="#666" viewBox="0 0 24 24"><path stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg></div>
+                                <div class="api-key-details"><h4>Test Key</h4><p>Created Jan 10, 2026</p></div>
+                            </div>
+                            <div class="api-key-value">aa_test_****...m2Pq</div>
+                            <button class="icon-btn"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions -->
+                    <div class="section">
+                        <div class="section-header"><h2 class="section-title">Recent Transactions</h2><button class="btn btn-secondary" style="padding:6px 12px;font-size:0.8rem">View All</button></div>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Transaction ID</th><th>Amount</th><th>Status</th><th>Time</th></tr></thead>
+                                <tbody>
+                                    <tr><td class="mono">txn_8kJ2m...x9Pq</td><td>$49.99</td><td><span class="status-badge authorized"><span class="status-dot"></span>Authorized</span></td><td>2m ago</td></tr>
+                                    <tr><td class="mono">txn_7hN3p...w2Lk</td><td>$124.50</td><td><span class="status-badge authorized"><span class="status-dot"></span>Authorized</span></td><td>5m ago</td></tr>
+                                    <tr><td class="mono">txn_9mK4q...y6Rj</td><td>$899.00</td><td><span class="status-badge denied"><span class="status-dot"></span>Denied</span></td><td>8m ago</td></tr>
+                                    <tr><td class="mono">txn_2bL5r...z8Tm</td><td>$32.00</td><td><span class="status-badge authorized"><span class="status-dot"></span>Authorized</span></td><td>12m ago</td></tr>
+                                    <tr><td class="mono">txn_4pM7s...a3Vn</td><td>$15.99</td><td><span class="status-badge pending"><span class="status-dot"></span>Pending</span></td><td>15m ago</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

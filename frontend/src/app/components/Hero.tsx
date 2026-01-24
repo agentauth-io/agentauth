@@ -60,7 +60,9 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="text-2xl text-white">AgentAuth</div>
+          <a href="/">
+            <img src="/agentauth-logo-dark.svg" alt="AgentAuth" className="h-8" />
+          </a>
           <div className="flex items-center gap-8">
             <a href="/docs" className="text-gray-400 hover:text-white transition-colors">
               Docs
@@ -70,6 +72,12 @@ export function Hero() {
             </a>
             <a href="#pricing" className="text-gray-400 hover:text-white transition-colors">
               Pricing
+            </a>
+            <a
+              href="/portal"
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+            >
+              Login
             </a>
           </div>
         </motion.nav>
