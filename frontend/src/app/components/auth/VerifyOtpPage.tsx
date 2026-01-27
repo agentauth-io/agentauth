@@ -175,7 +175,7 @@ export function VerifyOtpPage({ email, phone, method, onVerified, onBack }: Veri
                         {otp.map((digit, index) => (
                             <input
                                 key={index}
-                                ref={(el) => (inputRefs.current[index] = el)}
+                                ref={(el) => { inputRefs.current[index] = el; }}
                                 type="text"
                                 inputMode="numeric"
                                 maxLength={1}
