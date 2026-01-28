@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentAuth - Executive Summary</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            font-size: 18px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        h2 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #a78bfa;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            margin-top: 30px;
+        }
+
+        h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 15px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 15px;
+        }
+
+        .highlight {
+            color: #a78bfa;
+            font-weight: 600;
+        }
+
+        .one-liner {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 20px 30px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .one-liner p {
+            font-size: 18px;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        ul {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        ul li {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        ul li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #a78bfa;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 10px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        th {
+            background: rgba(255,255,255,0.05);
+            font-weight: 600;
+            color: #a78bfa;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 30px 0;
+        }
+
+        .quote {
+            font-style: italic;
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+        }
+
+        .contact {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .contact p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                color: #000;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .card {
+                border-color: #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">AGENTAUTH</div>
+    <div class="tagline">Executive Summary</div>
+</div>
+
+<div class="one-liner">
+    <p><span class="highlight">AgentAuth</span> is the authorization layer for autonomous AI agents — the "Okta for AI."</p>
+</div>
+
+<h2>The Problem</h2>
+<p>AI agents are becoming autonomous. Claude uses computers. GPT executes code. Agents book flights, deploy infrastructure, and process refunds. But there's no standardized way to control what they can do.</p>
+<p><span class="highlight">78% of enterprises cite "lack of control" as their #1 barrier to AI agent adoption.</span></p>
+
+<div class="divider"></div>
+
+<h2>The Solution</h2>
+<p>AgentAuth provides permission infrastructure for AI agents:</p>
+<ul>
+    <li><strong>Consent Management</strong> — Define what each agent can do</li>
+    <li><strong>Policy Enforcement</strong> — Real-time allow/deny/escalate decisions</li>
+    <li><strong>Limits</strong> — Cap spending, rate limit actions, restrict scope</li>
+    <li><strong>Human-in-the-Loop</strong> — Route sensitive actions for approval</li>
+    <li><strong>Audit Trail</strong> — Cryptographic proof of every agent action</li>
+</ul>
+<p><span class="highlight">5-minute integration. One API call to authorize any agent action.</span></p>
+
+<div class="divider"></div>
+
+<h2>Market</h2>
+<div class="grid-2">
+    <div class="card">
+        <div class="stat-row">
+            <span class="stat-label">TAM</span>
+            <span class="stat-value">$12.4B by 2028</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">SAM</span>
+            <span class="stat-value">$4.2B</span>
+        </div>
+    </div>
+    <div class="card">
+        <p style="font-size: 14px; margin: 0;"><strong>Timing:</strong> EU AI Act requires human oversight. Enterprises need guardrails now. Every AI lab shipping agent capabilities.</p>
+    </div>
+</div>
+
+<div class="divider"></div>
+
+<h2>Business Model</h2>
+<p>SaaS + usage-based pricing:</p>
+<table>
+    <tr>
+        <th>Tier</th>
+        <th>Price</th>
+        <th>Included</th>
+    </tr>
+    <tr>
+        <td>Free</td>
+        <td>$0</td>
+        <td>1,000 actions/mo</td>
+    </tr>
+    <tr>
+        <td>Startup</td>
+        <td>$49/mo</td>
+        <td>10K actions</td>
+    </tr>
+    <tr>
+        <td>Pro</td>
+        <td>$199/mo</td>
+        <td>50K actions</td>
+    </tr>
+    <tr>
+        <td>Enterprise</td>
+        <td>Custom</td>
+        <td>Unlimited + SLA</td>
+    </tr>
+</table>
+<p><span class="highlight">Target ACV:</span> $15K | <span class="highlight">LTV:CAC:</span> 15:1 | <span class="highlight">Gross Margin:</span> 85%</p>
+
+<div class="divider"></div>
+
+<h2>Traction</h2>
+<ul>
+    <li>MVP live (Nucleus dashboard + API)</li>
+    <li>SDKs: JavaScript, Python</li>
+    <li>[X] waitlist signups</li>
+    <li>Design partners in pipeline</li>
+</ul>
+
+<div class="divider"></div>
+
+<h2>Competition</h2>
+<table>
+    <tr>
+        <th>Competitor</th>
+        <th>Gap</th>
+    </tr>
+    <tr>
+        <td>Okta/Auth0</td>
+        <td>Human identity, not agent actions</td>
+    </tr>
+    <tr>
+        <td>Guardrails AI</td>
+        <td>Prompt validation, not action authorization</td>
+    </tr>
+    <tr>
+        <td>In-house</td>
+        <td>6+ months vs. 5-minute integration</td>
+    </tr>
+</table>
+
+<div class="divider"></div>
+
+<h2>The Ask</h2>
+<div class="card">
+    <div class="stat-row">
+        <span class="stat-label">Raising</span>
+        <span class="stat-value">$2.5M Seed</span>
+    </div>
+    <div class="stat-row">
+        <span class="stat-label">Use</span>
+        <span class="stat-value">Engineering (60%), GTM (25%), Ops (15%)</span>
+    </div>
+    <div class="stat-row">
+        <span class="stat-label">18-Month Milestone</span>
+        <span class="stat-value">$500K ARR, 50 customers, SOC2</span>
+    </div>
+</div>
+
+<div class="divider"></div>
+
+<h2>Why Now?</h2>
+<ul>
+    <li><strong>Autonomous agents are shipping</strong> — Every major AI lab building agent capabilities</li>
+    <li><strong>Regulation is coming</strong> — EU AI Act, SEC scrutiny on AI decisions</li>
+    <li><strong>Enterprises are stuck</strong> — Can't deploy agents without authorization layer</li>
+    <li><strong>No incumbent</strong> — First-mover advantage in defining the category</li>
+</ul>
+
+<div class="quote">
+    "Stripe built payments infrastructure. Okta built identity infrastructure.<br>
+    AgentAuth is building authorization infrastructure for the age of AI."
+</div>
+
+<div class="contact">
+    <p>📧 <strong>founder@agentauth.in</strong></p>
+    <p>🌐 <strong>agentauth.in</strong></p>
+    <p>🎯 <strong>Live demo:</strong> agentauth.in/demo</p>
+</div>
+
+</body>
+</html>

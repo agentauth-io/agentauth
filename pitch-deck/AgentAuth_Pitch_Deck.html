@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentAuth - Pitch Deck</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .slide {
+            min-height: 100vh;
+            padding: 60px 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            page-break-after: always;
+            position: relative;
+            background: linear-gradient(135deg, #0a0a0f 0%, #12121a 50%, #0a0a0f 100%);
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at top right, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at bottom left, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .slide-number {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.3);
+            font-weight: 500;
+        }
+
+        h1 {
+            font-size: 64px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        h3 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #a78bfa;
+        }
+
+        h4 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #06b6d4;
+        }
+
+        p {
+            font-size: 20px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 20px;
+        }
+
+        .subtitle {
+            font-size: 28px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 40px;
+        }
+
+        .tagline {
+            font-size: 24px;
+            color: #a78bfa;
+            font-style: italic;
+            margin-top: 40px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 50px;
+            font-size: 16px;
+            color: #a78bfa;
+            margin-top: 30px;
+        }
+
+        ul {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        ul li {
+            font-size: 20px;
+            color: rgba(255,255,255,0.8);
+            padding: 12px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        ul li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #a78bfa;
+        }
+
+        .check-list li::before {
+            content: '✓';
+            color: #10b981;
+        }
+
+        .x-list li::before {
+            content: '✗';
+            color: #ef4444;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin: 30px 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px;
+        }
+
+        .card.highlight {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .code-block {
+            background: #1a1a24;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 25px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            color: #06b6d4;
+            overflow-x: auto;
+            white-space: pre;
+            margin: 20px 0;
+        }
+
+        .diagram {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .flow-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .flow-box {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 20px 30px;
+            text-align: center;
+        }
+
+        .flow-box.center {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
+            border-color: #a78bfa;
+            transform: scale(1.1);
+        }
+
+        .flow-arrow {
+            font-size: 24px;
+            color: rgba(255,255,255,0.3);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        th {
+            background: rgba(255,255,255,0.05);
+            font-weight: 600;
+            color: #a78bfa;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .highlight-text {
+            color: #a78bfa;
+            font-weight: 600;
+        }
+
+        .cyan-text {
+            color: #06b6d4;
+        }
+
+        .green-text {
+            color: #10b981;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #a78bfa 0%, #06b6d4 100%);
+            border-radius: 6px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .title-slide {
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title-slide h1 {
+            font-size: 80px;
+        }
+
+        .quote {
+            font-size: 24px;
+            font-style: italic;
+            color: rgba(255,255,255,0.7);
+            border-left: 4px solid #a78bfa;
+            padding-left: 30px;
+            margin: 30px 0;
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 40px 0;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #a78bfa 0%, #06b6d4 100%);
+        }
+
+        .timeline-item {
+            text-align: center;
+            position: relative;
+            flex: 1;
+        }
+
+        .timeline-dot {
+            width: 40px;
+            height: 40px;
+            background: #0a0a0f;
+            border: 3px solid #a78bfa;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #a78bfa 0%, #06b6d4 100%);
+            color: #000;
+            font-weight: 700;
+            font-size: 18px;
+            border-radius: 50px;
+            text-decoration: none;
+            margin-top: 30px;
+        }
+
+        @media print {
+            .slide {
+                page-break-after: always;
+                min-height: 100vh;
+            }
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide title-slide">
+    <div class="slide-content" style="text-align: center;">
+        <div class="logo" style="margin-bottom: 60px;">AGENTAUTH</div>
+        <h1>The Authorization Layer for Autonomous AI Agents</h1>
+        <p class="tagline">"Every AI agent needs permission. We're the permission."</p>
+        <div class="badge">Seed Round</div>
+    </div>
+    <div class="slide-number">1</div>
+</div>
+
+<!-- Slide 2: Problem -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>The Problem</h2>
+        <h3>AI Agents Are Getting Autonomous. Authorization Isn't Keeping Up.</h3>
+
+        <div class="diagram">
+            <div class="flow-container">
+                <div class="flow-box">
+                    <div style="font-size: 32px; margin-bottom: 10px;">🤖</div>
+                    <div style="font-weight: 600;">AI AGENT</div>
+                    <div style="font-size: 14px; color: rgba(255,255,255,0.5);">Autonomous</div>
+                </div>
+                <div class="flow-arrow">→ ??? →</div>
+                <div class="flow-box">
+                    <div style="font-size: 32px; margin-bottom: 10px;">🌍</div>
+                    <div style="font-weight: 600;">REAL WORLD</div>
+                    <div style="font-size: 14px; color: rgba(255,255,255,0.5);">Actions</div>
+                </div>
+            </div>
+            <p style="margin-top: 30px; font-size: 24px; color: #a78bfa;">WHO DECIDES WHAT THE AGENT CAN DO?</p>
+        </div>
+
+        <div class="grid-2">
+            <div>
+                <h4>Current State</h4>
+                <ul class="x-list">
+                    <li>No standardized way to set agent permissions</li>
+                    <li>No audit trail of agent actions</li>
+                    <li>No human-in-the-loop for sensitive operations</li>
+                    <li>Enterprises blocked due to compliance concerns</li>
+                </ul>
+            </div>
+            <div class="card highlight">
+                <div class="stat-number" style="color: #ef4444;">$47B</div>
+                <p style="text-align: center; margin: 0;">in AI agent market potential stuck behind authorization concerns</p>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">2</div>
+</div>
+
+<!-- Slide 3: Solution -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>The Solution</h2>
+        <h3>AgentAuth: Permission Infrastructure for AI Agents</h3>
+
+        <div class="diagram">
+            <div class="flow-container">
+                <div class="flow-box">
+                    <div style="font-size: 24px; margin-bottom: 5px;">🤖</div>
+                    <div>AI AGENT</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box center">
+                    <div style="font-size: 24px; margin-bottom: 5px;">🔐</div>
+                    <div style="font-weight: 700;">AGENTAUTH</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div style="font-size: 24px; margin-bottom: 5px;">✓</div>
+                    <div>ACTION</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <span style="color: rgba(255,255,255,0.5);">↓ Optional</span>
+            </div>
+            <div class="flow-box" style="display: inline-block; margin-top: 10px;">
+                <div style="font-size: 24px; margin-bottom: 5px;">👤</div>
+                <div>HUMAN APPROVAL</div>
+            </div>
+        </div>
+
+        <div class="grid-3" style="margin-top: 40px;">
+            <div class="card">
+                <h4>Consent Management</h4>
+                <p style="font-size: 16px;">Define what each agent can and cannot do</p>
+            </div>
+            <div class="card">
+                <h4>Policy Enforcement</h4>
+                <p style="font-size: 16px;">Real-time authorization (allow/deny/escalate)</p>
+            </div>
+            <div class="card">
+                <h4>Spending & Rate Limits</h4>
+                <p style="font-size: 16px;">Cap agent actions, API calls, and scope</p>
+            </div>
+            <div class="card">
+                <h4>Audit Logging</h4>
+                <p style="font-size: 16px;">Cryptographic proof of every agent action</p>
+            </div>
+            <div class="card">
+                <h4>Human-in-the-Loop</h4>
+                <p style="font-size: 16px;">Route sensitive actions for approval</p>
+            </div>
+            <div class="card">
+                <h4>5-Minute Integration</h4>
+                <p style="font-size: 16px;">One API call to authorize any action</p>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">3</div>
+</div>
+
+<!-- Slide 4: Why Now -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>Why Now?</h2>
+        <h3>Three Converging Trends</h3>
+
+        <div class="grid-3">
+            <div class="card">
+                <h4>1. Autonomous Agents Are Here</h4>
+                <ul>
+                    <li>Claude Computer Use</li>
+                    <li>OpenAI Operator</li>
+                    <li>GPT Actions</li>
+                    <li>Microsoft Copilot</li>
+                </ul>
+                <p style="font-size: 14px; color: #a78bfa; margin-top: 20px;">Every major AI lab building agent capabilities</p>
+            </div>
+            <div class="card">
+                <h4>2. Enterprises Need Guardrails</h4>
+                <div class="stat-number" style="font-size: 36px;">78%</div>
+                <p style="font-size: 16px;">of enterprises cite "lack of control" as #1 barrier to AI adoption</p>
+                <p style="font-size: 14px; color: rgba(255,255,255,0.5);">SOC2, HIPAA, GDPR require audit trails</p>
+            </div>
+            <div class="card">
+                <h4>3. Regulation Is Coming</h4>
+                <ul>
+                    <li>EU AI Act requires human oversight</li>
+                    <li>SEC investigating AI decisions</li>
+                    <li>Insurance requiring AI documentation</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card highlight" style="margin-top: 40px; text-align: center;">
+            <p style="font-size: 24px; margin: 0;"><span class="highlight-text">Window:</span> The next 18 months will determine who becomes the authorization standard for AI agents.</p>
+        </div>
+    </div>
+    <div class="slide-number">4</div>
+</div>
+
+<!-- Slide 5: Market Size -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>Market Size</h2>
+        <h3>$12B+ TAM by 2028</h3>
+
+        <div style="margin: 40px 0;">
+            <div style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>AI Agent Market</span>
+                    <span class="highlight-text">$47.1B by 2030</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 100%;"></div></div>
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>AI Infrastructure/DevTools</span>
+                    <span class="highlight-text">$28.3B by 2028</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 60%;"></div></div>
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>AI Governance & Compliance (TAM)</span>
+                    <span class="highlight-text">$12.4B by 2028</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 35%;"></div></div>
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>AgentAuth SAM (Auth layer)</span>
+                    <span class="cyan-text">$4.2B by 2028</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width: 15%;"></div></div>
+            </div>
+        </div>
+
+        <div class="grid-3">
+            <div class="card stat-card">
+                <div class="stat-number">$12.4B</div>
+                <div class="stat-label">TAM</div>
+                <p style="font-size: 14px;">AI governance & compliance</p>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-number">$4.2B</div>
+                <div class="stat-label">SAM</div>
+                <p style="font-size: 14px;">Authorization & access control</p>
+            </div>
+            <div class="card stat-card highlight">
+                <div class="stat-number">$120M</div>
+                <div class="stat-label">SOM (Year 3)</div>
+                <p style="font-size: 14px;">Enterprise AI deployments</p>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">5</div>
+</div>
+
+<!-- Slide 6: Product -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>Product</h2>
+        <h3>How It Works</h3>
+
+        <div class="grid-2">
+            <div>
+                <h4>For Developers (5-minute integration)</h4>
+                <div class="code-block">import AgentAuth from '@agentauth/sdk';
+
+const auth = new AgentAuth({
+  apiKey: 'aa_live_...'
+});
+
+// Before any agent action
+const result = await auth.authorize({
+  agentId: 'support-bot',
+  action: 'refund',
+  amount: 150.00,
+  customerId: 'cust_123'
+});
+
+if (result.authorized) {
+  await processRefund();
+} else {
+  await notifyHuman(result.reason);
+}</div>
+            </div>
+            <div>
+                <h4>For Administrators (Nucleus Dashboard)</h4>
+                <div class="card" style="background: #0d0d12; padding: 20px;">
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 15px;">NUCLEUS — AgentAuth Control Center</div>
+                    <div class="grid-4" style="gap: 10px; margin: 15px 0;">
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 20px; font-weight: 700;">12,847</div>
+                            <div style="font-size: 10px; color: rgba(255,255,255,0.5);">Actions</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 20px; font-weight: 700;">$847K</div>
+                            <div style="font-size: 10px; color: rgba(255,255,255,0.5);">Volume</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 20px; font-weight: 700; color: #10b981;">98.2%</div>
+                            <div style="font-size: 10px; color: rgba(255,255,255,0.5);">Approval</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 20px; font-weight: 700; color: #06b6d4;">23ms</div>
+                            <div style="font-size: 10px; color: rgba(255,255,255,0.5);">Latency</div>
+                        </div>
+                    </div>
+                    <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; padding: 15px; margin-top: 15px;">
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.5);">PENDING APPROVAL</div>
+                        <div style="font-size: 14px; margin: 10px 0;">procurement-bot wants to purchase $2,499 from AWS</div>
+                        <div style="display: flex; gap: 10px;">
+                            <span style="background: #10b981; color: #000; padding: 5px 15px; border-radius: 4px; font-size: 12px; font-weight: 600;">APPROVE</span>
+                            <span style="background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 4px; font-size: 12px;">DENY</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">6</div>
+</div>
+
+<!-- Slide 7: Business Model -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>Business Model</h2>
+        <h3>SaaS + Usage-Based Pricing</h3>
+
+        <div class="grid-4" style="margin: 40px 0;">
+            <div class="card" style="text-align: center;">
+                <h4 style="color: rgba(255,255,255,0.6);">Community</h4>
+                <div class="stat-number" style="font-size: 36px;">Free</div>
+                <p style="font-size: 14px;">1,000 actions/mo</p>
+                <p style="font-size: 12px; color: rgba(255,255,255,0.5);">Developers, startups</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h4>Startup</h4>
+                <div class="stat-number" style="font-size: 36px;">$49</div>
+                <p style="font-size: 14px;">10,000 actions/mo</p>
+                <p style="font-size: 12px; color: rgba(255,255,255,0.5);">Small teams</p>
+            </div>
+            <div class="card highlight" style="text-align: center;">
+                <div style="background: #a78bfa; color: #000; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 600; display: inline-block; margin-bottom: 10px;">POPULAR</div>
+                <h4>Pro</h4>
+                <div class="stat-number" style="font-size: 36px;">$199</div>
+                <p style="font-size: 14px;">50,000 actions/mo</p>
+                <p style="font-size: 12px; color: rgba(255,255,255,0.5);">Growth companies</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h4>Enterprise</h4>
+                <div class="stat-number" style="font-size: 36px;">Custom</div>
+                <p style="font-size: 14px;">Unlimited + SLA</p>
+                <p style="font-size: 12px; color: rgba(255,255,255,0.5);">Large enterprises</p>
+            </div>
+        </div>
+
+        <h4>Unit Economics (Target)</h4>
+        <div class="grid-4">
+            <div class="card stat-card">
+                <div class="stat-number" style="font-size: 28px;">$15K</div>
+                <div class="stat-label">ACV</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-number" style="font-size: 28px;">15:1</div>
+                <div class="stat-label">LTV:CAC</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-number" style="font-size: 28px;">85%</div>
+                <div class="stat-label">Gross Margin</div>
+            </div>
+            <div class="card stat-card">
+                <div class="stat-number" style="font-size: 28px;">130%</div>
+                <div class="stat-label">Net Retention</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">7</div>
+</div>
+
+<!-- Slide 8: Traction -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>Traction</h2>
+        <h3>Early Signals</h3>
+
+        <div class="grid-2">
+            <div>
+                <h4>Product</h4>
+                <ul class="check-list">
+                    <li>MVP launched (Nucleus dashboard + API)</li>
+                    <li>SDKs: JavaScript, Python</li>
+                    <li>Netlify + Supabase infrastructure</li>
+                    <li>Stripe billing integration</li>
+                </ul>
+
+                <h4 style="margin-top: 30px;">Technical Validation</h4>
+                <ul class="check-list">
+                    <li>&lt;50ms authorization latency</li>
+                    <li>SOC2 compliance roadmap</li>
+                    <li>Cryptographic proof-of-authorization</li>
+                </ul>
+            </div>
+            <div>
+                <h4>Waitlist & Interest</h4>
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="stat-number" style="font-size: 48px;">[X]</div>
+                    <div class="stat-label">Waitlist Signups</div>
+                </div>
+
+                <h4>Design Partners (Pipeline)</h4>
+                <ul>
+                    <li><strong>[Company A]</strong> — AI customer support (50 agents)</li>
+                    <li><strong>[Company B]</strong> — AI procurement automation</li>
+                    <li><strong>[Company C]</strong> — AI coding assistant deployment</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">8</div>
+</div>
+
+<!-- Slide 9: Competition -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>Competition</h2>
+        <h3>Why We Win</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Competitor</th>
+                    <th>What They Do</th>
+                    <th>Our Advantage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Okta / Auth0</strong></td>
+                    <td>Human identity management</td>
+                    <td>Not built for AI agents, no action-level auth</td>
+                </tr>
+                <tr>
+                    <td><strong>Guardrails AI</strong></td>
+                    <td>Prompt validation</td>
+                    <td>Input/output only, not action authorization</td>
+                </tr>
+                <tr>
+                    <td><strong>LangChain / LlamaIndex</strong></td>
+                    <td>Agent frameworks</td>
+                    <td>No enterprise controls, no audit trail</td>
+                </tr>
+                <tr>
+                    <td><strong>Build In-House</strong></td>
+                    <td>Custom solutions</td>
+                    <td>6+ months dev time, no compliance, no updates</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4 style="margin-top: 40px;">Our Moat</h4>
+        <div class="grid-4">
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 32px; margin-bottom: 10px;">🥇</div>
+                <p style="font-size: 14px; margin: 0;"><strong>First-mover</strong><br/>Purpose-built for agents</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 32px; margin-bottom: 10px;">⚡</div>
+                <p style="font-size: 14px; margin: 0;"><strong>Developer UX</strong><br/>5-minute integration</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 32px; margin-bottom: 10px;">🏢</div>
+                <p style="font-size: 14px; margin: 0;"><strong>Enterprise</strong><br/>Audit, compliance, SSO</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <div style="font-size: 32px; margin-bottom: 10px;">🔗</div>
+                <p style="font-size: 14px; margin: 0;"><strong>Network Effects</strong><br/>More agents → better policies</p>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">9</div>
+</div>
+
+<!-- Slide 10: Go-To-Market -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>Go-To-Market</h2>
+        <h3>Land & Expand Strategy</h3>
+
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-dot">1</div>
+                <h4>Developer-Led Growth</h4>
+                <p style="font-size: 14px;">Now - Month 6</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">2</div>
+                <h4>Sales-Assisted</h4>
+                <p style="font-size: 14px;">Month 6 - 18</p>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">3</div>
+                <h4>Platform & Ecosystem</h4>
+                <p style="font-size: 14px;">Month 18+</p>
+            </div>
+        </div>
+
+        <div class="grid-3" style="margin-top: 40px;">
+            <div class="card">
+                <h4>Phase 1: Developer-Led</h4>
+                <ul>
+                    <li>Hacker News, Reddit</li>
+                    <li>Dev Twitter, AI Discord</li>
+                    <li>Technical blog posts</li>
+                    <li>Open-source SDK</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>Phase 2: Sales-Assisted</h4>
+                <ul>
+                    <li>Outbound to AI teams</li>
+                    <li>Partner with LangChain, CrewAI</li>
+                    <li>AI conference sponsorships</li>
+                    <li>SOC2 certification</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h4>Phase 3: Platform</h4>
+                <ul>
+                    <li>Pre-built integrations</li>
+                    <li>Policy marketplace</li>
+                    <li>Partner program</li>
+                    <li>Strategic acquisitions</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">10</div>
+</div>
+
+<!-- Slide 11: Team -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>Team</h2>
+        <h3>Founding Team</h3>
+
+        <div class="grid-2" style="margin: 40px 0;">
+            <div class="card" style="text-align: center; padding: 40px;">
+                <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #a78bfa, #06b6d4); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700;">[F1]</div>
+                <h3 style="margin-bottom: 5px;">[Founder 1 Name]</h3>
+                <p style="color: #a78bfa; margin-bottom: 15px;">CEO</p>
+                <p style="font-size: 14px;">[Previous company/role]</p>
+                <p style="font-size: 14px; color: rgba(255,255,255,0.5);">[Notable achievement]</p>
+            </div>
+            <div class="card" style="text-align: center; padding: 40px;">
+                <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #06b6d4, #a78bfa); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700;">[F2]</div>
+                <h3 style="margin-bottom: 5px;">[Founder 2 Name]</h3>
+                <p style="color: #06b6d4; margin-bottom: 15px;">CTO</p>
+                <p style="font-size: 14px;">[Previous company/role]</p>
+                <p style="font-size: 14px; color: rgba(255,255,255,0.5);">[Notable achievement]</p>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div>
+                <h4>Advisors</h4>
+                <ul>
+                    <li>[Advisor 1] — [Title/Company]</li>
+                    <li>[Advisor 2] — [Title/Company]</li>
+                </ul>
+            </div>
+            <div>
+                <h4>Key Hires Planned</h4>
+                <ul>
+                    <li><strong>Head of Engineering</strong> — Scale infrastructure</li>
+                    <li><strong>Developer Advocate</strong> — Community growth</li>
+                    <li><strong>Enterprise Sales</strong> — Close $100K+ deals</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">11</div>
+</div>
+
+<!-- Slide 12: Financials -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>Financials</h2>
+        <h3>Use of Funds</h3>
+
+        <div class="card highlight" style="text-align: center; margin-bottom: 40px;">
+            <p style="font-size: 18px; color: rgba(255,255,255,0.6); margin-bottom: 10px;">RAISING</p>
+            <div class="stat-number">$2.5M Seed</div>
+        </div>
+
+        <div class="grid-3">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0;">Engineering</h4>
+                    <span class="highlight-text">60%</span>
+                </div>
+                <div class="stat-number" style="font-size: 28px;">$1.5M</div>
+                <ul style="font-size: 14px;">
+                    <li>4 engineers</li>
+                    <li>Infrastructure scaling</li>
+                    <li>SDK development</li>
+                </ul>
+            </div>
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0;">Go-to-Market</h4>
+                    <span class="highlight-text">25%</span>
+                </div>
+                <div class="stat-number" style="font-size: 28px;">$625K</div>
+                <ul style="font-size: 14px;">
+                    <li>Developer marketing</li>
+                    <li>First sales hire</li>
+                    <li>Conference sponsorships</li>
+                </ul>
+            </div>
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0;">Operations</h4>
+                    <span class="highlight-text">15%</span>
+                </div>
+                <div class="stat-number" style="font-size: 28px;">$375K</div>
+                <ul style="font-size: 14px;">
+                    <li>Legal/compliance</li>
+                    <li>SOC2 certification</li>
+                    <li>Office/tools</li>
+                </ul>
+            </div>
+        </div>
+
+        <h4 style="margin-top: 40px;">Milestones to Series A (18 months)</h4>
+        <table>
+            <tr><td>Customers</td><td class="highlight-text">50 paying customers</td></tr>
+            <tr><td>ARR</td><td class="highlight-text">$500K</td></tr>
+            <tr><td>Usage</td><td class="highlight-text">10M agent actions/month</td></tr>
+            <tr><td>Team</td><td class="highlight-text">10 people</td></tr>
+            <tr><td>Product</td><td class="highlight-text">Enterprise-ready (SOC2, SSO)</td></tr>
+        </table>
+    </div>
+    <div class="slide-number">12</div>
+</div>
+
+<!-- Slide 13: The Ask -->
+<div class="slide">
+    <div class="slide-content">
+        <h2>The Ask</h2>
+        <h3>Join Us in Building the Authorization Layer for AI</h3>
+
+        <div class="grid-2" style="margin: 40px 0;">
+            <div>
+                <h4>What We're Looking For</h4>
+                <div class="card">
+                    <p><strong>Lead Investor:</strong> a16z</p>
+                    <p><strong>Round Size:</strong> $2.5M Seed</p>
+                    <p><strong>Use of Funds:</strong> 18-month runway to Series A metrics</p>
+                </div>
+            </div>
+            <div>
+                <h4>Why a16z?</h4>
+                <ul class="check-list">
+                    <li><strong>AI expertise</strong> — You're backing the future of AI</li>
+                    <li><strong>Enterprise playbook</strong> — You've scaled B2B infrastructure</li>
+                    <li><strong>Network</strong> — Portfolio companies are our customers</li>
+                    <li><strong>Brand</strong> — Credibility for enterprise sales</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card highlight" style="text-align: center;">
+            <h4>What We Offer</h4>
+            <div class="grid-4" style="margin-top: 20px;">
+                <div>
+                    <div style="font-size: 24px; margin-bottom: 10px;">🥇</div>
+                    <p style="font-size: 14px; margin: 0;">First-mover advantage</p>
+                </div>
+                <div>
+                    <div style="font-size: 24px; margin-bottom: 10px;">👨‍💻</div>
+                    <p style="font-size: 14px; margin: 0;">Technical founding team</p>
+                </div>
+                <div>
+                    <div style="font-size: 24px; margin-bottom: 10px;">📈</div>
+                    <p style="font-size: 14px; margin: 0;">Clear path to $100M+ ARR</p>
+                </div>
+                <div>
+                    <div style="font-size: 24px; margin-bottom: 10px;">🏆</div>
+                    <p style="font-size: 14px; margin: 0;">Category-defining opportunity</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">13</div>
+</div>
+
+<!-- Slide 14: Vision -->
+<div class="slide">
+    <div class="slide-content" style="text-align: center;">
+        <h2>Vision</h2>
+        <h3>The Future We're Building</h3>
+
+        <div class="diagram" style="margin: 40px 0;">
+            <p style="font-size: 48px; font-weight: 800; margin-bottom: 30px;">2030</p>
+            <p style="font-size: 24px; color: rgba(255,255,255,0.8); margin-bottom: 40px;">Every AI agent in the world asks AgentAuth<br/>before taking action.</p>
+
+            <div class="flow-container" style="margin-bottom: 30px;">
+                <div class="flow-box">
+                    <div>Coding<br/>Agents</div>
+                </div>
+                <div class="flow-box">
+                    <div>Finance<br/>Agents</div>
+                </div>
+                <div class="flow-box">
+                    <div>Support<br/>Agents</div>
+                </div>
+                <div class="flow-box">
+                    <div>DevOps<br/>Agents</div>
+                </div>
+            </div>
+
+            <div style="font-size: 24px; color: rgba(255,255,255,0.3); margin: 20px 0;">↓</div>
+
+            <div class="flow-box center" style="display: inline-block;">
+                <div style="font-size: 24px; margin-bottom: 10px;">🔐</div>
+                <div style="font-size: 24px; font-weight: 700;">AGENTAUTH</div>
+                <div style="font-size: 14px; color: rgba(255,255,255,0.6);">The Trust Layer for AI</div>
+            </div>
+        </div>
+
+        <div class="quote">
+            "Stripe built payments infrastructure.<br/>
+            Okta built identity infrastructure.<br/>
+            AgentAuth is building authorization infrastructure<br/>
+            for the age of AI."
+        </div>
+    </div>
+    <div class="slide-number">14</div>
+</div>
+
+<!-- Slide 15: Contact -->
+<div class="slide title-slide">
+    <div class="slide-content" style="text-align: center;">
+        <div class="logo" style="margin-bottom: 40px; font-size: 48px;">AGENTAUTH</div>
+        <h2>Let's Talk</h2>
+        <p class="subtitle">The Authorization Layer for Autonomous AI Agents</p>
+
+        <div style="margin: 40px 0;">
+            <p style="font-size: 24px;">📧 founder@agentauth.in</p>
+            <p style="font-size: 24px;">🌐 agentauth.in</p>
+            <p style="font-size: 24px;">📅 [Calendly link]</p>
+        </div>
+
+        <div class="card highlight" style="display: inline-block; padding: 20px 40px;">
+            <p style="margin: 0; font-size: 18px;"><strong>Live Demo:</strong> agentauth.in/demo</p>
+        </div>
+    </div>
+    <div class="slide-number">15</div>
+</div>
+
+</body>
+</html>
