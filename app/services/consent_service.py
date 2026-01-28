@@ -99,7 +99,7 @@ class ConsentService:
             "expires_at": str(expires_at),
             "constraints": constraints,
         }
-                _consent_cache[consent_id] = (cache_data, datetime.now(timezone.utc))
+        _consent_cache[consent_id] = (cache_data, datetime.now(timezone.utc))
         
         # Generate delegation token
         delegation_token = token_service.create_delegation_token(
