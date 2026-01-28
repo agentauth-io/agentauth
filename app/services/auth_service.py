@@ -169,6 +169,9 @@ class AuthService:
             "created_at": now,
         }
         
+        # Make expires_at timezone-naive for DB compatibility
+        expires_at_naive = expires_at.replace(tzinfo=None)
+        
         # Write authorization directly to DB (fast, <10ms)
         try:
             authorization = Authorization(
@@ -182,7 +185,7 @@ class AuthService:
                 merchant_category=request.transaction.merchant_category,
                 action=request.action,
                 transaction_metadata={"description": request.transaction.description},
-                expires_at=expires_at,
+                expires_at=expires_at_naive,
             )
             db.add(authorization)
             await db.flush()  # Write immediately, don't wait for commit

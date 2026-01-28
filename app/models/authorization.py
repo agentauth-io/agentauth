@@ -75,14 +75,14 @@ class Authorization(Base):
         default=lambda: datetime.now(timezone.utc),
         nullable=False
     )
-    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     
     # Usage tracking
-    used_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     is_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     
     # Verification details (filled when merchant verifies)
-    verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    verified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     verified_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     
     def __repr__(self) -> str:
