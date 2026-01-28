@@ -34,13 +34,15 @@ async def list_consents(
         return {
             "consents": [
                 {
-                    "id": c.consent_id,
+                    "consent_id": c.consent_id,
                     "user_id": c.user_id,
-                    "agent_id": c.agent_id,
-                    "intent": c.intent_description,
+                    "developer_id": c.developer_id,
+                    "intent_description": c.intent_description,
                     "constraints": c.constraints,
+                    "scope": c.scope,
                     "is_active": c.is_active,
                     "created_at": c.created_at.isoformat() if c.created_at else None,
+                    "expires_at": c.expires_at.isoformat() if c.expires_at else None,
                 }
                 for c in consents
             ],
