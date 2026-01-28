@@ -327,3 +327,4 @@ Real-time monitoring of consents and authorizations.
 Proprietary. All rights reserved.
 
 © 2026 AgentAuth
+
