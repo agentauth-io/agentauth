@@ -297,7 +297,7 @@ async def dashboard_health():
     return {
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "version": "1.0.2",  # Incremented to verify new code deployed
+        "version": "1.0.3",  # Cache fix for consent creation
     }
 
 
