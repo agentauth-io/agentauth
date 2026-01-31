@@ -30,9 +30,9 @@ export function Header() {
   return (
     <motion.header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled 
-          ? "bg-black/80 backdrop-blur-xl border-b border-white/5" 
-          : "bg-transparent"
+        scrolled || mobileMenuOpen
+          ? "bg-black/95 backdrop-blur-xl border-b border-white/10" 
+          : "bg-black/50 backdrop-blur-md md:bg-transparent md:backdrop-blur-none"
       }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -95,18 +95,18 @@ export function Header() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <motion.div
-            className="md:hidden py-4 border-t border-white/5"
+            className="md:hidden py-4 border-t border-white/10 bg-black/95"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               {navLinks.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-zinc-300 hover:text-white transition-colors py-2"
+                  className="text-zinc-300 hover:text-white hover:bg-white/5 transition-colors py-3 px-4 rounded-lg"
                 >
                   {link.label}
                 </a>
@@ -114,7 +114,7 @@ export function Header() {
               <a
                 href="#waitlist"
                 onClick={() => setMobileMenuOpen(false)}
-                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white text-black font-medium rounded-xl text-center"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white text-black font-medium rounded-xl text-center mt-2"
               >
                 Join Waitlist
               </a>

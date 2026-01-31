@@ -1,90 +1,131 @@
 @custom-variant dark (&:is(.dark *));
 
-/* AgentAuth Theme - Black, White & Metallic */
+/* ═══════════════════════════════════════════════════════════════
+   AgentAuth Design System — Apple-Level Precision
+   ═══════════════════════════════════════════════════════════════ */
+
 :root {
-  --font-size: 16px;
+  /* Typography Scale (Apple-inspired restraint) */
+  --font-size: 17px;
+  
+  /* Core Palette - Light Mode */
   --background: #ffffff;
-  --foreground: #0a0a0a;
+  --foreground: #1d1d1f;
   --card: #ffffff;
-  --card-foreground: #0a0a0a;
+  --card-foreground: #1d1d1f;
   --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
-  --primary: #0a0a0a;
+  --popover-foreground: #1d1d1f;
+  
+  /* Primary - Pure Black/White */
+  --primary: #1d1d1f;
   --primary-foreground: #ffffff;
-  --secondary: #f5f5f5;
-  --secondary-foreground: #0a0a0a;
-  --muted: #f0f0f0;
-  --muted-foreground: #6b6b6b;
-  --accent: #e8e8e8;
-  --accent-foreground: #0a0a0a;
-  --destructive: #dc2626;
+  
+  /* Secondary - Subtle Grey */
+  --secondary: #f5f5f7;
+  --secondary-foreground: #1d1d1f;
+  
+  /* Muted - Apple's signature grey */
+  --muted: #f5f5f7;
+  --muted-foreground: #86868b;
+  
+  /* Accent */
+  --accent: #f5f5f7;
+  --accent-foreground: #1d1d1f;
+  
+  /* Semantic */
+  --destructive: #ff3b30;
   --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
+  
+  /* Borders - Nearly invisible */
+  --border: rgba(0, 0, 0, 0.06);
   --input: transparent;
-  --input-background: #f5f5f5;
-  --switch-background: #d4d4d4;
+  --input-background: #f5f5f7;
+  --switch-background: #e5e5e5;
+  
+  /* Typography weights */
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  --ring: #a1a1a1;
-  /* Metallic accents */
-  --metallic-silver: #c0c0c0;
-  --metallic-chrome: #a8a8a8;
-  --metallic-steel: #71797E;
-  --chart-1: #0a0a0a;
-  --chart-2: #4a4a4a;
-  --chart-3: #8a8a8a;
-  --chart-4: #c0c0c0;
-  --chart-5: #e0e0e0;
-  --radius: 0.625rem;
+  --font-weight-semibold: 600;
+  
+  --ring: #0071e3;
+  
+  /* Charts - Monochromatic */
+  --chart-1: #1d1d1f;
+  --chart-2: #6e6e73;
+  --chart-3: #86868b;
+  --chart-4: #d2d2d7;
+  --chart-5: #f5f5f7;
+  
+  /* Radius - Generous Apple curves */
+  --radius: 0.75rem;
+  
+  /* Sidebar */
   --sidebar: #fafafa;
-  --sidebar-foreground: #0a0a0a;
-  --sidebar-primary: #0a0a0a;
+  --sidebar-foreground: #1d1d1f;
+  --sidebar-primary: #1d1d1f;
   --sidebar-primary-foreground: #fafafa;
-  --sidebar-accent: #f0f0f0;
-  --sidebar-accent-foreground: #1a1a1a;
-  --sidebar-border: #e5e5e5;
-  --sidebar-ring: #a1a1a1;
+  --sidebar-accent: #f5f5f7;
+  --sidebar-accent-foreground: #1d1d1f;
+  --sidebar-border: rgba(0, 0, 0, 0.06);
+  --sidebar-ring: #0071e3;
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-  --card: #0f0f0f;
-  --card-foreground: #fafafa;
-  --popover: #0f0f0f;
-  --popover-foreground: #fafafa;
-  --primary: #ffffff;
-  --primary-foreground: #0a0a0a;
-  --secondary: #1a1a1a;
-  --secondary-foreground: #fafafa;
-  --muted: #1a1a1a;
-  --muted-foreground: #a1a1a1;
-  --accent: #1f1f1f;
-  --accent-foreground: #fafafa;
-  --destructive: #7f1d1d;
-  --destructive-foreground: #fecaca;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: #1a1a1a;
-  --ring: #525252;
+  /* ═══════════════════════════════════════════════════════════════
+     Dark Mode — Elegant, not harsh
+     ═══════════════════════════════════════════════════════════════ */
+  --background: #000000;
+  --foreground: #f5f5f7;
+  --card: #1d1d1f;
+  --card-foreground: #f5f5f7;
+  --popover: #1d1d1f;
+  --popover-foreground: #f5f5f7;
+  
+  /* Primary - Inverted */
+  --primary: #f5f5f7;
+  --primary-foreground: #000000;
+  
+  /* Secondary */
+  --secondary: #1d1d1f;
+  --secondary-foreground: #f5f5f7;
+  
+  /* Muted - Apple's dark mode grey */
+  --muted: #1d1d1f;
+  --muted-foreground: #86868b;
+  
+  /* Accent */
+  --accent: #2d2d2d;
+  --accent-foreground: #f5f5f7;
+  
+  /* Semantic */
+  --destructive: #ff453a;
+  --destructive-foreground: #ffffff;
+  
+  /* Borders - Barely visible */
+  --border: rgba(255, 255, 255, 0.08);
+  --input: #1d1d1f;
+  --ring: #0a84ff;
+  
   --font-weight-medium: 500;
   --font-weight-normal: 400;
-  /* Metallic accents for dark mode */
-  --metallic-silver: #71797E;
-  --metallic-chrome: #8a8a8a;
-  --metallic-steel: #a8a8a8;
-  --chart-1: #ffffff;
-  --chart-2: #c0c0c0;
-  --chart-3: #8a8a8a;
-  --chart-4: #4a4a4a;
-  --chart-5: #2a2a2a;
-  --sidebar: #0f0f0f;
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #ffffff;
-  --sidebar-primary-foreground: #0a0a0a;
-  --sidebar-accent: #1a1a1a;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #262626;
-  --sidebar-ring: #525252;
+  --font-weight-semibold: 600;
+  
+  /* Charts */
+  --chart-1: #f5f5f7;
+  --chart-2: #a1a1a6;
+  --chart-3: #86868b;
+  --chart-4: #48484a;
+  --chart-5: #2d2d2d;
+  
+  /* Sidebar */
+  --sidebar: #000000;
+  --sidebar-foreground: #f5f5f7;
+  --sidebar-primary: #f5f5f7;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #1d1d1f;
+  --sidebar-accent-foreground: #f5f5f7;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #0a84ff;
 }
 
 @theme inline {

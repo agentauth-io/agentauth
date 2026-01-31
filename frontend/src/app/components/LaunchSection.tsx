@@ -1,145 +1,81 @@
-import { Calendar, Users, Rocket } from "lucide-react";
 import { motion } from "motion/react";
 
 export function LaunchSection() {
   return (
-    <section className="relative px-6 py-32 border-t border-white/5">
-      <div className="max-w-5xl mx-auto">
-        {/* Launch Announcement */}
-        <div className="text-center mb-16">
-          <motion.div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-white/5 mb-8"
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            whileHover={{ scale: 1.05 }}
-          >
-            <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
-              <Rocket className="w-4 h-4 text-white" />
-            </motion.div>
-            <span className="text-sm text-gray-300">Public Beta Launching Soon</span>
-          </motion.div>
+    <footer className="px-6 lg:px-12 py-16 border-t border-[#1d1d1f]">
+      <div className="max-w-6xl mx-auto">
+        {/* Footer Grid */}
+        <div className="grid md:grid-cols-4 gap-12 mb-16">
+          {/* Brand */}
+          <div className="md:col-span-1">
+            <a href="/" className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
+                <span className="text-black font-semibold text-sm">A</span>
+              </div>
+              <span className="text-white font-medium text-lg tracking-tight">
+                AgentAuth
+              </span>
+            </a>
+            <p className="text-[#86868b] text-sm leading-relaxed">
+              The authorization layer for AI agent payments.
+            </p>
+          </div>
 
-          <motion.h2
-            className="text-5xl md:text-6xl mb-6 bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            Join the Waitlist
-          </motion.h2>
+          {/* Product */}
+          <div>
+            <h4 className="text-white text-sm font-medium mb-4">Product</h4>
+            <ul className="space-y-3">
+              <li><a href="/docs" className="text-[#86868b] hover:text-white text-sm transition-colors">Documentation</a></li>
+              <li><a href="/demo" className="text-[#86868b] hover:text-white text-sm transition-colors">Demo</a></li>
+              <li><a href="#pricing" className="text-[#86868b] hover:text-white text-sm transition-colors">Pricing</a></li>
+              <li><a href="/portal" className="text-[#86868b] hover:text-white text-sm transition-colors">Dashboard</a></li>
+            </ul>
+          </div>
 
-          <motion.p
-            className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            Be among the first to access our platform. Early adopters get exclusive benefits and lifetime discounts.
-          </motion.p>
+          {/* Company */}
+          <div>
+            <h4 className="text-white text-sm font-medium mb-4">Company</h4>
+            <ul className="space-y-3">
+              <li><a href="/contact" className="text-[#86868b] hover:text-white text-sm transition-colors">Contact</a></li>
+              <li><a href="mailto:hello@agentauth.in" className="text-[#86868b] hover:text-white text-sm transition-colors">hello@agentauth.in</a></li>
+            </ul>
+          </div>
 
-          <motion.button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="px-8 py-4 bg-white hover:bg-gray-200 text-black rounded-lg transition-all inline-flex items-center gap-2 text-lg relative overflow-hidden group"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            {/* Button shimmer effect */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-              animate={{ x: ["-200%", "200%"] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-            />
-            <span className="relative">Reserve Your Spot</span>
-            <motion.svg
-              className="w-5 h-5 relative"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              animate={{ x: [0, 5, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </motion.svg>
-          </motion.button>
+          {/* Legal */}
+          <div>
+            <h4 className="text-white text-sm font-medium mb-4">Legal</h4>
+            <ul className="space-y-3">
+              <li><a href="#" className="text-[#86868b] hover:text-white text-sm transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="text-[#86868b] hover:text-white text-sm transition-colors">Terms of Service</a></li>
+            </ul>
+          </div>
         </div>
 
-        {/* Launch Benefits */}
-        <div className="grid md:grid-cols-3 gap-6 mt-20">
-          {[
-            { icon: Calendar, title: "Early Access", desc: "Get your API keys before the public launch" },
-            { icon: Users, title: "Founding Member", desc: "Join our community and shape the product roadmap" },
-            {
-              icon: () => (
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              ),
-              title: "Special Pricing",
-              desc: "Lock in discounted rates for the first year"
-            }
-          ].map((benefit, index) => {
-            const Icon = benefit.icon;
-            return (
-              <motion.div
-                key={index}
-                className="text-center p-6 relative group"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                whileHover={{
-                  y: -10,
-                  transition: { duration: 0.3 }
-                }}
-              >
-                <motion.div
-                  className="inline-flex p-3 rounded-xl bg-white/5 mb-4 relative"
-                  whileHover={{
-                    scale: 1.15,
-                    rotate: 10,
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    transition: { duration: 0.3 }
-                  }}
-                >
-                  <Icon />
-
-                  {/* Glow effect */}
-                  <motion.div
-                    className="absolute inset-0 bg-white/20 rounded-xl blur-xl"
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </motion.div>
-                <h3 className="text-lg mb-2 text-white">{benefit.title}</h3>
-                <p className="text-sm text-gray-400">{benefit.desc}</p>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Footer */}
+        {/* Bottom Bar */}
         <motion.div
-          className="mt-20 pt-12 border-t border-white/5 text-center text-sm text-gray-500"
+          className="pt-8 border-t border-[#1d1d1f] flex flex-col sm:flex-row items-center justify-between gap-4"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.6 }}
         >
-          <p>© 2026 AgentAuth, Inc. All rights reserved.</p>
+          <p className="text-[#86868b] text-sm">
+            © {new Date().getFullYear()} AgentAuth. All rights reserved.
+          </p>
+          <div className="flex items-center gap-6">
+            <a href="https://twitter.com" className="text-[#86868b] hover:text-white transition-colors">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </a>
+            <a href="https://github.com" className="text-[#86868b] hover:text-white transition-colors">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+              </svg>
+            </a>
+          </div>
         </motion.div>
       </div>
-    </section>
+    </footer>
   );
 }

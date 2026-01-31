@@ -21,6 +21,8 @@ import { ResetPasswordPage } from "./components/auth/ResetPasswordPage";
 import { SetPasswordPage } from "./components/auth/SetPasswordPage";
 import { AuthCallbackPage } from "./components/auth/AuthCallbackPage";
 import { supabase, checkBetaAccess } from "../lib/supabase";
+import { LandingA } from "./pages/LandingA";
+import { LandingB } from "./pages/LandingB";
 
 const PLAN_DETAILS: Record<string, { name: string; price: number }> = {
   community: { name: "Community", price: 0 },
@@ -249,6 +251,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/variant-a" element={<LandingA />} />
+        <Route path="/variant-b" element={<LandingB />} />
         <Route path="/demo" element={<DemoPage />} />
         <Route path="/docs" element={<DocsPage />} />
         <Route path="/contact" element={<ContactPage />} />

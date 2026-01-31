@@ -1,0 +1,22 @@
+/* Apple-level Typography System */
+/* Inter - the closest to SF Pro for web */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+/* SF Pro Display for headlines (system font stack fallback) */
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Monaco, Consolas, monospace;
+}
+
+/* Precise tracking for Apple-level typography */
+.tracking-apple {
+  letter-spacing: -0.022em;
+}
+
+.tracking-headline {
+  letter-spacing: -0.025em;
+}
+
+.tracking-display {
+  letter-spacing: -0.03em;
+}
