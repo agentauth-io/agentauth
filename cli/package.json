@@ -22,6 +22,12 @@
   ],
   "author": "AgentAuth",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentauth-io/agentauth.git",
+    "directory": "cli"
+  },
+  "homepage": "https://agentauth.in",
   "dependencies": {
     "boxen": "^5.1.2",
     "chalk": "^4.1.2",
