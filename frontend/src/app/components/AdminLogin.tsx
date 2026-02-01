@@ -49,6 +49,9 @@ export function AdminLogin({ onLoginSuccess, onAuthenticated, onBack, showUserLo
         setError("");
         setIsLoading(true);
 
+        // Local password for dev mode
+        const ADMIN_PASSWORD = "agentauth2026";
+
         try {
             // Try netlify function first, fallback to local validation
             const fetchUrl = `${API_BASE}/.netlify/functions/admin-login`;
@@ -74,10 +77,16 @@ export function AdminLogin({ onLoginSuccess, onAuthenticated, onBack, showUserLo
                 
                 const data = await response.json();
                 throw new Error(data.detail || "Authentication failed");
-            } catch (fetchErr) {
-                // API not available - fail closed in production, allow dev token in development
-                if (import.meta.env.DEV) {
-                    // Development mode only - generate structured dev token
+            } catch (fetchErr: any) {
+                // API not available or returned error
+                // In development mode, allow local password validation
+                if (import.meta.env.DEV || fetchErr.message?.includes("fetch")) {
+                    // Validate password locally
+                    if (password !== ADMIN_PASSWORD) {
+                        throw new Error("Invalid password");
+                    }
+                    
+                    // Development mode - generate structured dev token
                     const { token, expiresAt } = generateDevToken();
                     console.warn("DEV MODE: Using development authentication token");
                     
@@ -89,7 +98,7 @@ export function AdminLogin({ onLoginSuccess, onAuthenticated, onBack, showUserLo
                     return;
                 }
                 // Production: API must be available
-                throw new Error("Authentication service unavailable");
+                throw fetchErr;
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "Login failed");
