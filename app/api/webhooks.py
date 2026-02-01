@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.database import get_db
 from app.models.webhooks import WEBHOOK_EVENTS
 from app.services.webhooks import WebhooksService
+from app.middleware import require_api_key
 
 
 router = APIRouter(prefix="/v1/webhooks", tags=["Webhooks"])
@@ -55,7 +56,8 @@ class WebhookResponse(BaseModel):
 @router.get("", response_model=List[WebhookResponse])
 async def list_webhooks(
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     List all webhooks.
@@ -85,7 +87,8 @@ async def list_webhooks(
 async def create_webhook(
     webhook: WebhookCreate,
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Create a new webhook.
@@ -117,7 +120,8 @@ async def create_webhook(
 async def get_webhook(
     webhook_id: UUID,
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Get a specific webhook.
@@ -146,7 +150,8 @@ async def update_webhook(
     webhook_id: UUID,
     update: WebhookUpdate,
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Update a webhook.
@@ -181,7 +186,8 @@ async def update_webhook(
 async def delete_webhook(
     webhook_id: UUID,
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Delete a webhook.

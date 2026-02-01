@@ -12,6 +12,7 @@ from app.models.database import get_db
 from app.models.consent import Consent
 from app.schemas.consent import ConsentCreate, ConsentResponse
 from app.services.consent_service import consent_service
+from app.middleware import require_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ async def list_consents(
     limit: int = Query(default=20, le=100, description="Max consents to return"),
     offset: int = Query(default=0, ge=0, description="Offset for pagination"),
     db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key),
 ):
     """List all consents for dashboard monitoring with pagination."""
     try:
@@ -92,6 +94,7 @@ async def list_consents(
 async def create_consent(
     consent_data: ConsentCreate,
     db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key),
 ) -> ConsentResponse:
     """
     Create a new consent.
@@ -124,6 +127,7 @@ async def create_consent(
 async def get_consent(
     consent_id: str,
     db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key),
 ):
     """Get consent by ID."""
     consent = await consent_service.get_consent(db, consent_id)
@@ -153,6 +157,7 @@ async def get_consent(
 async def revoke_consent(
     consent_id: str,
     db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key),
 ):
     """Revoke a consent."""
     success = await consent_service.revoke_consent(db, consent_id)

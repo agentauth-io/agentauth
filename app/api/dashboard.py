@@ -13,6 +13,7 @@ from app.config import get_settings
 from app.models.database import get_db
 from app.models.consent import Consent
 from app.models.authorization import Authorization
+from app.middleware import require_api_key
 
 settings = get_settings()
 
@@ -22,6 +23,7 @@ router = APIRouter(prefix="/v1/dashboard", tags=["Dashboard"])
 @router.get("")
 async def get_dashboard(
     db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Get complete dashboard data for the frontend.
@@ -119,6 +121,7 @@ async def get_dashboard(
 @router.get("/stats")
 async def get_dashboard_stats(
     db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Get aggregate dashboard statistics.
@@ -186,6 +189,7 @@ async def get_transactions(
     limit: int = Query(default=50, le=100),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Get recent transactions/consents for the dashboard.
@@ -242,6 +246,7 @@ async def get_transactions(
 async def get_analytics(
     days: int = Query(default=7, le=30),
     db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Get analytics data for charts.
@@ -305,6 +310,7 @@ async def dashboard_health():
 async def debug_authorizations(
     limit: int = Query(default=10, le=100),
     db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key),
 ):
     """Debug endpoint to check authorization records."""
     try:

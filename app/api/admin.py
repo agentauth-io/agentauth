@@ -8,10 +8,13 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta, timezone
 import jwt
 import hashlib
+import hmac
+import logging
 from typing import Optional
 
 from app.config import get_settings
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
 
 router = APIRouter(prefix="/v1/admin", tags=["Admin"])
@@ -88,13 +91,18 @@ async def admin_login(request: AdminLoginRequest):
     
     Returns a JWT token valid for 1 hour.
     """
-    # Simple password check (in production, use bcrypt)
-    if request.password != settings.admin_password:
+    # Constant-time password comparison to prevent timing attacks
+    password_hash = hashlib.sha256(request.password.encode()).hexdigest()
+    expected_hash = hashlib.sha256(settings.admin_password.encode()).hexdigest()
+    
+    if not hmac.compare_digest(password_hash, expected_hash):
+        logger.warning("Failed admin login attempt")
         raise HTTPException(
             status_code=401, 
             detail="Invalid password"
         )
     
+    logger.info("Admin login successful")
     token, expires = create_admin_token()
     
     return AdminLoginResponse(
@@ -129,8 +137,8 @@ async def verify_token(
         if payload.get("type") == "admin":
             exp = datetime.fromtimestamp(payload["exp"])
             return AdminVerifyResponse(valid=True, expires_at=exp.isoformat())
-    except:
-        pass
+    except Exception as e:
+        logger.debug(f"Token verification failed: {e}")
     
     return AdminVerifyResponse(valid=False)
 

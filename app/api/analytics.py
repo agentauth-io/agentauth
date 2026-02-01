@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.database import get_db
 from app.services.analytics import AnalyticsService
+from app.middleware import require_api_key
 
 
 router = APIRouter(prefix="/v1/analytics", tags=["Analytics"])
@@ -62,7 +63,8 @@ class LogEntry(BaseModel):
 async def get_summary(
     user_id: str = "default",
     days: int = Query(30, ge=1, le=365, description="Days to include in stats"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Get analytics summary for dashboard.
@@ -93,7 +95,8 @@ async def get_summary(
 async def get_trends(
     user_id: str = "default",
     days: int = Query(30, ge=1, le=365, description="Days to include in trends"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Get trend data for charts.
@@ -117,7 +120,8 @@ async def get_logs(
     limit: int = Query(50, ge=1, le=500, description="Maximum logs to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     decision: Optional[str] = Query(None, description="Filter by decision: approved/denied"),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Get authorization logs.
@@ -133,7 +137,8 @@ async def get_logs(
 @router.get("/agents")
 async def get_agent_stats(
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Get per-agent statistics.
@@ -149,7 +154,8 @@ async def get_agent_stats(
 @router.get("/merchants")
 async def get_merchant_stats(
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Get per-merchant statistics.

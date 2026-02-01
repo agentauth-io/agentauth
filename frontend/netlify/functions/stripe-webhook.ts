@@ -66,15 +66,63 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     // Handle subscription updates
     if (stripeEvent.type === "customer.subscription.updated") {
         const subscription = stripeEvent.data.object as Stripe.Subscription;
-        console.log("Subscription updated:", subscription.id);
-        // Update subscription status in database
+        const customerId = subscription.customer as string;
+        const status = subscription.status;
+        const priceId = subscription.items.data[0]?.price.id;
+        const planName = PRICE_TO_PLAN[priceId] || "startup";
+
+        console.log(`Subscription updated: ${subscription.id}, status: ${status}, plan: ${planName}`);
+
+        // Find user by stripe customer ID and update their plan
+        try {
+            const { data: users } = await supabase.auth.admin.listUsers();
+            const user = users?.users?.find(u => 
+                u.user_metadata?.stripe_customer_id === customerId
+            );
+
+            if (user) {
+                await supabase.auth.admin.updateUserById(user.id, {
+                    user_metadata: {
+                        ...user.user_metadata,
+                        subscription_plan: planName,
+                        subscription_status: status,
+                    },
+                });
+                console.log(`Updated user ${user.id} to plan: ${planName}, status: ${status}`);
+            }
+        } catch (err) {
+            console.error("Error updating subscription:", err);
+        }
     }
 
     // Handle subscription cancellation
     if (stripeEvent.type === "customer.subscription.deleted") {
         const subscription = stripeEvent.data.object as Stripe.Subscription;
-        console.log("Subscription canceled:", subscription.id);
-        // Mark subscription as canceled in database
+        const customerId = subscription.customer as string;
+
+        console.log(`Subscription canceled: ${subscription.id}`);
+
+        // Find user and downgrade to free tier
+        try {
+            const { data: users } = await supabase.auth.admin.listUsers();
+            const user = users?.users?.find(u => 
+                u.user_metadata?.stripe_customer_id === customerId
+            );
+
+            if (user) {
+                await supabase.auth.admin.updateUserById(user.id, {
+                    user_metadata: {
+                        ...user.user_metadata,
+                        subscription_plan: "free",
+                        subscription_status: "canceled",
+                        subscription_canceled_at: new Date().toISOString(),
+                    },
+                });
+                console.log(`Downgraded user ${user.id} to free tier`);
+            }
+        } catch (err) {
+            console.error("Error handling cancellation:", err);
+        }
     }
 
     return { statusCode: 200, body: JSON.stringify({ received: true }) };
@@ -139,11 +187,11 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
             type: "magiclink",
             email: customerEmail,
             options: {
-                redirectTo: "https://agentauth.in/portal",
+                redirectTo: "https://agentauth.in/nucleus",
             },
         });
 
-        const magicLink = magicLinkData?.properties?.action_link || "https://agentauth.in/portal";
+        const magicLink = magicLinkData?.properties?.action_link || "https://agentauth.in/nucleus";
 
         // Send welcome email
         await sendWelcomeEmail(customerEmail, customerName, planName, magicLink);
@@ -275,7 +323,7 @@ async function sendUpgradeEmail(email: string, name: string, plan: string) {
         
         <p>All your new features are now active and available in your dashboard.</p>
         
-        <a href="https://agentauth.in/portal" class="button">Go to Dashboard →</a>
+        <a href="https://agentauth.in/nucleus" class="button">Go to Dashboard →</a>
         
         <p>Your receipt has been sent separately.</p>
         

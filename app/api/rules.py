@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.database import get_db
 from app.models.limits import MerchantRule, CategoryRule, RuleAction
+from app.middleware import require_api_key
 
 
 router = APIRouter(prefix="/v1/rules", tags=["Rules"])
@@ -54,7 +55,8 @@ class CategoryRuleResponse(BaseModel):
 @router.get("/merchants", response_model=List[MerchantRuleResponse])
 async def list_merchant_rules(
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     List all merchant rules.
@@ -85,7 +87,8 @@ async def list_merchant_rules(
 async def create_merchant_rule(
     rule: MerchantRuleCreate,
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Create a new merchant rule.
@@ -119,7 +122,8 @@ async def create_merchant_rule(
 async def delete_merchant_rule(
     rule_id: UUID,
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Delete a merchant rule.
@@ -148,7 +152,8 @@ async def delete_merchant_rule(
 @router.get("/categories", response_model=List[CategoryRuleResponse])
 async def list_category_rules(
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     List all category rules.
@@ -178,7 +183,8 @@ async def list_category_rules(
 async def create_category_rule(
     rule: CategoryRuleCreate,
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Create a new category rule.
@@ -208,7 +214,8 @@ async def create_category_rule(
 async def delete_category_rule(
     rule_id: UUID,
     user_id: str = "default",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key)
 ):
     """
     Delete a category rule.

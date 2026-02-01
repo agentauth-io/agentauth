@@ -12,6 +12,7 @@ from datetime import datetime
 from app.models.database import get_db
 from app.services import stripe_service
 from app.config import get_settings
+from app.middleware import require_api_key
 
 settings = get_settings()
 
@@ -64,6 +65,7 @@ class ConnectBalanceResponse(BaseModel):
 async def create_connect_account(
     request: CreateConnectAccountRequest,
     user_id: str = Query(..., description="User ID"),
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Create a new Stripe Connect account for a user.
@@ -99,7 +101,10 @@ async def create_connect_account(
 
 
 @router.get("/accounts/{account_id}", response_model=ConnectAccountStatus)
-async def get_connect_account_status(account_id: str):
+async def get_connect_account_status(
+    account_id: str,
+    api_key: dict = Depends(require_api_key),
+):
     """
     Get the status of a connected Stripe account.
     """
@@ -130,7 +135,10 @@ async def get_connect_account_status(account_id: str):
 
 
 @router.post("/accounts/{account_id}/onboarding-link")
-async def refresh_onboarding_link(account_id: str):
+async def refresh_onboarding_link(
+    account_id: str,
+    api_key: dict = Depends(require_api_key),
+):
     """
     Generate a new onboarding link for an incomplete account.
     """
@@ -152,7 +160,10 @@ async def refresh_onboarding_link(account_id: str):
 
 
 @router.get("/accounts/{account_id}/dashboard-link")
-async def get_dashboard_link(account_id: str):
+async def get_dashboard_link(
+    account_id: str,
+    api_key: dict = Depends(require_api_key),
+):
     """
     Get a login link to the connected account's Stripe dashboard.
     """
@@ -171,6 +182,7 @@ async def get_dashboard_link(account_id: str):
 async def list_connect_transactions(
     account_id: str,
     limit: int = Query(20, ge=1, le=100),
+    api_key: dict = Depends(require_api_key),
 ):
     """
     List recent transactions for a connected account.
@@ -190,7 +202,10 @@ async def list_connect_transactions(
 
 
 @router.get("/accounts/{account_id}/balance", response_model=ConnectBalanceResponse)
-async def get_connect_balance(account_id: str):
+async def get_connect_balance(
+    account_id: str,
+    api_key: dict = Depends(require_api_key),
+):
     """
     Get the balance for a connected account.
     """
