@@ -117,6 +117,18 @@ export function getConfigPath(): string {
 }
 
 /**
+ * Get all config as an object (used by commands that need apiKey + apiUrl)
+ */
+export function getConfig(): { apiKey: string; apiUrl: string; outputFormat: string; colorEnabled: boolean } {
+  return {
+    apiKey: getApiKey(),
+    apiUrl: getApiUrl(),
+    outputFormat: getOutputFormat(),
+    colorEnabled: isColorEnabled(),
+  };
+}
+
+/**
  * Get all config values (with masked API key)
  */
 export function getAll(): Record<string, unknown> {

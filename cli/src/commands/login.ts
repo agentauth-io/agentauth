@@ -4,6 +4,10 @@ import * as config from '../config';
 import { AgentAuthClient } from '../api';
 import * as ui from '../ui';
 
+export function registerLoginCommand(program: Command) {
+  program.addCommand(loginCommand);
+}
+
 export const loginCommand = new Command('login')
   .description('Authenticate with AgentAuth API')
   .option('--key <apiKey>', 'API key (or use interactive prompt)')

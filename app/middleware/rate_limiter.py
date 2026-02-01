@@ -77,6 +77,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     EXEMPT_PATHS = {
         "/docs", "/redoc", "/openapi.json", "/health", "/", "/metrics"
     }
+
+    # Auth endpoints get stricter rate limits (10 req/min per IP)
+    STRICT_PATHS = {
+        "/v1/admin/login",
+        "/v1/auth/login",
+        "/v1/auth/register",
+        "/v1/auth/otp",
+    }
+    STRICT_LIMIT = 10  # requests per minute for auth endpoints
     
     def __init__(
         self,
@@ -113,8 +122,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_ip = request.client.host if request.client else "unknown"
         api_key = self._extract_api_key(request)
         
-        # Determine rate limit based on auth
-        if api_key and api_key.startswith("aa_"):
+        # Determine rate limit based on auth and path
+        path = request.url.path
+        if path in self.STRICT_PATHS:
+            # Stricter limit for auth endpoints — prevent brute force
+            key = f"auth:{client_ip}:{path}"
+            max_requests = self.STRICT_LIMIT
+            window_seconds = 60
+        elif api_key and api_key.startswith("aa_"):
             key = f"apikey:{api_key[:20]}"
             max_requests = self.settings.rate_limit_requests_per_second
             window_seconds = 1  # Per-second for API keys

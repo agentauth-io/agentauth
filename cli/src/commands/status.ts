@@ -3,6 +3,10 @@ import * as config from '../config';
 import { AgentAuthClient } from '../api';
 import * as ui from '../ui';
 
+export function registerStatusCommand(program: Command) {
+  program.addCommand(statusCommand);
+}
+
 export const statusCommand = new Command('status')
   .description('Show connection status and account information')
   .option('--json', 'Output as JSON')
@@ -104,14 +108,14 @@ function usageBar(percent: number, width: number = 30): string {
   const filled = Math.round((percent / 100) * width);
   const empty = width - filled;
 
-  let color: typeof ui.chalk;
-  if (percent >= 90) {
-    color = ui.chalk.red;
-  } else if (percent >= 70) {
-    color = ui.chalk.yellow;
-  } else {
-    color = ui.chalk.green;
-  }
+  const filledStr = '█'.repeat(filled);
+  const emptyStr = '░'.repeat(empty);
 
-  return `${color('█'.repeat(filled))}${ui.chalk.gray('░'.repeat(empty))}`;
+  if (percent >= 90) {
+    return `${ui.chalk.red(filledStr)}${ui.chalk.gray(emptyStr)}`;
+  } else if (percent >= 70) {
+    return `${ui.chalk.yellow(filledStr)}${ui.chalk.gray(emptyStr)}`;
+  } else {
+    return `${ui.chalk.green(filledStr)}${ui.chalk.gray(emptyStr)}`;
+  }
 }

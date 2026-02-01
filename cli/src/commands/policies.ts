@@ -492,6 +492,10 @@ const pullPolicy = new Command('pull')
 
 // ─── Main Command ───────────────────────────────────────────────────────────
 
+export function registerPoliciesCommand(program: Command) {
+  program.addCommand(policiesCommand);
+}
+
 export const policiesCommand = new Command('policies')
   .description('Manage authorization policies')
   .addCommand(listPolicies)

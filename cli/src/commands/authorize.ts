@@ -5,6 +5,10 @@ import { AgentAuthClient } from '../api';
 import * as ui from '../ui';
 import { AuthorizationRequest } from '../types';
 
+export function registerAuthorizeCommand(program: Command) {
+  program.addCommand(authorizeCommand);
+}
+
 export const authorizeCommand = new Command('authorize')
   .description('Submit an authorization request')
   .option('-a, --agent <agentId>', 'Agent ID')
@@ -100,7 +104,7 @@ export const authorizeCommand = new Command('authorize')
         agentId: answers.agentId,
         action: answers.action === '_custom' ? answers.customAction : answers.action,
         resource: answers.resource || undefined,
-        amount: answers.amount || undefined,
+        amount: answers.amount ? Number(answers.amount) : undefined,
         merchant: answers.merchant || undefined,
         description: answers.description || undefined,
       };

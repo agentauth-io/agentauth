@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import fs from 'fs';
 import { getConfig } from '../config';
 import { AgentAuthClient } from '../api';
-import { ui } from '../ui';
+import * as ui from '../ui';
 import { LogEntry } from '../types';
 
 function getClient(): AgentAuthClient {

@@ -5,7 +5,7 @@ import YAML from 'yaml';
 import inquirer from 'inquirer';
 import { getConfig } from '../config';
 import { AgentAuthClient } from '../api';
-import { ui } from '../ui';
+import * as ui from '../ui';
 import { TestScenario, TestCase, TestResult, AuthorizationRequest } from '../types';
 
 function getClient(): AgentAuthClient {

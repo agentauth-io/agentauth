@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { getConfig } from '../config';
 import { AgentAuthClient } from '../api';
-import { ui } from '../ui';
+import * as ui from '../ui';
 
 function getClient(): AgentAuthClient {
   const config = getConfig();
@@ -62,25 +62,25 @@ async function renderDashboard(client: AgentAuthClient): Promise<string> {
 
     // Stats cards
     const statsContent = [
-      `${chalk.white.bold(String(data.actionsToday || data.total_authorizations || 0).padEnd(12))} ${chalk.gray('Actions Today')}     ${chalk.white.bold(ui.formatAmount(data.totalVolume || data.transaction_volume || 0).padEnd(12))} ${chalk.gray('Volume')}`,
-      `${chalk.green.bold(String((data.approvalRate || data.approval_rate || 0).toFixed(1) + '%').padEnd(12))} ${chalk.gray('Approval Rate')}     ${chalk.cyan.bold(String((data.averageLatencyMs || data.avg_response_time || 0).toFixed(0) + 'ms').padEnd(12))} ${chalk.gray('Avg Latency')}`,
+      `${chalk.white.bold(String(data.actionsToday || 0).padEnd(12))} ${chalk.gray('Actions Today')}     ${chalk.white.bold(ui.formatAmount(data.totalVolume || 0).padEnd(12))} ${chalk.gray('Volume')}`,
+      `${chalk.green.bold(String((data.approvalRate || 0).toFixed(1) + '%').padEnd(12))} ${chalk.gray('Approval Rate')}     ${chalk.cyan.bold(String((data.averageLatencyMs || 0).toFixed(0) + 'ms').padEnd(12))} ${chalk.gray('Avg Latency')}`,
       `${chalk.white.bold(String(data.activeAgents || data.totalAgents || 0).padEnd(12))} ${chalk.gray('Active Agents')}     ${chalk.yellow.bold(String(data.pendingConsents || 0).padEnd(12))} ${chalk.gray('Pending Consents')}`,
     ];
     lines.push(drawBox('Stats', statsContent, width));
     lines.push('');
 
     // Recent activity
-    const recentActivity = data.recentActivity || data.transactions || [];
+    const recentActivity: any[] = data.recentActivity || [];
     if (recentActivity.length > 0) {
       const activityLines: string[] = [];
       const displayCount = Math.min(recentActivity.length, 10);
 
       for (let i = 0; i < displayCount; i++) {
         const entry = recentActivity[i];
-        const status = entry.status || entry.decision || 'unknown';
+        const decision = entry.decision || 'unknown';
 
         let icon: string;
-        switch (status.toLowerCase()) {
+        switch (decision.toLowerCase()) {
           case 'authorized':
           case 'allowed':
             icon = chalk.green('✓');
@@ -95,10 +95,10 @@ async function renderDashboard(client: AgentAuthClient): Promise<string> {
             icon = chalk.gray('·');
         }
 
-        const agent = chalk.cyan((entry.agentName || entry.agentId || entry.merchant || 'unknown').substring(0, 20).padEnd(20));
+        const agent = chalk.cyan((entry.agentName || entry.agentId || 'unknown').substring(0, 20).padEnd(20));
         const amount = entry.amount ? chalk.white(ui.formatAmount(entry.amount).padEnd(12)) : chalk.gray('-'.padEnd(12));
-        const merchant = chalk.gray((entry.merchant || entry.description || '').substring(0, 20).padEnd(20));
-        const time = chalk.gray(ui.formatDate(entry.created_at || entry.timestamp || new Date().toISOString()));
+        const merchant = chalk.gray((entry.merchant || '').substring(0, 20).padEnd(20));
+        const time = chalk.gray(ui.formatDate(entry.timestamp || new Date().toISOString()));
 
         activityLines.push(`${icon} ${agent} ${amount} ${merchant} ${time}`);
       }

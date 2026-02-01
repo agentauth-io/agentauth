@@ -3,12 +3,16 @@ Admin authentication API.
 
 Provides secure access to the admin dashboard.
 """
+import logging
 from fastapi import APIRouter, HTTPException, Depends, Header
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import jwt
 import hashlib
+import hmac
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from app.config import get_settings
 
@@ -88,9 +92,10 @@ async def admin_login(request: AdminLoginRequest):
     
     Returns a JWT token valid for 1 hour.
     """
-    # Simple password check
-    # TODO: Use bcrypt password hashing in production instead of plaintext comparison
-    if request.password != settings.admin_password:
+    # Constant-time password comparison to prevent timing attacks
+    password_hash = hashlib.sha256(request.password.encode()).hexdigest()
+    expected_hash = hashlib.sha256(settings.admin_password.encode()).hexdigest()
+    if not hmac.compare_digest(password_hash, expected_hash):
         raise HTTPException(
             status_code=401, 
             detail="Invalid password"

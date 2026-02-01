@@ -272,6 +272,10 @@ const removeAgent = new Command('remove')
 
 // ─── Main Command ───────────────────────────────────────────────────────────
 
+export function registerAgentsCommand(program: Command) {
+  program.addCommand(agentsCommand);
+}
+
 export const agentsCommand = new Command('agents')
   .description('Manage AI agents')
   .addCommand(listAgents)
