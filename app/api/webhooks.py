@@ -12,9 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.database import get_db
 from app.models.webhooks import WEBHOOK_EVENTS
 from app.services.webhooks import WebhooksService
+from app.middleware.api_keys import require_api_key
 
 
-router = APIRouter(prefix="/v1/webhooks", tags=["Webhooks"])
+router = APIRouter(prefix="/v1/webhooks", tags=["Webhooks"], dependencies=[Depends(require_api_key)])
 
 
 # Schemas

@@ -11,8 +11,9 @@ from app.models.database import get_db
 from app.models.consent import Consent
 from app.schemas.consent import ConsentCreate, ConsentResponse
 from app.services.consent_service import consent_service
+from app.middleware.api_keys import require_api_key
 
-router = APIRouter(prefix="/v1/consents", tags=["Consents"])
+router = APIRouter(prefix="/v1/consents", tags=["Consents"], dependencies=[Depends(require_api_key)])
 
 
 @router.get(

@@ -12,6 +12,7 @@ from typing import Optional
 from app.config import get_settings
 from app.models.database import get_db
 from app.models.consent import Consent
+from app.api.admin import get_admin_user
 
 settings = get_settings()
 
@@ -21,6 +22,7 @@ router = APIRouter(prefix="/v1/dashboard", tags=["Dashboard"])
 @router.get("/stats")
 async def get_dashboard_stats(
     db: AsyncSession = Depends(get_db),
+    _admin: bool = Depends(get_admin_user),
 ):
     """
     Get aggregate dashboard statistics.
@@ -88,6 +90,7 @@ async def get_transactions(
     limit: int = Query(default=50, le=100),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
+    _admin: bool = Depends(get_admin_user),
 ):
     """
     Get recent transactions/consents for the dashboard.
@@ -141,6 +144,7 @@ async def get_transactions(
 async def get_analytics(
     days: int = Query(default=7, le=30),
     db: AsyncSession = Depends(get_db),
+    _admin: bool = Depends(get_admin_user),
 ):
     """
     Get analytics data for charts.

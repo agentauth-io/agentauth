@@ -13,6 +13,7 @@ from app.models.database import get_db
 from app.models.subscription import PlanType, PLAN_LIMITS
 from app.services import billing_service, stripe_service
 from app.config import get_settings
+from app.middleware.api_keys import require_api_key
 
 settings = get_settings()
 
@@ -67,6 +68,7 @@ class PlanLimitsResponse(BaseModel):
 async def get_subscription(
     user_id: str,  # In production, get from auth token
     db: AsyncSession = Depends(get_db),
+    _key: dict = Depends(require_api_key),
 ) -> SubscriptionResponse:
     """
     Get current subscription details for a user.
@@ -90,6 +92,7 @@ async def get_subscription(
 async def get_usage(
     user_id: str,  # In production, get from auth token
     db: AsyncSession = Depends(get_db),
+    _key: dict = Depends(require_api_key),
 ) -> UsageResponse:
     """
     Get usage statistics for the current billing period.
@@ -102,6 +105,7 @@ async def get_usage(
 async def check_limit(
     user_id: str,
     db: AsyncSession = Depends(get_db),
+    _key: dict = Depends(require_api_key),
 ) -> dict:
     """
     Check if user can make another API call.
@@ -191,7 +195,8 @@ async def create_checkout_session(
 @router.post("/portal")
 async def create_billing_portal(
     user_id: str,
-    return_url: str = "https://agentauth.in/portal",
+    return_url: str = "https://agentauth.in/nucleus",
+    _key: dict = Depends(require_api_key),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """
@@ -225,6 +230,7 @@ async def create_billing_portal(
 async def cancel_subscription(
     user_id: str,
     db: AsyncSession = Depends(get_db),
+    _key: dict = Depends(require_api_key),
 ) -> dict:
     """
     Cancel user's subscription.

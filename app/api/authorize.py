@@ -9,8 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.database import get_db
 from app.schemas.authorize import AuthorizeRequest, AuthorizeResponse
 from app.services.auth_service import auth_service
+from app.middleware.api_keys import require_api_key
 
-router = APIRouter(prefix="/v1", tags=["Authorization"])
+router = APIRouter(prefix="/v1", tags=["Authorization"], dependencies=[Depends(require_api_key)])
 
 
 @router.post(

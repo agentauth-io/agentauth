@@ -12,9 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.database import get_db
 from app.models.limits import SpendingLimit, UsageTracking
+from app.middleware.api_keys import require_api_key
 
 
-router = APIRouter(prefix="/v1/limits", tags=["Spending Limits"])
+router = APIRouter(prefix="/v1/limits", tags=["Spending Limits"], dependencies=[Depends(require_api_key)])
 
 
 # Schemas

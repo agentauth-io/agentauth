@@ -9,8 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.database import get_db
 from app.schemas.verify import VerifyRequest, VerifyResponse
 from app.services.verify_service import verify_service
+from app.middleware.api_keys import require_api_key
 
-router = APIRouter(prefix="/v1", tags=["Verification"])
+router = APIRouter(prefix="/v1", tags=["Verification"], dependencies=[Depends(require_api_key)])
 
 
 @router.post(

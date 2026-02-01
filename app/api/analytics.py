@@ -11,9 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.database import get_db
 from app.services.analytics import AnalyticsService
+from app.middleware.api_keys import require_api_key
 
 
-router = APIRouter(prefix="/v1/analytics", tags=["Analytics"])
+router = APIRouter(prefix="/v1/analytics", tags=["Analytics"], dependencies=[Depends(require_api_key)])
 
 
 # Schemas
