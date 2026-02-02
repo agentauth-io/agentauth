@@ -4,7 +4,12 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
-const ADMIN_PASSWORD = "agentauth2026";
+// Password must be set via NEXT_PUBLIC_ADMIN_PASSWORD environment variable
+const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "";
+
+if (!ADMIN_PASSWORD) {
+    console.warn("NEXT_PUBLIC_ADMIN_PASSWORD not set - admin login will fail");
+}
 
 interface Transaction {
   id: string;

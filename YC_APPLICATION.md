@@ -144,7 +144,7 @@ We're looking for:
 ## Links
 
 - **Live Demo:** https://agentauth.dev/#demo
-- **Dashboard:** https://agentauth.dev/#nucleus (password: agentauth2026)
+- **Dashboard:** https://agentauth.dev/#nucleus (password via ADMIN_PASSWORD env var)
 - **GitHub:** https://github.com/Ashok-kumar290/agentauth
 - **API Docs:** https://agentauth.dev/docs
 

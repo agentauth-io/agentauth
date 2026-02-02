@@ -27,7 +27,8 @@ try:
     import httpx
 except ImportError:
     print("Installing required packages...")
-    os.system("pip install rich httpx -q")
+    import subprocess
+    subprocess.run(["pip", "install", "rich", "httpx", "-q"], check=True)
     from rich.console import Console
     from rich.table import Table
     from rich.layout import Layout

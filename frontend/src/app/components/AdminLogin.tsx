@@ -49,11 +49,8 @@ export function AdminLogin({ onLoginSuccess, onAuthenticated, onBack, showUserLo
         setError("");
         setIsLoading(true);
 
-        // Local password for dev mode
-        const ADMIN_PASSWORD = "agentauth2026";
-
         try {
-            // Try netlify function first, fallback to local validation
+            // Authenticate via Netlify function only (no hardcoded fallback)
             const fetchUrl = `${API_BASE}/.netlify/functions/admin-login`;
             // Auth request to Netlify function
 

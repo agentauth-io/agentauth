@@ -6,10 +6,19 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_KEY || ""
 );
 
+const ALLOWED_ORIGINS = [
+    "https://agentauth.in",
+    "https://www.agentauth.in",
+    "https://agentauth.netlify.app",
+];
+
 const handler: Handler = async (event: HandlerEvent) => {
+    const origin = event.headers?.origin || "";
+    const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+    
     // CORS headers
     const headers = {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": allowedOrigin,
         "Access-Control-Allow-Headers": "Content-Type",
         "Content-Type": "application/json",
     };

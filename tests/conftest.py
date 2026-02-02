@@ -67,13 +67,20 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
     """Create async test client with proper lifecycle management.
     
     Uses ASGITransport to test the actual FastAPI app without
-    running a real server.
+    running a real server. Includes a valid API key for authenticated requests.
     """
+    from app.middleware.api_keys import generate_api_key
+    
+    # Generate a test API key
+    key_data = generate_api_key(owner="test_user")
+    test_api_key = key_data["key"]
+    
     transport = ASGITransport(app=app)
     async with AsyncClient(
         transport=transport,
         base_url="http://test",
-        timeout=30.0  # Increase timeout for DB operations
+        timeout=30.0,  # Increase timeout for DB operations
+        headers={"X-API-Key": test_api_key}  # Include API key in all requests
     ) as ac:
         yield ac
 

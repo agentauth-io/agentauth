@@ -1,0 +1,188 @@
+# PostgreSQL StatefulSet for AgentAuth
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: agentauth
+spec:
+  serviceName: postgres
+  replicas: 1  # Use managed PostgreSQL (AWS RDS, Cloud SQL) for production HA
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      securityContext:
+        fsGroup: 999
+      
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          
+          ports:
+            - containerPort: 5432
+              name: postgres
+          
+          env:
+            - name: POSTGRES_DB
+              value: agentauth
+            - name: POSTGRES_USER
+              value: agentauth
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: agentauth-secrets
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"
+          
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - agentauth
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - agentauth
+            initialDelaySeconds: 5
+            periodSeconds: 5
+  
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: fast-ssd  # Use your cluster's SSD storage class
+        resources:
+          requests:
+            storage: 100Gi
+
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: agentauth
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+
+---
+# Redis StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: agentauth
+spec:
+  serviceName: redis
+  replicas: 1  # Use Redis Cluster or managed Redis for production HA
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          
+          command:
+            - redis-server
+            - --requirepass
+            - $(REDIS_PASSWORD)
+            - --appendonly
+            - "yes"
+            - --maxmemory
+            - "2gb"
+            - --maxmemory-policy
+            - allkeys-lru
+          
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: agentauth-secrets
+                  key: REDIS_PASSWORD
+          
+          ports:
+            - containerPort: 6379
+              name: redis
+          
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 5
+            periodSeconds: 5
+  
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: fast-ssd
+        resources:
+          requests:
+            storage: 10Gi
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: agentauth
+spec:
+  type: ClusterIP
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379

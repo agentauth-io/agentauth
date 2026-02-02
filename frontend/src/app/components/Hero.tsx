@@ -41,6 +41,7 @@ export function Hero() {
   const navLinks = [
     { href: "/docs", label: "Docs" },
     { href: "/demo", label: "Demo" },
+    { href: "/live", label: "Live Dashboard" },
     { href: "#pricing", label: "Pricing" },
     { href: "/contact", label: "Contact" },
   ];

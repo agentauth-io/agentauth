@@ -41,12 +41,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# CORS - Restricted origins
+CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "https://agentbuy.ai,https://www.agentbuy.ai").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 

@@ -1,0 +1,38 @@
+# AgentAuth Core - Sensitive Files
+# DO NOT COMMIT THESE FILES
+
+# Master secrets
+*.secret
+*.key
+master_secret.txt
+secrets/
+
+# Audit logs (may contain sensitive data)
+*.audit
+audit_*.json
+audit_*.jsonl
+
+# Key backups
+*.pem
+*.p12
+*.pfx
+
+# Environment files with secrets
+.env.production
+.env.local
+
+# Compiled Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test outputs
+test_output/
+*.test.json

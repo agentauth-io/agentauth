@@ -1,0 +1,12 @@
+export { loginCommand, logoutCommand } from "./login.js";
+export { statusCommand } from "./status.js";
+export { authorizeCommand } from "./authorize.js";
+export { agentsCommand } from "./agents.js";
+export { policiesCommand } from "./policies.js";
+export { consentsCommand } from "./consents.js";
+export { logsCommand } from "./logs.js";
+export { keysCommand } from "./keys.js";
+export { testCommand } from "./test.js";
+export { dashboardCommand } from "./dashboard.js";
+export { doctorCommand } from "./doctor.js";
+export { agentCommand } from "./agent.js";

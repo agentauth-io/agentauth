@@ -1,0 +1,30 @@
+# AgentAuth ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: agentauth-config
+  namespace: agentauth
+data:
+  # Application settings
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  
+  # Server configuration
+  API_WORKERS: "4"
+  API_HOST: "0.0.0.0"
+  API_PORT: "8000"
+  
+  # Rate limiting
+  RATE_LIMIT_REQUESTS: "1000"
+  RATE_LIMIT_WINDOW_SECONDS: "60"
+  
+  # Token settings
+  TOKEN_EXPIRY_SECONDS: "3600"
+  
+  # Risk thresholds
+  RISK_THRESHOLD_LOW: "0.3"
+  RISK_THRESHOLD_HIGH: "0.7"
+  
+  # Audit settings
+  AUDIT_RETENTION_DAYS: "365"
+  AUDIT_SIGNING_ENABLED: "true"

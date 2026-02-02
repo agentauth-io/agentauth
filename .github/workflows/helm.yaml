@@ -1,0 +1,126 @@
+# Helm Chart Linting and Testing
+name: Helm
+
+on:
+  push:
+    paths:
+      - 'helm/**'
+  pull_request:
+    paths:
+      - 'helm/**'
+
+jobs:
+  lint:
+    name: Lint Helm Chart
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.13.0'
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2
+      
+      - name: Lint chart
+        run: ct lint --chart-dirs helm --charts helm/agentauth
+
+  test:
+    name: Test Helm Chart
+    runs-on: ubuntu-latest
+    needs: lint
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.13.0'
+      
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+      
+      - name: Build test image
+        run: |
+          docker build -f Dockerfile.prod -t agentauth:test .
+          kind load docker-image agentauth:test
+      
+      - name: Install chart
+        run: |
+          helm install agentauth ./helm/agentauth \
+            --namespace test \
+            --create-namespace \
+            --set image.repository=agentauth \
+            --set image.tag=test \
+            --set image.pullPolicy=Never \
+            --set secrets.masterSecret=test_secret_12345678901234567890123456 \
+            --set postgresql.auth.password=testpassword \
+            --set redis.auth.password=testpassword \
+            --set ingress.enabled=false \
+            --wait \
+            --timeout 5m
+      
+      - name: Test deployment
+        run: |
+          kubectl get pods -n test
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=agentauth -n test --timeout=120s
+      
+      - name: Run helm test
+        run: helm test agentauth -n test
+
+  template:
+    name: Template Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.13.0'
+      
+      - name: Template with default values
+        run: |
+          helm template agentauth ./helm/agentauth \
+            --set secrets.masterSecret=test123 \
+            --set postgresql.auth.password=test \
+            --set redis.auth.password=test
+      
+      - name: Template with production values
+        run: |
+          helm template agentauth ./helm/agentauth \
+            --set secrets.masterSecret=test123 \
+            --set postgresql.enabled=false \
+            --set redis.enabled=false \
+            --set secrets.databaseUrl=postgresql://u:p@h:5432/db \
+            --set secrets.redisUrl=redis://:p@h:6379/0
+      
+      - name: Install kubeval
+        run: |
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+          sudo mv kubeval /usr/local/bin/
+      
+      - name: Validate templates
+        run: |
+          helm template agentauth ./helm/agentauth \
+            --set secrets.masterSecret=test123 \
+            --set postgresql.auth.password=test \
+            --set redis.auth.password=test | kubeval --strict

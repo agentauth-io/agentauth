@@ -277,6 +277,18 @@ async def get_demo_key():
     }
 
 
+@app.post("/v1/test-key", tags=["API Keys"])
+async def create_test_key(owner: str = "test"):
+    """Create a test API key (development only)."""
+    key_data = generate_api_key(owner)
+    return {
+        "key": key_data["key"],
+        "key_id": key_data["key_id"],
+        "owner": owner,
+        "message": "Test key created. Development only!",
+    }
+
+
 @app.get("/demo", response_class=HTMLResponse, tags=["Demo"])
 async def demo():
     """Serve the demo UI."""

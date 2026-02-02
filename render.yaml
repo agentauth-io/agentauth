@@ -6,20 +6,28 @@ services:
     name: agentauth-api
     runtime: python
     region: oregon
-    plan: free
-    buildCommand: pip install -e .
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn production_server:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: "3.12"
       - key: DATABASE_URL
         sync: false  # Set manually in Render dashboard
+      - key: REDIS_URL
+        sync: false  # Set manually in Render dashboard  
       - key: SECRET_KEY
         generateValue: true
+      - key: MASTER_SECRET
+        generateValue: true
+      - key: STRIPE_SECRET_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false  # Set manually in Render dashboard
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
         value: "false"
       - key: CORS_ORIGINS
-        value: "https://agentauth.in,https://www.agentauth.in"
+        value: "https://agentauth.in,https://www.agentauth.in,https://agentauth-production.up.railway.app"

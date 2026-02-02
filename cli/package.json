@@ -1,0 +1,78 @@
+{
+  "name": "@agentauth/cli",
+  "version": "1.0.0",
+  "description": "AgentAuth CLI - Authorization infrastructure for AI agents. Manage consents, policies, and authorizations from your terminal.",
+  "main": "dist/index.js",
+  "bin": {
+    "agentauth": "./dist/index.js"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build",
+    "lint": "eslint src/**/*.ts",
+    "test": "vitest",
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "agentauth",
+    "ai",
+    "agents",
+    "authorization",
+    "authentication",
+    "cli",
+    "ai-agents",
+    "llm",
+    "oauth",
+    "payments",
+    "consent",
+    "spending-limits",
+    "delegation"
+  ],
+  "author": {
+    "name": "AgentAuth",
+    "email": "support@agentauth.in",
+    "url": "https://agentauth.in"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentauth-io/agentauth.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/agentauth-io/agentauth/issues"
+  },
+  "homepage": "https://agentauth.in",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/agentauth-io"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^5.3.8",
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "conf": "^13.0.1",
+    "dotenv": "^17.2.3",
+    "node-fetch": "^3.3.2",
+    "ora": "^8.1.1",
+    "table": "^6.8.2"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

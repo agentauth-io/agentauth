@@ -1,0 +1,204 @@
+# AgentAuth API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agentauth-api
+  namespace: agentauth
+  labels:
+    app: agentauth-api
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: agentauth-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: agentauth-api
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/v1/metrics"
+    spec:
+      serviceAccountName: agentauth-api
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      # Pod anti-affinity - spread across nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - agentauth-api
+                topologyKey: kubernetes.io/hostname
+      
+      containers:
+        - name: api
+          image: agentauth/api:latest
+          imagePullPolicy: Always
+          
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          
+          envFrom:
+            - configMapRef:
+                name: agentauth-config
+            - secretRef:
+                name: agentauth-secrets
+          
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          
+          # Startup probe - allow 60s for initial startup
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            failureThreshold: 30
+            periodSeconds: 2
+          
+          # Liveness probe - restart if unhealthy
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          
+          # Readiness probe - stop traffic if not ready
+          readinessProbe:
+            httpGet:
+              path: /v1/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /app/.cache
+      
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+
+---
+# Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agentauth-api
+  namespace: agentauth
+
+---
+# API Service (internal ClusterIP)
+apiVersion: v1
+kind: Service
+metadata:
+  name: agentauth-api-service
+  namespace: agentauth
+  labels:
+    app: agentauth-api
+spec:
+  type: ClusterIP
+  selector:
+    app: agentauth-api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: agentauth-api-hpa
+  namespace: agentauth
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: agentauth-api
+  minReplicas: 3
+  maxReplicas: 50
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+      selectPolicy: Max
+
+---
+# Pod Disruption Budget - maintain availability during updates
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agentauth-api-pdb
+  namespace: agentauth
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: agentauth-api

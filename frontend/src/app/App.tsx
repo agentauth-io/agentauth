@@ -20,6 +20,7 @@ import { Contact } from "./components/Contact";
 import { ResetPasswordPage } from "./components/auth/ResetPasswordPage";
 import { SetPasswordPage } from "./components/auth/SetPasswordPage";
 import { AuthCallbackPage } from "./components/auth/AuthCallbackPage";
+import { LiveDashboard } from "./components/LiveDashboard";
 import { supabase, checkBetaAccess } from "../lib/supabase";
 import { LandingA } from "./pages/LandingA";
 import { LandingB } from "./pages/LandingB";
@@ -262,6 +263,7 @@ export default function App() {
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/yc" element={<YCPage />} />
         <Route path="/nucleus" element={<NucleusPage />} />
+        <Route path="/live" element={<LiveDashboard />} />
         {/* Fallback to home for any unknown routes */}
         <Route path="*" element={<HomePage />} />
       </Routes>

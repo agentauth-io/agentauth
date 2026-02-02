@@ -23,10 +23,19 @@ interface DashboardStats {
     transactions: TransactionData[];
 }
 
+const ALLOWED_ORIGINS = [
+    "https://agentauth.in",
+    "https://www.agentauth.in",
+    "https://agentauth.netlify.app",
+];
+
 const handler: Handler = async (event) => {
+    const origin = event.headers?.origin || "";
+    const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+    
     // CORS headers
     const headers = {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": allowedOrigin,
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Allow-Methods": "GET, OPTIONS",
         "Content-Type": "application/json",

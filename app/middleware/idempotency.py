@@ -132,9 +132,10 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                 )
                 
                 # Return new response with body
+                import json
                 return JSONResponse(
                     status_code=response.status_code,
-                    content=eval(body.decode()) if body else {},  # Parse JSON
+                    content=json.loads(body.decode()) if body else {},  # Safe JSON parsing
                     headers={
                         "X-Idempotency-Key": idempotency_key,
                         **dict(response.headers)

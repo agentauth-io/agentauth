@@ -1,0 +1,8 @@
+# Kubernetes Namespace for AgentAuth
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agentauth
+  labels:
+    app.kubernetes.io/name: agentauth
+    app.kubernetes.io/component: authorization
