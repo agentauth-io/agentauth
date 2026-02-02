@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Loader2, Shield, Zap, Lock } from "lucide-react";
 import { motion } from "motion/react";
 
 export function Hero() {
@@ -47,33 +47,37 @@ export function Hero() {
 
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden">
-      {/* Video Background */}
+      {/* Animated Gradient Background */}
       <div className="absolute inset-0 z-0">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-50"
-        >
-          <source src="/240967.mp4" type="video/mp4" />
-        </video>
-        {/* Gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0f0f1a] via-[#1a1a2e] to-[#16213e]" />
+        
+        {/* Animated gradient orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        
+        {/* Grid pattern overlay */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px'
+          }}
+        />
       </div>
 
-      {/* Navigation - Minimal Apple Style */}
+      {/* Navigation */}
       <motion.nav
-        className="relative z-10 flex items-center justify-between px-6 lg:px-12 py-5"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
+        className="relative z-10 flex items-center justify-between px-6 lg:px-12 py-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
       >
         <a href="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-            <span className="text-black font-semibold text-sm">A</span>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
+            <span className="text-white font-bold text-lg">A</span>
           </div>
-          <span className="text-white font-medium text-lg tracking-tight hidden sm:block">
+          <span className="text-white font-semibold text-xl tracking-tight">
             AgentAuth
           </span>
         </a>
@@ -84,7 +88,7 @@ export function Hero() {
             <a
               key={link.href}
               href={link.href}
-              className="text-[#86868b] hover:text-white transition-colors duration-300 text-sm font-medium"
+              className="text-gray-400 hover:text-white transition-colors duration-300 text-sm font-medium"
             >
               {link.label}
             </a>
@@ -92,77 +96,94 @@ export function Hero() {
         </div>
 
         {/* CTA Button */}
-        <div className="hidden md:flex items-center gap-6">
-          <a
-            href="#waitlist"
-            className="px-5 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-[#f5f5f7] transition-colors duration-300"
-          >
-            Join Waitlist
-          </a>
-        </div>
-
-        {/* Mobile Menu Toggle - simplified */}
         <a
           href="#waitlist"
-          className="md:hidden px-4 py-2 bg-white text-black rounded-full text-sm font-medium"
+          className="hidden md:flex px-6 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full text-sm font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
         >
           Join Waitlist
         </a>
+
+        {/* Mobile CTA */}
+        <a
+          href="#waitlist"
+          className="md:hidden px-5 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full text-sm font-medium"
+        >
+          Join
+        </a>
       </motion.nav>
 
-      {/* Hero Content - Centered, Dramatic */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 lg:px-12 pb-24 pt-12">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Headline - Apple-scale typography */}
+      {/* Hero Content */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 lg:px-12 pb-20 pt-10">
+        <div className="max-w-5xl mx-auto text-center">
+          
+          {/* Badge */}
+          <motion.div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-sm text-gray-300">Now in Private Beta</span>
+          </motion.div>
+
+          {/* Headline */}
           <motion.h1
-            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-semibold tracking-tight leading-[0.95] mb-8"
+            className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05] mb-8"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
           >
             <span className="text-white">Let AI Agents</span>
             <br />
-            <span className="text-[#86868b]">Buy For You.</span>
+            <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              Buy For You.
+            </span>
           </motion.h1>
 
-          {/* Subheadline - Restrained */}
+          {/* Subheadline */}
           <motion.p
-            className="text-lg md:text-xl text-[#86868b] max-w-2xl mx-auto mb-12 leading-relaxed font-normal"
+            className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
           >
             The authorization layer for AI agent payments. Set spending limits,
-            control merchants, and let autonomous systems transact with confidence.
+            control merchants, and let autonomous systems transact with{" "}
+            <span className="text-white font-medium">cryptographic proof</span>.
           </motion.p>
 
-          {/* CTA - Single Focus */}
+          {/* Email Form */}
           <motion.form
+            id="waitlist"
             onSubmit={handleSubmit}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto mb-8"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto mb-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
           >
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full sm:w-auto flex-1 px-5 py-3.5 bg-[#1d1d1f] border border-[#424245] rounded-full text-white placeholder:text-[#6e6e73] focus:outline-none focus:border-[#86868b] transition-colors duration-300 text-sm"
-              required
-              disabled={isLoading}
-            />
+            <div className="relative w-full sm:w-auto flex-1">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-white/10 transition-all duration-300 text-sm"
+                required
+                disabled={isLoading}
+              />
+            </div>
             <motion.button
               type="submit"
-              className="w-full sm:w-auto px-8 py-3.5 bg-white hover:bg-[#f5f5f7] text-black rounded-full transition-colors duration-300 inline-flex items-center justify-center gap-2 font-medium text-sm disabled:opacity-50"
+              className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl transition-all duration-300 inline-flex items-center justify-center gap-2 font-semibold text-sm shadow-lg shadow-purple-500/25 disabled:opacity-50"
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               disabled={isLoading}
             >
               {isSubmitted ? (
                 <>
                   <Check className="w-4 h-4" />
-                  You're in
+                  You're in!
                 </>
               ) : isLoading ? (
                 <>
@@ -171,7 +192,7 @@ export function Hero() {
                 </>
               ) : (
                 <>
-                  Join Waitlist
+                  Get Early Access
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -188,94 +209,95 @@ export function Hero() {
             </motion.p>
           )}
 
-          {/* Secondary CTA - Subtle */}
+          {/* Trust indicators */}
           <motion.div
-            className="flex items-center justify-center gap-6"
+            className="flex items-center justify-center gap-6 text-sm text-gray-500"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.9 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
           >
-            <a
-              href="/demo"
-              className="text-[#2997ff] hover:underline text-sm font-medium inline-flex items-center gap-1"
-            >
-              Try Live Demo
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
-            <a
-              href="/docs"
-              className="text-[#2997ff] hover:underline text-sm font-medium inline-flex items-center gap-1"
-            >
-              Read the Docs
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-green-400" />
+              <span>SOC2 Compliant</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-purple-400" />
+              <span>Bank-grade encryption</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-yellow-400" />
+              <span>&lt;50ms latency</span>
+            </div>
           </motion.div>
         </div>
 
-        {/* Code Preview - Clean, Minimal */}
+        {/* Floating Code Card */}
         <motion.div
-          className="mt-20 w-full max-w-2xl mx-auto"
-          initial={{ opacity: 0, y: 40 }}
+          className="mt-16 w-full max-w-2xl mx-auto"
+          initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 1 }}
         >
-          <div className="relative rounded-2xl border border-[#424245] bg-[#1d1d1f] p-6 overflow-hidden">
+          <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 overflow-hidden shadow-2xl">
+            {/* Glow effect */}
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl" />
+            
             {/* Window Controls */}
             <div className="flex items-center gap-2 mb-5">
-              <div className="w-3 h-3 rounded-full bg-[#3a3a3c]" />
-              <div className="w-3 h-3 rounded-full bg-[#3a3a3c]" />
-              <div className="w-3 h-3 rounded-full bg-[#3a3a3c]" />
+              <div className="w-3 h-3 rounded-full bg-red-500/60" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+              <div className="w-3 h-3 rounded-full bg-green-500/60" />
+              <span className="ml-4 text-xs text-gray-500 font-mono">authorize.ts</span>
             </div>
 
-            <pre className="text-sm text-[#86868b] leading-relaxed font-mono overflow-x-auto">
+            <pre className="text-sm text-gray-300 leading-relaxed font-mono overflow-x-auto">
               <code>
-                <span className="text-[#ff7b72]">const</span>{" "}
-                <span className="text-[#d2a8ff]">auth</span>{" "}
+                <span className="text-purple-400">const</span>{" "}
+                <span className="text-blue-300">auth</span>{" "}
                 <span className="text-white">=</span>{" "}
-                <span className="text-[#ff7b72]">await</span>{" "}
-                <span className="text-[#79c0ff]">agentauth</span>
+                <span className="text-purple-400">await</span>{" "}
+                <span className="text-cyan-300">agentauth</span>
                 <span className="text-white">.</span>
-                <span className="text-[#d2a8ff]">authorize</span>
+                <span className="text-yellow-300">authorize</span>
                 <span className="text-white">({"{"}</span>
                 {"\n"}
                 {"  "}
-                <span className="text-[#79c0ff]">agentId</span>
+                <span className="text-gray-400">agentId</span>
                 <span className="text-white">:</span>{" "}
-                <span className="text-[#a5d6ff]">"agent_123"</span>
+                <span className="text-green-300">"agent_shopping_123"</span>
                 <span className="text-white">,</span>
                 {"\n"}
                 {"  "}
-                <span className="text-[#79c0ff]">amount</span>
+                <span className="text-gray-400">amount</span>
                 <span className="text-white">:</span>{" "}
-                <span className="text-[#79c0ff]">49.99</span>
+                <span className="text-orange-300">49.99</span>
                 <span className="text-white">,</span>
                 {"\n"}
                 {"  "}
-                <span className="text-[#79c0ff]">merchant</span>
+                <span className="text-gray-400">merchant</span>
                 <span className="text-white">:</span>{" "}
-                <span className="text-[#a5d6ff]">"stripe.com"</span>
+                <span className="text-green-300">"amazon.com"</span>
+                <span className="text-white">,</span>
+                {"\n"}
+                {"  "}
+                <span className="text-gray-400">category</span>
+                <span className="text-white">:</span>{" "}
+                <span className="text-green-300">"electronics"</span>
                 {"\n"}
                 <span className="text-white">{"})"}</span>
                 <span className="text-white">;</span>
                 {"\n\n"}
-                <span className="text-[#ff7b72]">if</span>{" "}
-                <span className="text-white">(</span>
-                <span className="text-[#d2a8ff]">auth</span>
-                <span className="text-white">.</span>
-                <span className="text-[#79c0ff]">approved</span>
-                <span className="text-white">)</span>{" "}
-                <span className="text-white">{"{"}</span>
-                {"\n"}
-                {"  "}
-                <span className="text-[#8b949e]">// Transaction authorized</span>
-                {"\n"}
-                <span className="text-white">{"}"}</span>
+                <span className="text-gray-500">// ✓ Approved in 23ms</span>
               </code>
             </pre>
 
-            {/* Subtle approved indicator */}
-            <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-[#30d158]/10 border border-[#30d158]/20">
-              <span className="text-[#30d158] text-xs font-medium">✓ Approved</span>
+            {/* Status indicator */}
+            <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
+              <span className="text-green-400 text-xs font-medium flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                Approved
+              </span>
             </div>
           </div>
         </motion.div>
