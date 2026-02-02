@@ -1,59 +1,49 @@
+import { Shield, Wallet, Zap, Lock, Eye, Globe } from "lucide-react";
 import { motion } from "motion/react";
-import { Shield, Zap, Lock, Eye, Wallet, Globe } from "lucide-react";
 
 const features = [
   {
     icon: Shield,
-    title: "Cryptographic Proof",
-    description: "Every transaction includes verifiable proof that a human authorized the purchase. Immutable audit trail for compliance.",
-    gradient: "from-purple-500 to-purple-600",
+    title: "Cryptographic Consent",
+    description: "Ed25519 signatures prove human authorization. Chargeback-proof transactions with immutable consent chains.",
   },
   {
     icon: Wallet,
     title: "Spending Controls",
-    description: "Set daily, weekly, and per-transaction limits. Control which merchants and categories your agents can access.",
-    gradient: "from-blue-500 to-blue-600",
+    description: "Set per-transaction, daily, weekly, and monthly limits. Agents can't exceed what you authorize.",
   },
   {
     icon: Zap,
-    title: "50ms Authorization",
-    description: "Real-time decisioning with sub-50ms latency. Your AI agents never wait. Built for production scale.",
-    gradient: "from-yellow-500 to-orange-500",
+    title: "Sub-50ms Latency",
+    description: "Authorization decisions in milliseconds. No perceptible delay for your AI agents or customers.",
   },
   {
     icon: Lock,
-    title: "Bank-Grade Security",
-    description: "Ed25519 signatures, X25519 key exchange. Zero-knowledge architecture. Your keys never leave your infrastructure.",
-    gradient: "from-green-500 to-emerald-500",
+    title: "Merchant Rules",
+    description: "Allowlist trusted merchants, block risky categories. Full control over where your agents can transact.",
   },
   {
     icon: Eye,
-    title: "Complete Visibility",
-    description: "Real-time dashboard showing all agent activity. See every transaction, approval, and denial as it happens.",
-    gradient: "from-pink-500 to-rose-500",
+    title: "Complete Audit Trail",
+    description: "Every authorization logged immutably. Export for compliance, debug issues, analyze patterns.",
   },
   {
     icon: Globe,
-    title: "Multi-Agent Support",
-    description: "Manage hundreds of AI agents from one dashboard. Each with their own policies, limits, and audit logs.",
-    gradient: "from-cyan-500 to-blue-500",
+    title: "Framework Agnostic",
+    description: "Works with LangChain, LlamaIndex, AutoGPT, or any custom agent. Simple REST API + SDKs.",
   },
 ];
 
 export function Features() {
   return (
-    <section className="relative py-24 lg:py-32 px-6 lg:px-12 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a2e] via-[#16213e] to-[#0f0f1a]" />
-      
-      {/* Decorative elements */}
-      <div className="absolute top-1/2 left-0 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl -translate-y-1/2" />
-      <div className="absolute top-1/2 right-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl -translate-y-1/2" />
+    <section id="features" className="relative px-6 lg:px-12 py-24 lg:py-32 overflow-hidden bg-[#050505]">
+      {/* Subtle gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-[#050505] to-black" />
 
       <div className="relative z-10 max-w-6xl mx-auto">
         {/* Section Header */}
         <motion.div
-          className="text-center max-w-3xl mx-auto mb-16 lg:mb-20"
+          className="text-center max-w-2xl mx-auto mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -65,13 +55,10 @@ export function Features() {
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
             Authorization Infrastructure
             <br />
-            <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-              Built for AI Commerce
-            </span>
+            <span className="text-gray-500">Built for AI Commerce</span>
           </h2>
-          <p className="text-lg text-gray-400 leading-relaxed">
-            The missing piece between your AI agents and real-world purchases.
-            Secure, fast, and auditable.
+          <p className="text-lg text-gray-500 leading-relaxed">
+            Everything you need to let AI agents transact safely on behalf of humans.
           </p>
         </motion.div>
 
@@ -80,35 +67,24 @@ export function Features() {
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
-              className="group relative p-8 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 hover:bg-white/[0.04] transition-all duration-500"
+              className="group p-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
+              viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              {/* Hover glow effect */}
-              <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`} />
-              
               {/* Icon */}
-              <div className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${feature.gradient} mb-6 shadow-lg`}>
-                <feature.icon className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-5 group-hover:bg-white/10 transition-colors">
+                <feature.icon className="w-6 h-6 text-gray-400" />
               </div>
 
               {/* Content */}
-              <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-white transition-colors">
+              <h3 className="text-lg font-semibold text-white mb-2">
                 {feature.title}
               </h3>
-              <p className="text-gray-400 leading-relaxed text-sm">
+              <p className="text-gray-500 text-sm leading-relaxed">
                 {feature.description}
               </p>
-
-              {/* Subtle arrow on hover */}
-              <div className="mt-6 flex items-center gap-2 text-sm text-gray-500 group-hover:text-purple-400 transition-colors">
-                <span>Learn more</span>
-                <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
             </motion.div>
           ))}
         </div>

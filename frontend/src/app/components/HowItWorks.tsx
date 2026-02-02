@@ -1,127 +1,117 @@
 import { motion } from "motion/react";
-import { Code, Settings, Zap, CheckCircle } from "lucide-react";
 
 const steps = [
   {
     number: "01",
-    icon: Code,
-    title: "Connect Your Agent",
-    description: "Integrate our SDK with your AI agent in minutes. Simple REST API or Python SDK.",
-    code: `import { AgentAuth } from 'agentauth';
-const auth = new AgentAuth(apiKey);`,
+    title: "Create Consent",
+    description: "User defines what their AI agent can purchase—limits, merchants, time windows.",
+    code: `const consent = await agentauth.createConsent({
+  agentId: "agent_shopping_123",
+  limits: { maxTransaction: 100, dailyLimit: 500 },
+  allowedMerchants: ["amazon.com", "bestbuy.com"]
+});`,
   },
   {
     number: "02",
-    icon: Settings,
-    title: "Set Spending Rules",
-    description: "Define budgets, merchant allowlists, and transaction limits through our dashboard.",
-    code: `auth.setLimits({
-  daily: 500,
-  perTransaction: 100
+    title: "Agent Requests Authorization",
+    description: "When the AI agent wants to make a purchase, it requests authorization.",
+    code: `const auth = await agentauth.authorize({
+  consentId: consent.id,
+  amount: 79.99,
+  merchant: "amazon.com",
+  description: "Wireless headphones"
 });`,
   },
   {
     number: "03",
-    icon: Zap,
-    title: "Agent Makes Purchase",
-    description: "Your agent requests authorization. We validate against your rules in real-time.",
-    code: `const result = await auth.authorize({
-  amount: 49.99,
-  merchant: "amazon.com"
-});`,
+    title: "Policy Evaluation",
+    description: "AgentAuth validates the request against all active policies in under 50ms.",
+    code: `// AgentAuth checks:
+// ✓ Valid consent exists
+// ✓ Amount within limits
+// ✓ Merchant allowed
+// ✓ Daily limit not exceeded
+// → Returns APPROVED or DENIED`,
   },
   {
     number: "04",
-    icon: CheckCircle,
-    title: "Transaction Complete",
-    description: "Payment is processed securely. You get instant webhooks and detailed audit logs.",
-    code: `// Webhook: transaction.completed
-{
-  "status": "approved",
-  "proofId": "prf_abc123"
+    title: "Cryptographic Proof",
+    description: "Approved transactions receive a signed proof that merchants can verify.",
+    code: `if (auth.approved) {
+  // Use auth.signature for payment
+  await processPayment({
+    amount: 79.99,
+    authCode: auth.authCode,
+    signature: auth.signature  // Ed25519 proof
+  });
 }`,
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section className="relative px-6 lg:px-12 py-24 lg:py-32 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0f0f1a] to-[#1a1a2e]" />
-      
-      {/* Decorative gradient */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-purple-600/10 to-transparent blur-3xl" />
-
-      <div className="relative z-10 max-w-6xl mx-auto">
+    <section id="how-it-works" className="relative px-6 lg:px-12 py-24 lg:py-32 overflow-hidden bg-black">
+      <div className="relative z-10 max-w-5xl mx-auto">
         {/* Section Header */}
         <motion.div
-          className="text-center max-w-3xl mx-auto mb-16 lg:mb-20"
+          className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
-            <span className="text-sm text-gray-400">Simple Integration</span>
+            <span className="text-sm text-gray-400">How It Works</span>
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Get Started in
-            <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent"> Minutes</span>
+            Four Steps to Secure
+            <br />
+            <span className="text-gray-500">AI Agent Commerce</span>
           </h2>
-          <p className="text-lg text-gray-400 leading-relaxed">
-            Four simple steps to empower your AI agents with secure payment authorization.
-          </p>
         </motion.div>
 
         {/* Steps */}
-        <div className="space-y-6">
+        <div className="space-y-12">
           {steps.map((step, index) => (
             <motion.div
               key={step.number}
-              className="relative"
-              initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
+              className="grid lg:grid-cols-2 gap-8 items-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
             >
-              <div className={`flex flex-col lg:flex-row items-start gap-8 p-8 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-colors ${
-                index % 2 === 1 ? 'lg:flex-row-reverse' : ''
-              }`}>
-                {/* Content */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10 flex items-center justify-center">
-                      <step.icon className="w-5 h-5 text-purple-400" />
-                    </div>
-                    <div>
-                      <span className="text-purple-400 text-sm font-mono">{step.number}</span>
-                      <h3 className="text-xl font-semibold text-white">{step.title}</h3>
-                    </div>
-                  </div>
-                  <p className="text-gray-400 leading-relaxed mb-4">
-                    {step.description}
-                  </p>
+              {/* Content - alternating sides */}
+              <div className={index % 2 === 1 ? "lg:order-2" : ""}>
+                <div className="flex items-center gap-4 mb-4">
+                  <span className="text-4xl font-bold text-white/10 font-mono">
+                    {step.number}
+                  </span>
+                  <h3 className="text-xl font-semibold text-white">
+                    {step.title}
+                  </h3>
                 </div>
-
-                {/* Code Block */}
-                <div className="flex-1 w-full">
-                  <div className="rounded-xl bg-[#0a0a0f] border border-white/5 p-4 font-mono text-sm overflow-x-auto">
-                    <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
-                    </div>
-                    <pre className="text-gray-400">
-                      <code>{step.code}</code>
-                    </pre>
-                  </div>
-                </div>
+                <p className="text-gray-500 leading-relaxed">
+                  {step.description}
+                </p>
               </div>
 
-              {/* Connector line */}
-              {index < steps.length - 1 && (
-                <div className="hidden lg:block absolute left-1/2 -bottom-3 w-px h-6 bg-gradient-to-b from-purple-500/50 to-transparent" />
-              )}
+              {/* Code Block */}
+              <div className={index % 2 === 1 ? "lg:order-1" : ""}>
+                <div className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+                  <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-white/10" />
+                      <div className="w-3 h-3 rounded-full bg-white/10" />
+                      <div className="w-3 h-3 rounded-full bg-white/10" />
+                    </div>
+                    <span className="text-xs text-gray-600 font-mono ml-2">step-{step.number}.ts</span>
+                  </div>
+                  <pre className="p-4 text-sm text-gray-400 font-mono overflow-x-auto">
+                    <code>{step.code}</code>
+                  </pre>
+                </div>
+              </div>
             </motion.div>
           ))}
         </div>

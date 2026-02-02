@@ -54,14 +54,14 @@ export function Hero() {
           loop
           muted
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover grayscale"
         >
           <source src="/240967.mp4" type="video/mp4" />
         </video>
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-black/70" />
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-[#0f0f1a]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black" />
       </div>
 
       {/* Navigation */}
@@ -72,8 +72,8 @@ export function Hero() {
         transition={{ duration: 0.6 }}
       >
         <a href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-lg shadow-purple-500/25">
-            <span className="text-white font-bold text-lg">A</span>
+          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center">
+            <span className="text-black font-bold text-lg">A</span>
           </div>
           <span className="text-white font-semibold text-xl tracking-tight">
             AgentAuth
@@ -86,7 +86,7 @@ export function Hero() {
             <a
               key={link.href}
               href={link.href}
-              className="text-gray-300 hover:text-white transition-colors duration-300 text-sm font-medium"
+              className="text-gray-400 hover:text-white transition-colors duration-300 text-sm font-medium"
             >
               {link.label}
             </a>
@@ -96,7 +96,7 @@ export function Hero() {
         {/* CTA Button */}
         <a
           href="#waitlist"
-          className="hidden md:flex px-6 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full text-sm font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
+          className="hidden md:flex px-6 py-2.5 bg-white text-black rounded-full text-sm font-medium hover:bg-gray-200 transition-all duration-300"
         >
           Join Waitlist
         </a>
@@ -104,7 +104,7 @@ export function Hero() {
         {/* Mobile CTA */}
         <a
           href="#waitlist"
-          className="md:hidden px-5 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full text-sm font-medium"
+          className="md:hidden px-5 py-2 bg-white text-black rounded-full text-sm font-medium"
         >
           Join
         </a>
@@ -116,13 +116,13 @@ export function Hero() {
           
           {/* Badge */}
           <motion.div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-sm text-gray-200">Now in Private Beta</span>
+            <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            <span className="text-sm text-gray-300">Now in Private Beta</span>
           </motion.div>
 
           {/* Headline */}
@@ -134,14 +134,14 @@ export function Hero() {
           >
             <span className="text-white">Let AI Agents</span>
             <br />
-            <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+            <span className="text-gray-400">
               Buy For You
             </span>
           </motion.h1>
 
           {/* Subheadline */}
           <motion.p
-            className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed"
+            className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
@@ -165,14 +165,14 @@ export function Hero() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="flex-1 px-5 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder:text-gray-400 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-400/20 transition-all text-base"
+                className="flex-1 px-5 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all text-base"
                 required
                 autoComplete="email"
               />
               <button
                 type="submit"
                 disabled={isLoading}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl transition-all duration-300 inline-flex items-center justify-center gap-2 font-semibold text-base shadow-lg shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                className="px-8 py-4 bg-white hover:bg-gray-100 text-black rounded-xl transition-all duration-300 inline-flex items-center justify-center gap-2 font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 {isSubmitted ? (
                   <>
@@ -203,12 +203,12 @@ export function Hero() {
           {/* Watch Demo Link */}
           <motion.a
             href="#demo"
-            className="inline-flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-10"
+            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
-            <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center">
               <Play className="w-4 h-4 text-white ml-0.5" />
             </div>
             <span className="text-sm font-medium">Watch Demo</span>
@@ -216,21 +216,21 @@ export function Hero() {
 
           {/* Trust indicators */}
           <motion.div
-            className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-400"
+            className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.8 }}
           >
             <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-green-400" />
+              <Shield className="w-4 h-4 text-gray-400" />
               <span>SOC2 Compliant</span>
             </div>
             <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-purple-400" />
+              <Lock className="w-4 h-4 text-gray-400" />
               <span>Bank-grade encryption</span>
             </div>
             <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-yellow-400" />
+              <Zap className="w-4 h-4 text-gray-400" />
               <span>&lt;50ms latency</span>
             </div>
           </motion.div>

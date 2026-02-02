@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, HelpCircle } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 const faqs = [
@@ -56,7 +56,7 @@ interface FAQItemProps {
 function FAQItem({ question, answer, isOpen, onClick, index }: FAQItemProps) {
   return (
     <motion.div
-      className={`border-b border-white/[0.05] last:border-none ${
+      className={`border-b border-white/5 last:border-none ${
         isOpen ? "bg-white/[0.02]" : ""
       }`}
       initial={{ opacity: 0, y: 20 }}
@@ -73,7 +73,7 @@ function FAQItem({ question, answer, isOpen, onClick, index }: FAQItemProps) {
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+          <ChevronDown className="w-5 h-5 text-gray-600 flex-shrink-0" />
         </motion.div>
       </button>
 
@@ -86,7 +86,7 @@ function FAQItem({ question, answer, isOpen, onClick, index }: FAQItemProps) {
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <p className="px-6 pb-6 text-gray-400 leading-relaxed">
+            <p className="px-6 pb-6 text-gray-500 leading-relaxed">
               {answer}
             </p>
           </motion.div>
@@ -104,13 +104,7 @@ export function FAQ() {
   };
 
   return (
-    <section id="faq" className="relative px-6 lg:px-12 py-24 lg:py-32 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-[#0f0f1a]" />
-      
-      {/* Decorative gradient */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-t from-purple-600/10 to-transparent blur-3xl" />
-
+    <section id="faq" className="relative px-6 lg:px-12 py-24 lg:py-32 overflow-hidden bg-[#050505]">
       <div className="relative z-10 max-w-3xl mx-auto">
         {/* Section Header */}
         <motion.div
@@ -121,21 +115,19 @@ export function FAQ() {
           transition={{ duration: 0.6 }}
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
-            <HelpCircle className="w-4 h-4 text-purple-400" />
             <span className="text-sm text-gray-400">FAQ</span>
           </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Got
-            <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent"> Questions?</span>
+            Got Questions?
           </h2>
-          <p className="text-lg text-gray-400 leading-relaxed">
+          <p className="text-lg text-gray-500 leading-relaxed">
             Everything you need to know about securing your AI agents.
           </p>
         </motion.div>
 
         {/* FAQ List */}
         <motion.div
-          className="rounded-2xl border border-white/[0.05] bg-white/[0.01] overflow-hidden"
+          className="rounded-2xl border border-white/5 bg-white/[0.01] overflow-hidden"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -161,7 +153,7 @@ export function FAQ() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <p className="text-gray-400 mb-4">
+          <p className="text-gray-500 mb-4">
             Still have questions?
           </p>
           <a

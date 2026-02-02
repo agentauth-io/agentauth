@@ -10,7 +10,7 @@ import { Docs } from "./components/Docs";
 // Simple Home page - Clean landing
 function HomePage() {
   return (
-    <div className="min-h-screen bg-[#0f0f1a]">
+    <div className="min-h-screen bg-black">
       <Hero />
       <Demo />
       <Features />
@@ -36,14 +36,14 @@ function DocsPage() {
 // Simple Footer
 function Footer() {
   return (
-    <footer className="relative bg-[#0a0a0f] border-t border-white/5 py-16 px-6">
+    <footer className="relative bg-black border-t border-white/5 py-16 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-12">
           {/* Logo & Description */}
           <div className="max-w-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">A</span>
+              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center">
+                <span className="text-black font-bold text-lg">A</span>
               </div>
               <span className="text-white font-semibold text-xl">AgentAuth</span>
             </div>
