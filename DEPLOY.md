@@ -87,19 +87,42 @@ Deploy to:
 
 ## Database Setup
 
-### Neon (Recommended - Free tier)
+### Neon (Recommended - Free tier with generous limits)
 
-1. Go to [neon.tech](https://neon.tech)
-2. Create a new project
-3. Copy the connection string
-4. Set as `DATABASE_URL` in your deployment
+1. **Create account**: Go to [neon.tech](https://neon.tech) and sign up
+2. **Create project**: Click "New Project" → Name it `agentauth`
+3. **Get connection string**: Copy the connection string from the dashboard
+4. **Convert for asyncpg**: Change the format:
+   ```
+   # From Neon (psycopg2 format):
+   postgresql://user:password@ep-xxx.region.aws.neon.tech/agentauth
+   
+   # To asyncpg format (add +asyncpg):
+   postgresql+asyncpg://user:password@ep-xxx.region.aws.neon.tech/agentauth?sslmode=require
+   ```
+5. **Set in Koyeb**: Add as `DATABASE_URL` environment variable
 
-### Supabase
+**Free tier includes:**
+- 0.5 GB storage
+- 3 GB data transfer/month
+- Autoscaling compute
+- Branching for dev/staging
+
+### Supabase (Alternative)
 
 1. Go to [supabase.com](https://supabase.com)
 2. Create a new project
 3. Go to Settings → Database → Connection string
-4. Use the "URI" format
+4. Use the "URI" format with `?sslmode=require`
+
+### Run Migrations
+
+After setting up the database:
+
+```bash
+# Run locally to apply migrations to production DB
+DATABASE_URL="your-production-url" alembic upgrade head
+```
 
 ---
 
