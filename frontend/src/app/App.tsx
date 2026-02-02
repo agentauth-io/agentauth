@@ -1,23 +1,19 @@
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { Hero } from "./components/Hero";
-import { Stats } from "./components/Stats";
+import { Demo } from "./components/Demo";
 import { Features } from "./components/Features";
-import { TrustLogos } from "./components/TrustLogos";
 import { HowItWorks } from "./components/HowItWorks";
-import { Pricing } from "./components/Pricing";
 import { FAQ } from "./components/FAQ";
 import { Contact } from "./components/Contact";
 
-// Simple Home page - Landing only
+// Simple Home page - Clean landing
 function HomePage() {
   return (
     <div className="min-h-screen bg-[#0f0f1a]">
       <Hero />
-      <TrustLogos />
-      <Stats />
+      <Demo />
       <Features />
       <HowItWorks />
-      <Pricing />
       <FAQ />
       <Footer />
     </div>
@@ -28,32 +24,6 @@ function HomePage() {
 function ContactPage() {
   const navigate = useNavigate();
   return <Contact onBack={() => navigate("/")} />;
-}
-
-// Demo redirect - goes to live API docs
-function DemoPage() {
-  window.location.href = "https://characteristic-inessa-agentauth-0a540dd6.koyeb.app/docs";
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="text-center">
-        <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-400">Redirecting to API Demo...</p>
-      </div>
-    </div>
-  );
-}
-
-// Docs redirect - goes to documentation
-function DocsPage() {
-  window.location.href = "https://characteristic-inessa-agentauth-0a540dd6.koyeb.app/docs";
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="text-center">
-        <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-400">Redirecting to Docs...</p>
-      </div>
-    </div>
-  );
 }
 
 // Simple Footer
@@ -80,9 +50,9 @@ function Footer() {
             <div>
               <h4 className="text-white font-medium mb-4 text-sm">Product</h4>
               <div className="flex flex-col gap-3">
-                <a href="/docs" className="text-gray-500 hover:text-white transition-colors text-sm">Documentation</a>
-                <a href="/demo" className="text-gray-500 hover:text-white transition-colors text-sm">Live Demo</a>
-                <a href="#pricing" className="text-gray-500 hover:text-white transition-colors text-sm">Pricing</a>
+                <a href="#demo" className="text-gray-500 hover:text-white transition-colors text-sm">Demo</a>
+                <a href="#features" className="text-gray-500 hover:text-white transition-colors text-sm">Features</a>
+                <a href="#how-it-works" className="text-gray-500 hover:text-white transition-colors text-sm">How it Works</a>
               </div>
             </div>
             <div>
@@ -116,8 +86,6 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/demo" element={<DemoPage />} />
-        <Route path="/docs" element={<DocsPage />} />
         <Route path="/contact" element={<ContactPage />} />
         {/* All other routes go to home */}
         <Route path="*" element={<HomePage />} />
