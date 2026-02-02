@@ -47,7 +47,22 @@ export function Hero() {
   ];
 
   return (
-    <section className="relative min-h-screen flex flex-col">
+    <section className="relative min-h-screen flex flex-col overflow-hidden">
+      {/* Video Background */}
+      <div className="absolute inset-0 z-0">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-30"
+        >
+          <source src="/240967.mp4" type="video/mp4" />
+        </video>
+        {/* Gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+      </div>
+
       {/* Navigation - Minimal Apple Style */}
       <motion.nav
         className="relative z-10 flex items-center justify-between px-6 lg:px-12 py-5"
