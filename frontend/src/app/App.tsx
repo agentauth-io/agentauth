@@ -5,6 +5,7 @@ import { Features } from "./components/Features";
 import { HowItWorks } from "./components/HowItWorks";
 import { FAQ } from "./components/FAQ";
 import { Contact } from "./components/Contact";
+import { Docs } from "./components/Docs";
 
 // Simple Home page - Clean landing
 function HomePage() {
@@ -24,6 +25,12 @@ function HomePage() {
 function ContactPage() {
   const navigate = useNavigate();
   return <Contact onBack={() => navigate("/")} />;
+}
+
+// Docs page
+function DocsPage() {
+  const navigate = useNavigate();
+  return <Docs onBack={() => navigate("/")} />;
 }
 
 // Simple Footer
@@ -52,7 +59,7 @@ function Footer() {
               <div className="flex flex-col gap-3">
                 <a href="#demo" className="text-gray-500 hover:text-white transition-colors text-sm">Demo</a>
                 <a href="#features" className="text-gray-500 hover:text-white transition-colors text-sm">Features</a>
-                <a href="#how-it-works" className="text-gray-500 hover:text-white transition-colors text-sm">How it Works</a>
+                <a href="/docs" className="text-gray-500 hover:text-white transition-colors text-sm">Docs</a>
               </div>
             </div>
             <div>
@@ -86,6 +93,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/docs" element={<DocsPage />} />
         <Route path="/contact" element={<ContactPage />} />
         {/* All other routes go to home */}
         <Route path="*" element={<HomePage />} />
