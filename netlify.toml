@@ -1,10 +1,25 @@
 # Netlify configuration - simple static site deploy
 [build]
+  # No base directory - deploy from root
+  base = ""
+  # Publish the public folder
   publish = "public"
-  command = "echo 'Deploying pre-built static files'"
+  # No build needed - files are pre-built
+  command = "echo 'Deploying static landing page' && ls -la public/"
+
+# Ignore build if no changes to public folder (optional)
+[build.processing]
+  skip_processing = false
 
 # Handle SPA routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
