@@ -1,15 +1,18 @@
-# Netlify configuration - simple static site deploy
+# Netlify configuration - deploy frontend with video hero
 [build]
-  # No base directory - deploy from root
-  base = ""
-  # Publish the public folder
-  publish = "public"
-  # No build needed - files are pre-built
-  command = "echo 'Deploying static landing page' && ls -la public/"
+  # Build from frontend folder
+  base = "frontend"
+  # Publish the dist folder (built output)
+  publish = "dist"
+  # Build command
+  command = "npm install && npx vite build"
 
-# Ignore build if no changes to public folder (optional)
-[build.processing]
-  skip_processing = false
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
 
 # Handle SPA routing
 [[redirects]]
