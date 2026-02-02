@@ -55,14 +55,13 @@ export function Hero() {
           muted
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
-          poster="/hero-poster.jpg"
         >
-          <source src="/hero-video.mp4" type="video/mp4" />
+          <source src="/240967.mp4" type="video/mp4" />
         </video>
         {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/70" />
+        <div className="absolute inset-0 bg-black/60" />
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-[#0f0f1a]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-[#0f0f1a]" />
       </div>
 
       {/* Navigation */}
