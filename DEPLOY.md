@@ -163,13 +163,82 @@ curl https://api.agentauth.in/docs  # OpenAPI docs
 
 ## Environment Variables Reference
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `SECRET_KEY` | Yes | JWT signing key (generate with `openssl rand -hex 32`) |
-| `DEBUG` | No | Set to `false` in production |
-| `CORS_ORIGINS` | No | Comma-separated allowed origins |
-| `PORT` | No | Server port (usually auto-set) |
+### Required Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql+asyncpg://user:pass@host:5432/agentauth` |
+| `SECRET_KEY` | JWT signing key (32+ chars) | Generate: `openssl rand -hex 32` |
+
+### Optional Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DEBUG` | `false` | Enable debug mode |
+| `ENVIRONMENT` | `development` | `development`, `staging`, or `production` |
+| `REDIS_URL` | `redis://localhost:6379` | Redis connection for caching/rate limiting |
+| `ALLOWED_ORIGINS` | `http://localhost:3000,...` | Comma-separated CORS origins |
+| `LOG_LEVEL` | `INFO` | Logging level |
+| `LOG_JSON` | `false` | JSON format logs for production |
+
+### Stripe Integration (for billing)
+
+| Variable | Description |
+|----------|-------------|
+| `STRIPE_SECRET_KEY` | Stripe API secret key (`sk_live_xxx` or `sk_test_xxx`) |
+| `STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (`pk_live_xxx` or `pk_test_xxx`) |
+| `STRIPE_WEBHOOK_SECRET` | Webhook signing secret (`whsec_xxx`) |
+| `STRIPE_PRICE_PRO` | Stripe Price ID for Pro plan |
+| `STRIPE_PRICE_ENTERPRISE` | Stripe Price ID for Enterprise plan |
+
+### Admin Panel
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ADMIN_PASSWORD` | Auto-generated | Admin dashboard password |
+| `ADMIN_JWT_SECRET` | Auto-generated | Admin JWT signing key |
+| `ADMIN_TOKEN_EXPIRY` | `3600` | Admin token expiry in seconds |
+
+### Rate Limiting
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RATE_LIMIT_REQUESTS_PER_SECOND` | `100` | Max requests per second |
+| `RATE_LIMIT_BURST` | `200` | Burst allowance |
+
+### Monitoring (Optional)
+
+| Variable | Description |
+|----------|-------------|
+| `SENTRY_DSN` | Sentry error tracking DSN |
+
+---
+
+## Koyeb Environment Setup
+
+To configure environment variables on Koyeb:
+
+1. Go to [app.koyeb.com](https://app.koyeb.com)
+2. Select your AgentAuth service
+3. Click **Settings** → **Environment variables**
+4. Add the following (at minimum):
+
+```bash
+# Required
+DATABASE_URL=postgresql+asyncpg://user:password@host:5432/agentauth
+SECRET_KEY=<run: openssl rand -hex 32>
+
+# Production settings
+ENVIRONMENT=production
+DEBUG=false
+LOG_JSON=true
+
+# Optional: Stripe for billing
+STRIPE_SECRET_KEY=sk_live_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
+```
+
+5. Click **Apply** to redeploy with new settings
 
 ---
 
