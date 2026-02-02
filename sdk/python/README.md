@@ -33,6 +33,7 @@ consent = client.consents.create(
 )
 print(f"Token: {consent.delegation_token}")
 
+
 # 2. Authorize a transaction (agent requests approval)
 auth = client.authorize(
     token=consent.delegation_token,
@@ -91,6 +92,50 @@ tool = AgentAuthTool(api_key="aa_live_xxx")
 from langchain.agents import initialize_agent
 agent = initialize_agent(tools=[tool], llm=llm)
 ```
+
+## Billing API
+
+Manage subscriptions and usage programmatically:
+
+```python
+from agentauth import AgentAuth
+
+client = AgentAuth(api_key="aa_live_xxx")
+
+# Get available billing plans
+plans = client.get_billing_plans()
+for plan in plans:
+    print(f"{plan['name']}: ${plan['price_monthly']}/mo - {plan['requests_per_month']} requests")
+
+# Check your organization's current usage
+usage = client.get_billing_usage()
+print(f"Plan: {usage['plan']}")
+print(f"Used: {usage['current_usage']} / {usage['limit']} requests")
+print(f"Remaining: {usage['remaining']}")
+
+# Create a checkout session to upgrade
+checkout = client.create_checkout_session(
+    plan="growth",
+    success_url="https://yourapp.com/billing/success",
+    cancel_url="https://yourapp.com/billing/cancel"
+)
+print(f"Redirect user to: {checkout['checkout_url']}")
+
+# Get billing portal for managing subscription
+portal = client.get_billing_portal_url(
+    return_url="https://yourapp.com/dashboard"
+)
+print(f"Portal URL: {portal['portal_url']}")
+```
+
+### Available Plans
+
+| Plan | Price | Requests/month |
+|------|-------|----------------|
+| Free | $0 | 1,000 |
+| Startup | $99 | 50,000 |
+| Growth | $499 | 500,000 |
+| Enterprise | Custom | Unlimited |
 
 ## License
 

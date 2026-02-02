@@ -318,6 +318,68 @@ class AgentAuth:
         
         return verification
     
+    # ==========================================================================
+    # Billing API Methods
+    # ==========================================================================
+    
+    def get_billing_plans(self) -> List[Dict[str, Any]]:
+        """
+        Get available billing plans.
+        
+        Returns:
+            List of available billing plans with pricing and limits
+        """
+        return self._request("GET", "/v1/billing/plans")
+    
+    def get_billing_usage(self) -> Dict[str, Any]:
+        """
+        Get current billing usage for authenticated organization.
+        
+        Returns:
+            Current usage statistics including request counts and limits
+        """
+        return self._request("GET", "/v1/billing/usage")
+    
+    def create_checkout_session(
+        self,
+        plan: str,
+        success_url: str,
+        cancel_url: str
+    ) -> Dict[str, Any]:
+        """
+        Create a Stripe checkout session for upgrading to a paid plan.
+        
+        Args:
+            plan: Plan ID to upgrade to ('startup', 'growth', 'enterprise')
+            success_url: URL to redirect to after successful payment
+            cancel_url: URL to redirect to if checkout is cancelled
+            
+        Returns:
+            Dict with 'checkout_url' for redirecting user to Stripe
+        """
+        data = {
+            "plan": plan,
+            "success_url": success_url,
+            "cancel_url": cancel_url
+        }
+        return self._request("POST", "/v1/billing/checkout", json=data)
+    
+    def get_billing_portal_url(self, return_url: str) -> Dict[str, Any]:
+        """
+        Get a URL to the Stripe customer billing portal.
+        
+        Args:
+            return_url: URL to return to after visiting the portal
+            
+        Returns:
+            Dict with 'portal_url' for redirecting user to billing portal
+        """
+        return self._request(
+            "POST", 
+            "/v1/billing/portal",
+            json={"return_url": return_url}
+        )
+    
     def close(self):
         """Close the HTTP client."""
         self._http.close()
@@ -530,6 +592,68 @@ class AsyncAgentAuth:
             raise VerificationFailed(verification.error or "Unknown error")
         
         return verification
+    
+    # ==========================================================================
+    # Billing API Methods
+    # ==========================================================================
+    
+    async def get_billing_plans(self) -> List[Dict[str, Any]]:
+        """
+        Get available billing plans.
+        
+        Returns:
+            List of available billing plans with pricing and limits
+        """
+        return await self._request("GET", "/v1/billing/plans")
+    
+    async def get_billing_usage(self) -> Dict[str, Any]:
+        """
+        Get current billing usage for authenticated organization.
+        
+        Returns:
+            Current usage statistics including request counts and limits
+        """
+        return await self._request("GET", "/v1/billing/usage")
+    
+    async def create_checkout_session(
+        self,
+        plan: str,
+        success_url: str,
+        cancel_url: str
+    ) -> Dict[str, Any]:
+        """
+        Create a Stripe checkout session for upgrading to a paid plan.
+        
+        Args:
+            plan: Plan ID to upgrade to ('startup', 'growth', 'enterprise')
+            success_url: URL to redirect to after successful payment
+            cancel_url: URL to redirect to if checkout is cancelled
+            
+        Returns:
+            Dict with 'checkout_url' for redirecting user to Stripe
+        """
+        data = {
+            "plan": plan,
+            "success_url": success_url,
+            "cancel_url": cancel_url
+        }
+        return await self._request("POST", "/v1/billing/checkout", json=data)
+    
+    async def get_billing_portal_url(self, return_url: str) -> Dict[str, Any]:
+        """
+        Get a URL to the Stripe customer billing portal.
+        
+        Args:
+            return_url: URL to return to after visiting the portal
+            
+        Returns:
+            Dict with 'portal_url' for redirecting user to billing portal
+        """
+        return await self._request(
+            "POST", 
+            "/v1/billing/portal",
+            json={"return_url": return_url}
+        )
     
     async def close(self):
         """Close the async HTTP client."""

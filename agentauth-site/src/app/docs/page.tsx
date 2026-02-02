@@ -26,6 +26,16 @@ const sections = [
     subsections: ['Agents', 'Policies', 'Transactions', 'Audit Logs'],
   },
   {
+    id: 'billing',
+    title: 'Billing & Pricing',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
+    subsections: ['Plans', 'Usage Tracking', 'Upgrading', 'API'],
+  },
+  {
     id: 'api-reference',
     title: 'API Reference',
     icon: (
@@ -139,6 +149,39 @@ Authorization: Bearer <api_key>
   ],
   "timestamp": "2026-01-29T10:30:00Z"
 }`,
+
+  billingPlans: `# Get available billing plans
+plans = client.get_billing_plans()
+
+for plan in plans:
+    print(f"{plan['name']}: \${plan['price_monthly']}/mo")
+    print(f"  Requests: {plan['requests_per_month']:,}")`,
+
+  billingUsage: `# Check your organization's current usage
+usage = client.get_billing_usage()
+
+print(f"Plan: {usage['plan']}")
+print(f"Used: {usage['current_usage']:,} / {usage['limit']:,}")
+print(f"Remaining: {usage['remaining']:,} requests")
+print(f"Billing period ends: {usage['period_end']}")`,
+
+  billingUpgrade: `# Create checkout session to upgrade
+checkout = client.create_checkout_session(
+    plan="growth",
+    success_url="https://yourapp.com/billing/success",
+    cancel_url="https://yourapp.com/billing/cancel"
+)
+
+# Redirect user to Stripe checkout
+print(f"Redirect to: {checkout['checkout_url']}")`,
+
+  billingPortal: `# Get billing portal URL for subscription management
+portal = client.get_billing_portal_url(
+    return_url="https://yourapp.com/dashboard"
+)
+
+# User can update payment method, cancel, etc.
+print(f"Portal: {portal['portal_url']}")`,
 };
 
 export default function DocsPage() {
@@ -377,6 +420,66 @@ export default function DocsPage() {
                       <CodeBlock code={codeExamples.apiResponse} language="json" id="api-res" />
                     </div>
                   </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Billing & Pricing */}
+            <section id="billing" className="mb-16">
+              <h1 className="text-4xl font-bold mb-4">Billing & Pricing</h1>
+              <p className="text-lg text-zinc-400 mb-8">
+                Simple, predictable pricing based on API requests. Start free and scale as you grow.
+              </p>
+
+              <div className="space-y-8">
+                <div id="plans" className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
+                  <h2 className="text-2xl font-semibold mb-4">Plans</h2>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    {[
+                      { name: 'Free', price: '$0', requests: '1,000/mo', features: ['API Access', 'Basic Support'] },
+                      { name: 'Startup', price: '$99', requests: '50,000/mo', features: ['Priority Support', 'Webhooks'] },
+                      { name: 'Growth', price: '$499', requests: '500,000/mo', features: ['Dedicated Support', 'SLA 99.9%'] },
+                      { name: 'Enterprise', price: 'Custom', requests: 'Unlimited', features: ['Custom SLA', 'On-premise'] },
+                    ].map((plan) => (
+                      <div key={plan.name} className="bg-black/50 rounded-lg p-4 border border-zinc-800">
+                        <h3 className="text-lg font-semibold text-white">{plan.name}</h3>
+                        <p className="text-2xl font-bold text-emerald-400 mt-2">{plan.price}</p>
+                        <p className="text-xs text-zinc-500">{plan.requests}</p>
+                        <ul className="mt-3 space-y-1">
+                          {plan.features.map((f) => (
+                            <li key={f} className="text-xs text-zinc-400 flex items-center gap-1">
+                              <span className="text-emerald-400">✓</span> {f}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                  <CodeBlock code={codeExamples.billingPlans} language="python" id="billing-plans" />
+                </div>
+
+                <div id="usage-tracking">
+                  <h2 className="text-2xl font-semibold mb-4">Usage Tracking</h2>
+                  <p className="text-zinc-400 mb-4">
+                    Monitor your API usage in real-time. Get notified when approaching limits.
+                  </p>
+                  <CodeBlock code={codeExamples.billingUsage} language="python" id="billing-usage" />
+                </div>
+
+                <div id="upgrading">
+                  <h2 className="text-2xl font-semibold mb-4">Upgrading Your Plan</h2>
+                  <p className="text-zinc-400 mb-4">
+                    Upgrade instantly via Stripe checkout. Changes take effect immediately.
+                  </p>
+                  <CodeBlock code={codeExamples.billingUpgrade} language="python" id="billing-upgrade" />
+                </div>
+
+                <div id="api">
+                  <h2 className="text-2xl font-semibold mb-4">Billing Portal</h2>
+                  <p className="text-zinc-400 mb-4">
+                    Give users access to manage their subscription, update payment methods, and view invoices.
+                  </p>
+                  <CodeBlock code={codeExamples.billingPortal} language="python" id="billing-portal" />
                 </div>
               </div>
             </section>
