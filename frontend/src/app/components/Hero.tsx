@@ -41,7 +41,6 @@ export function Hero() {
   const navLinks = [
     { href: "/docs", label: "Docs" },
     { href: "/demo", label: "Demo" },
-    { href: "/live", label: "Live Dashboard" },
     { href: "#pricing", label: "Pricing" },
     { href: "/contact", label: "Contact" },
   ];
@@ -92,28 +91,22 @@ export function Hero() {
           ))}
         </div>
 
-        {/* Auth Buttons */}
+        {/* CTA Button */}
         <div className="hidden md:flex items-center gap-6">
           <a
-            href="/nucleus"
-            className="text-[#86868b] hover:text-white transition-colors duration-300 text-sm font-medium"
-          >
-            Sign In
-          </a>
-          <a
-            href="/portal"
+            href="#waitlist"
             className="px-5 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-[#f5f5f7] transition-colors duration-300"
           >
-            Get Started
+            Join Waitlist
           </a>
         </div>
 
         {/* Mobile Menu Toggle - simplified */}
         <a
-          href="/portal"
+          href="#waitlist"
           className="md:hidden px-4 py-2 bg-white text-black rounded-full text-sm font-medium"
         >
-          Get Started
+          Join Waitlist
         </a>
       </motion.nav>
 

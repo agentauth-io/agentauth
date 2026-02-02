@@ -58,14 +58,17 @@ interface PricingProps {
   onSelectPlan?: (planId: string) => void;
 }
 
-export function Pricing({ onSelectPlan }: PricingProps) {
+export function Pricing({ onSelectPlan: _onSelectPlan }: PricingProps) {
   const handleSelectPlan = (planId: string) => {
     if (planId === "enterprise") {
       window.location.href = "mailto:hello@agentauth.in?subject=Enterprise%20Inquiry";
       return;
     }
-    if (onSelectPlan) {
-      onSelectPlan(planId);
+    // Scroll to waitlist form
+    const heroSection = document.querySelector('input[type="email"]');
+    if (heroSection) {
+      heroSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      (heroSection as HTMLInputElement).focus();
     }
   };
 
