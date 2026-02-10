@@ -18,8 +18,9 @@ interface WaitlistRequest {
 
 // Send "Thank you for joining" email (NOT beta access yet)
 const sendWaitlistConfirmationEmail = async (email: string, position?: number): Promise<boolean> => {
+  console.log(`Attempting to send waitlist email to ${email}...`);
   if (!RESEND_API_KEY) {
-    console.log("RESEND_API_KEY not set, skipping email send");
+    console.error("CRITICAL: RESEND_API_KEY environment variable is not set! Email cannot be sent.");
     return false;
   }
 

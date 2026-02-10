@@ -32,11 +32,10 @@ export function Hero() {
           <small>API</small>
         </a>
         <div className="seq-nav-r">
-          <a href="#api">API</a>
-          <a href="#features">Features</a>
+          <a href="/docs">Docs</a>
           <a href="/demo">Demo</a>
-          <a href="/docs" className="seq-nav-cta">
-            GET API KEY →
+          <a href="#waitlist" className="seq-nav-cta">
+            Join Waitlist →
           </a>
         </div>
       </nav>
@@ -52,8 +51,8 @@ export function Hero() {
           tokens that make chargebacks mathematically impossible.
         </p>
         <div className="seq-hero-actions">
-          <a className="seq-btn seq-btn-g" href="/docs">
-            Get API Key
+          <a className="seq-btn seq-btn-g" href="#waitlist">
+            Join Waitlist
           </a>
           <a className="seq-btn seq-btn-o" href="#sequence">
             See How It Works ↓
