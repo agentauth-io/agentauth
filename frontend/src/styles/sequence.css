@@ -914,13 +914,91 @@
         grid-template-columns: 1fr;
     }
 
-    .seq-nav-r a:not(.seq-nav-cta) {
-        display: none;
+    /* Hide desktop nav */
+    .seq-nav-r {
+        display: none !important;
     }
 
     .seq-nav {
         padding: 12px 16px;
     }
+
+    /* Mobile Toggle */
+    .seq-mobile-toggle {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        z-index: 100;
+        padding: 4px;
+    }
+
+    .ham-line {
+        width: 20px;
+        height: 2px;
+        background: var(--seq-fg);
+        transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .ham-line.open:first-child {
+        transform: translateY(7px) rotate(45deg);
+    }
+
+    .ham-line.open:last-child {
+        transform: translateY(-7px) rotate(-45deg);
+    }
+
+    /* Mobile Menu Overlay */
+    .seq-mobile-menu {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: rgba(8, 8, 10, 0.95);
+        backdrop-filter: blur(12px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 32px;
+        z-index: 90;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-20px);
+        transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .seq-mobile-menu.open {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
+    .seq-mobile-menu a {
+        font-family: var(--seq-font-display);
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--seq-fg);
+        text-decoration: none;
+    }
+
+    .seq-mobile-menu .seq-nav-cta {
+        font-size: 16px;
+        padding: 12px 24px;
+        background: var(--seq-accent);
+        color: var(--seq-bg);
+        border-radius: 8px;
+        margin-top: 16px;
+    }
+}
+
+/* Hide toggle on desktop */
+.seq-mobile-toggle,
+.seq-mobile-menu {
+    display: none;
 }
 
 

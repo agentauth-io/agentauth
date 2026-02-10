@@ -2,6 +2,7 @@ import { useState } from "react";
 
 export function Hero() {
   const [copied, setCopied] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText("npm install @agentauth/sdk");
@@ -31,10 +32,31 @@ export function Hero() {
           <b>AgentAuth</b>
           <small>API</small>
         </a>
+
+        {/* Desktop Nav */}
         <div className="seq-nav-r">
           <a href="/docs">Docs</a>
           <a href="/demo">Demo</a>
           <a href="#waitlist" className="seq-nav-cta">
+            Join Waitlist →
+          </a>
+        </div>
+
+        {/* Mobile Hamburger */}
+        <button
+          className="seq-mobile-toggle"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          <div className={`ham-line ${isMenuOpen ? 'open' : ''}`} />
+          <div className={`ham-line ${isMenuOpen ? 'open' : ''}`} />
+        </button>
+
+        {/* Mobile Menu Overlay */}
+        <div className={`seq-mobile-menu ${isMenuOpen ? 'open' : ''}`}>
+          <a href="/docs" onClick={() => setIsMenuOpen(false)}>Docs</a>
+          <a href="/demo" onClick={() => setIsMenuOpen(false)}>Demo</a>
+          <a href="#waitlist" className="seq-nav-cta" onClick={() => setIsMenuOpen(false)}>
             Join Waitlist →
           </a>
         </div>
