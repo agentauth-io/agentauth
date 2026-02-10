@@ -172,15 +172,18 @@
 
 .seq-hero h1 {
     font-family: var(--seq-font-display);
-    font-size: clamp(2.6rem, 7vw, 6.5rem);
+    font-size: clamp(2.4rem, 6.5vw, 6rem);
     font-weight: 800;
-    line-height: 1;
+    line-height: 1.1;
     letter-spacing: -0.04em;
     background: linear-gradient(135deg, #ffffff 0%, #b0b0be 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    max-width: 850px;
+    max-width: 90%;
+    margin: 0 auto;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
     opacity: 0;
     animation: seqFadeUp 1s 0.5s forwards;
 }
