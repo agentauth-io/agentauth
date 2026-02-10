@@ -19,7 +19,11 @@ export function CTASection() {
             const data = await res.json();
             if (data.success) {
                 setStatus("success");
-                setMessage(data.message || "You're on the list!");
+                if (data.emailSent === false && data.emailError) {
+                    setMessage(`Joined list, but email failed: ${data.emailError}`);
+                } else {
+                    setMessage(data.message || "You're on the list!");
+                }
                 setEmail("");
             } else {
                 setStatus("error");

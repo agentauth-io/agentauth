@@ -17,11 +17,12 @@ interface WaitlistRequest {
 }
 
 // Send "Thank you for joining" email (NOT beta access yet)
-const sendWaitlistConfirmationEmail = async (email: string, position?: number): Promise<boolean> => {
+const sendWaitlistConfirmationEmail = async (email: string, position?: number): Promise<{ success: boolean; error?: string }> => {
   console.log(`Attempting to send waitlist email to ${email}...`);
   if (!RESEND_API_KEY) {
-    console.error("CRITICAL: RESEND_API_KEY environment variable is not set! Email cannot be sent.");
-    return false;
+    const msg = "CRITICAL: RESEND_API_KEY environment variable is not set! Email cannot be sent.";
+    console.error(msg);
+    return { success: false, error: msg };
   }
 
   const emailHtml = `
@@ -189,13 +190,14 @@ https://agentauth.in
     });
 
     if (!response.ok) {
-      console.error("Resend API error:", await response.text());
-      return false;
+      const errorText = await response.text();
+      console.error("Resend API error:", errorText);
+      return { success: false, error: errorText };
     }
-    return true;
+    return { success: true };
   } catch (error) {
     console.error("Error sending email:", error);
-    return false;
+    return { success: false, error: (error as Error).message };
   }
 };
 
@@ -292,8 +294,12 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
     // Send confirmation email (only for new signups)
     let emailSent = false;
+    let emailError: string | undefined;
+
     if (isNewSignup) {
-      emailSent = await sendWaitlistConfirmationEmail(normalizedEmail, position);
+      const result = await sendWaitlistConfirmationEmail(normalizedEmail, position);
+      emailSent = result.success;
+      emailError = result.error;
     }
 
     return {
@@ -306,6 +312,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           : "You're already on the waitlist! We'll notify you soon.",
         position: position,
         emailSent,
+        emailError,
       }),
     };
   } catch (error) {
