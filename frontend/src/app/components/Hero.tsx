@@ -1,257 +1,76 @@
-import { useState, FormEvent } from "react";
-import { ArrowRight, Check, Loader2, Shield, Zap, Lock, Play } from "lucide-react";
-import { motion } from "motion/react";
+import { useState } from "react";
 
 export function Hero() {
-  const [email, setEmail] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!email || isLoading) return;
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch("/.netlify/functions/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setIsSubmitted(true);
-        setEmail("");
-        setTimeout(() => setIsSubmitted(false), 5000);
-      } else {
-        setError(data.error || "Something went wrong. Please try again.");
-      }
-    } catch {
-      setError("Network error. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleCopy = () => {
+    navigator.clipboard.writeText("npm install @agentauth/sdk");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  const navLinks = [
-    { href: "#demo", label: "Demo" },
-    { href: "#features", label: "Features" },
-    { href: "/docs", label: "Docs" },
-    { href: "/contact", label: "Contact" },
-  ];
-
   return (
-    <section className="relative min-h-screen flex flex-col overflow-hidden">
-      {/* Video Background */}
-      <div className="absolute inset-0 z-0">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover grayscale"
-        >
-          <source src="/240967.mp4" type="video/mp4" />
-        </video>
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/70" />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black" />
-      </div>
-
+    <>
       {/* Navigation */}
-      <motion.nav
-        className="relative z-20 flex items-center justify-between px-6 lg:px-12 py-6"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <a href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center">
-            <span className="text-black font-bold text-lg">A</span>
+      <nav className="seq-nav">
+        <a href="/" className="seq-logo">
+          <svg viewBox="0 0 24 28" fill="none">
+            <path
+              d="M12 1L2 5.5v7c0 7.5 4.5 13.5 10 14.5 5.5-1 10-7 10-14.5v-7L12 1Z"
+              stroke="#e8e6e1"
+              strokeWidth="1.2"
+            />
+            <path
+              d="M8.5 14l2.5 2.5 5-5"
+              stroke="#e8e6e1"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <b>AgentAuth</b>
+          <small>API</small>
+        </a>
+        <div className="seq-nav-r">
+          <a href="#api">API</a>
+          <a href="#features">Features</a>
+          <a href="/demo">Demo</a>
+          <a href="/docs" className="seq-nav-cta">
+            GET API KEY →
+          </a>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="seq-hero">
+        <div className="seq-hero-tag">
+          Cryptographic Authorization Infrastructure
+        </div>
+        <h1>Authorization API for AI Agent Commerce</h1>
+        <p>
+          One API to prove every AI agent purchase was human-approved. Delegation
+          tokens that make chargebacks mathematically impossible.
+        </p>
+        <div className="seq-hero-actions">
+          <a className="seq-btn seq-btn-g" href="/docs">
+            Get API Key
+          </a>
+          <a className="seq-btn seq-btn-o" href="#sequence">
+            See How It Works ↓
+          </a>
+        </div>
+        <div className="seq-hero-install">
+          <div className="seq-ibar" onClick={handleCopy}>
+            <span className="pr">$</span>
+            <span className="cm">npm install @agentauth/sdk</span>
+            <span className="cp">{copied ? "COPIED!" : "COPY"}</span>
           </div>
-          <span className="text-white font-semibold text-xl tracking-tight">
-            AgentAuth
-          </span>
-        </a>
-
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="text-gray-400 hover:text-white transition-colors duration-300 text-sm font-medium"
-            >
-              {link.label}
-            </a>
-          ))}
         </div>
-
-        {/* CTA Button */}
-        <a
-          href="#waitlist"
-          className="hidden md:flex px-6 py-2.5 bg-white text-black rounded-full text-sm font-medium hover:bg-gray-200 transition-all duration-300"
-        >
-          Join Waitlist
-        </a>
-
-        {/* Mobile CTA */}
-        <a
-          href="#waitlist"
-          className="md:hidden px-5 py-2 bg-white text-black rounded-full text-sm font-medium"
-        >
-          Join
-        </a>
-      </motion.nav>
-
-      {/* Hero Content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 lg:px-12 pb-20 pt-10">
-        <div className="max-w-4xl mx-auto text-center">
-          
-          {/* Badge */}
-          <motion.div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-            <span className="text-sm text-gray-300">Now in Private Beta</span>
-          </motion.div>
-
-          {/* Headline */}
-          <motion.h1
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <span className="text-white">Let AI Agents</span>
-            <br />
-            <span className="text-gray-400">
-              Buy For You
-            </span>
-          </motion.h1>
-
-          {/* Subheadline */}
-          <motion.p
-            className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            The authorization layer for AI agent payments. Set spending limits,
-            control merchants, and let autonomous systems transact with{" "}
-            <span className="text-white font-medium">cryptographic proof</span>.
-          </motion.p>
-
-          {/* Email Form */}
-          <motion.div
-            id="waitlist"
-            className="max-w-md mx-auto mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="flex-1 px-5 py-4 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-white/30 focus:ring-1 focus:ring-white/20 transition-all text-base"
-                required
-                autoComplete="email"
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-8 py-4 bg-white hover:bg-gray-100 text-black rounded-xl transition-all duration-300 inline-flex items-center justify-center gap-2 font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-              >
-                {isSubmitted ? (
-                  <>
-                    <Check className="w-5 h-5" />
-                    You're in!
-                  </>
-                ) : isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Joining...
-                  </>
-                ) : (
-                  <>
-                    Get Early Access
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-            </form>
-
-            {error && (
-              <p className="text-red-400 text-sm mt-3 text-center">
-                {error}
-              </p>
-            )}
-          </motion.div>
-
-          {/* Watch Demo Link */}
-          <motion.a
-            href="#demo"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
-          >
-            <div className="w-10 h-10 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center">
-              <Play className="w-4 h-4 text-white ml-0.5" />
-            </div>
-            <span className="text-sm font-medium">Watch Demo</span>
-          </motion.a>
-
-          {/* Trust indicators */}
-          <motion.div
-            className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-          >
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-gray-400" />
-              <span>SOC2 Compliant</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-gray-400" />
-              <span>Bank-grade encryption</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-gray-400" />
-              <span>&lt;50ms latency</span>
-            </div>
-          </motion.div>
+        <div className="seq-scroll-cue">
+          <span>Scroll</span>
+          <div className="arrow" />
         </div>
-      </div>
-
-      {/* Scroll indicator */}
-      <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
-      >
-        <div className="w-6 h-10 rounded-full border-2 border-white/20 flex items-start justify-center p-1">
-          <motion.div
-            className="w-1.5 h-3 bg-white/50 rounded-full"
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          />
-        </div>
-      </motion.div>
-    </section>
+      </section>
+    </>
   );
 }

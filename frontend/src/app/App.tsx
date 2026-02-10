@@ -1,22 +1,37 @@
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { useState, useCallback } from "react";
 import { Hero } from "./components/Hero";
-import { Demo } from "./components/Demo";
 import { Features } from "./components/Features";
-import { HowItWorks } from "./components/HowItWorks";
-import { FAQ } from "./components/FAQ";
 import { Contact } from "./components/Contact";
 import { Docs } from "./components/Docs";
+import { GrainOverlay } from "./components/landing/GrainOverlay";
+import { Loader } from "./components/landing/Loader";
+import { SequenceSection } from "./components/landing/SequenceSection";
+import { APISection } from "./components/landing/APISection";
+import { TerminalDemo } from "./components/landing/TerminalDemo";
+import { CTASection } from "./components/landing/CTASection";
+import { DemoPage } from "./components/DemoPage";
 
-// Simple Home page - Clean landing
+// Landing page — sequence design
 function HomePage() {
+  const [progress, setProgress] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+
+  const handleProgress = useCallback((pct: number) => setProgress(pct), []);
+  const handleReady = useCallback(() => { }, []);
+  const handleLoaderComplete = useCallback(() => setLoaded(true), []);
+
   return (
-    <div className="min-h-screen bg-black">
+    <div style={{ background: "#08080a", minHeight: "100vh" }}>
+      <GrainOverlay />
+      {!loaded && <Loader progress={progress} onComplete={handleLoaderComplete} />}
       <Hero />
-      <Demo />
+      <SequenceSection onProgress={handleProgress} onReady={handleReady} />
+      <APISection />
       <Features />
-      <HowItWorks />
-      <FAQ />
-      <Footer />
+      <TerminalDemo />
+      <CTASection />
+      <SequenceFooter />
     </div>
   );
 }
@@ -33,57 +48,15 @@ function DocsPage() {
   return <Docs onBack={() => navigate("/")} />;
 }
 
-// Simple Footer
-function Footer() {
+// Footer matching sequence design
+function SequenceFooter() {
   return (
-    <footer className="relative bg-black border-t border-white/5 py-16 px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-12">
-          {/* Logo & Description */}
-          <div className="max-w-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center">
-                <span className="text-black font-bold text-lg">A</span>
-              </div>
-              <span className="text-white font-semibold text-xl">AgentAuth</span>
-            </div>
-            <p className="text-gray-500 text-sm leading-relaxed">
-              The authorization layer for AI agent payments. Let autonomous systems transact safely.
-            </p>
-          </div>
-
-          {/* Links */}
-          <div className="flex gap-16">
-            <div>
-              <h4 className="text-white font-medium mb-4 text-sm">Product</h4>
-              <div className="flex flex-col gap-3">
-                <a href="#demo" className="text-gray-500 hover:text-white transition-colors text-sm">Demo</a>
-                <a href="#features" className="text-gray-500 hover:text-white transition-colors text-sm">Features</a>
-                <a href="/docs" className="text-gray-500 hover:text-white transition-colors text-sm">Docs</a>
-              </div>
-            </div>
-            <div>
-              <h4 className="text-white font-medium mb-4 text-sm">Company</h4>
-              <div className="flex flex-col gap-3">
-                <a href="/contact" className="text-gray-500 hover:text-white transition-colors text-sm">Contact</a>
-                <a href="https://github.com/agentauth-io/agentauth" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors text-sm">GitHub</a>
-                <a href="mailto:hello@agentauth.in" className="text-gray-500 hover:text-white transition-colors text-sm">Email</a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom bar */}
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-gray-600 text-sm">
-            © 2026 AgentAuth. All rights reserved.
-          </p>
-          <div className="flex items-center gap-6">
-            <a href="#" className="text-gray-600 hover:text-gray-400 transition-colors text-sm">Privacy</a>
-            <a href="#" className="text-gray-600 hover:text-gray-400 transition-colors text-sm">Terms</a>
-          </div>
-        </div>
-      </div>
+    <footer className="seq-footer">
+      <p>
+        © 2026 AgentAuth ·{" "}
+        <a href="https://agentauth.in">agentauth.in</a> · Cryptographic
+        authorization for AI agent commerce
+      </p>
     </footer>
   );
 }
@@ -95,6 +68,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/docs" element={<DocsPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/demo" element={<DemoPage />} />
         {/* All other routes go to home */}
         <Route path="*" element={<HomePage />} />
       </Routes>

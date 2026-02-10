@@ -30,59 +30,116 @@ const sendWaitlistConfirmationEmail = async (email: string, position?: number): 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; background-color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #000; padding: 48px 20px;">
+<body style="margin: 0; padding: 0; background-color: #08080a; font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #08080a; padding: 48px 20px;">
     <tr>
       <td align="center">
-        <table width="560" cellpadding="0" cellspacing="0" style="background: #0a0a0f; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
+        <table width="560" cellpadding="0" cellspacing="0" style="background: #0d0d12; border-radius: 16px; border: 1px solid rgba(255,255,255,0.06);">
           
+          <!-- Header -->
           <tr>
-            <td style="padding: 32px 40px 24px 40px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <div style="font-size: 24px; font-weight: 500; color: #fff;">AgentAuth</div>
+            <td style="padding: 28px 36px 20px 36px; border-bottom: 1px solid rgba(255,255,255,0.04);">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <div style="font-family: 'Segoe UI', sans-serif; font-size: 20px; font-weight: 700; color: #e8e6e1; letter-spacing: -0.5px;">🛡️ AgentAuth</div>
+                  </td>
+                  <td align="right">
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 2px; text-transform: uppercase;">Waitlist</div>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
+          <!-- Main Content -->
           <tr>
-            <td style="padding: 48px 40px 32px 40px; text-align: center;">
-              <div style="display: inline-block; padding: 6px 14px; background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(168,85,247,0.2)); border-radius: 100px; margin-bottom: 24px; border: 1px solid rgba(59,130,246,0.3);">
-                <span style="color: #3b82f6; font-size: 13px; font-weight: 600;">⏳ Waitlist Confirmed</span>
+            <td style="padding: 40px 36px 24px 36px; text-align: center;">
+              <div style="font-size: 48px; margin-bottom: 16px;">🔐 → 🔓 → ✅</div>
+              <h1 style="color: #e8e6e1; font-size: 28px; margin: 0 0 8px 0; font-weight: 700; letter-spacing: -0.5px;">You're on the list</h1>
+              <p style="color: rgba(255,255,255,0.4); font-size: 15px; margin: 0; line-height: 1.6;">Welcome to the future of AI agent authorization</p>
+            </td>
+          </tr>
+
+          <!-- What is AgentAuth -->
+          <tr>
+            <td style="padding: 0 36px 24px 36px;">
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; padding: 24px;">
+                <p style="color: rgba(255,255,255,0.6); font-size: 14px; line-height: 1.8; margin: 0;">
+                  <strong style="color: #e8e6e1;">AgentAuth</strong> is the authorization layer for AI agent commerce. 
+                  When an AI agent wants to buy something on your behalf, AgentAuth ensures:
+                </p>
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 16px;">
+                  <tr>
+                    <td style="padding: 8px 0;">
+                      <span style="color: #e8e6e1; font-size: 13px;">🔐 <strong>Consent</strong></span>
+                      <span style="color: rgba(255,255,255,0.4); font-size: 13px;"> — Human sets spending limits + intent</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0;">
+                      <span style="color: #e8e6e1; font-size: 13px;">🔓 <strong>Authorize</strong></span>
+                      <span style="color: rgba(255,255,255,0.4); font-size: 13px;"> — Agent purchases get verified in real-time</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0;">
+                      <span style="color: #e8e6e1; font-size: 13px;">✅ <strong>Verify</strong></span>
+                      <span style="color: rgba(255,255,255,0.4); font-size: 13px;"> — Cryptographic proof for chargeback defense</span>
+                    </td>
+                  </tr>
+                </table>
               </div>
-              <h1 style="color: #ffffff; font-size: 36px; margin: 0 0 12px 0; font-weight: 600;">You're on the list!</h1>
-              <p style="color: rgba(255,255,255,0.5); font-size: 17px; margin: 0;">Thank you for your interest in AgentAuth</p>
             </td>
           </tr>
 
+          <!-- Stats -->
           <tr>
-            <td style="padding: 0 40px 32px 40px;">
-              <div style="background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(168,85,247,0.1)); border-radius: 12px; padding: 24px; border: 1px solid rgba(59,130,246,0.2); text-align: center; margin-bottom: 24px;">
-                <p style="color: rgba(255,255,255,0.7); font-size: 15px; line-height: 1.7; margin: 0;">
-                  We're currently in private beta and adding new users gradually. 
-                  We'll send you an email with your access code as soon as a spot opens up!
+            <td style="padding: 0 36px 24px 36px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="33%" style="text-align: center; padding: 16px 8px; background: rgba(255,255,255,0.02); border-radius: 8px 0 0 8px; border: 1px solid rgba(255,255,255,0.04); border-right: none;">
+                    <div style="color: #e8e6e1; font-size: 20px; font-weight: 700;">&lt;5ms</div>
+                    <div style="color: rgba(255,255,255,0.3); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">Latency</div>
+                  </td>
+                  <td width="34%" style="text-align: center; padding: 16px 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-right: none;">
+                    <div style="color: #e8e6e1; font-size: 20px; font-weight: 700;">3 calls</div>
+                    <div style="color: rgba(255,255,255,0.3); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">Full Flow</div>
+                  </td>
+                  <td width="33%" style="text-align: center; padding: 16px 8px; background: rgba(255,255,255,0.02); border-radius: 0 8px 8px 0; border: 1px solid rgba(255,255,255,0.04);">
+                    <div style="color: #e8e6e1; font-size: 20px; font-weight: 700;">JWT</div>
+                    <div style="color: rgba(255,255,255,0.3); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;">Crypto Proof</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding: 0 36px 32px 36px; text-align: center;">
+              <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 20px;">
+                <p style="color: rgba(255,255,255,0.4); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin: 0 0 8px 0;">What's next</p>
+                <p style="color: #e8e6e1; font-size: 15px; margin: 0; font-weight: 500;">
+                  We're onboarding new users gradually. You'll receive your API key and access invite soon.
                 </p>
               </div>
-              
-              <div style="text-align: center; padding: 16px; background: rgba(168,85,247,0.1); border-radius: 8px; border: 1px solid rgba(168,85,247,0.2);">
-                <p style="color: rgba(255,255,255,0.5); font-size: 13px; margin: 0 0 4px 0;">WHAT'S NEXT?</p>
-                <p style="color: #a855f7; font-size: 15px; margin: 0; font-weight: 500;">
-                  📬 Watch your inbox for your beta access invite
-                </p>
-              </div>
             </td>
           </tr>
 
+          <!-- Try Demo Button -->
           <tr>
-            <td style="padding: 8px 40px 40px 40px; text-align: center;">
-              <a href="https://agentauth.in" style="display: inline-block; padding: 14px 28px; background: transparent; color: rgba(255,255,255,0.6); text-decoration: none; border-radius: 10px; font-weight: 500; font-size: 14px; border: 1px solid rgba(255,255,255,0.2);">
-                Learn More About AgentAuth
-              </a>
+            <td style="padding: 0 36px 32px 36px; text-align: center;">
+              <a href="https://agentauth.in/demo" style="display: inline-block; padding: 12px 28px; background: #e8e6e1; color: #08080a; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 13px; letter-spacing: 0.5px;">Try the Interactive Demo →</a>
             </td>
           </tr>
 
+          <!-- Footer -->
           <tr>
-            <td style="padding: 24px 40px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
-              <p style="color: rgba(255,255,255,0.3); font-size: 12px; margin: 0;">
-                © 2026 AgentAuth<br>
-                <a href="https://agentauth.in" style="color: rgba(255,255,255,0.4); text-decoration: none;">agentauth.in</a>
+            <td style="padding: 20px 36px; border-top: 1px solid rgba(255,255,255,0.04); text-align: center;">
+              <p style="color: rgba(255,255,255,0.2); font-size: 11px; margin: 0; line-height: 1.6;">
+                © 2026 AgentAuth · <a href="https://agentauth.in" style="color: rgba(255,255,255,0.3); text-decoration: none;">agentauth.in</a><br>
+                Authorization infrastructure for AI agent commerce
               </p>
             </td>
           </tr>
@@ -95,17 +152,22 @@ const sendWaitlistConfirmationEmail = async (email: string, position?: number): 
 </html>
   `;
 
-  const emailText = `You're on the Waitlist!
+  const emailText = `🔐→🔓→✅ You're on the AgentAuth Waitlist!
 
-Thank you for your interest in AgentAuth.
+Welcome to the future of AI agent authorization.
 
-We're currently in private beta and adding new users gradually. We'll send you an email with your access code as soon as a spot opens up!
+AgentAuth is the authorization layer for AI agent commerce. When an AI agent wants to buy something on your behalf, AgentAuth ensures:
 
-What's next?
-Watch your inbox for your beta access invite.
+🔐 Consent — Human sets spending limits + intent
+🔓 Authorize — Agent purchases get verified in real-time
+✅ Verify — Cryptographic proof for chargeback defense
+
+We're onboarding new users gradually. You'll receive your API key and access invite soon.
+
+Try the interactive demo: https://agentauth.in/demo
 
 ---
-AgentAuth
+© 2026 AgentAuth
 https://agentauth.in
 `;
 
@@ -119,7 +181,7 @@ https://agentauth.in
       body: JSON.stringify({
         from: "AgentAuth <hello@agentauth.in>",
         to: [email],
-        subject: "⏳ You're on the AgentAuth Waitlist!",
+        subject: "🔐→🔓→✅ You're in — AgentAuth Waitlist Confirmed",
         html: emailHtml,
         text: emailText,
       }),
@@ -137,15 +199,15 @@ https://agentauth.in
 };
 
 const ALLOWED_ORIGINS = [
-    "https://agentauth.in",
-    "https://www.agentauth.in",
-    "https://agentauth.netlify.app",
+  "https://agentauth.in",
+  "https://www.agentauth.in",
+  "https://agentauth.netlify.app",
 ];
 
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
   const origin = event.headers?.origin || "";
   const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  
+
   const headers = {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Headers": "Content-Type",
@@ -202,8 +264,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           .insert({
             email: normalizedEmail,
             name: name?.trim() || null,
-            status: 'pending',           // NOT approved yet
-            beta_access: false,           // NO beta access yet
+            status: 'pending',
+            beta_access: false,
             created_at: new Date().toISOString()
           })
           .select('id')

@@ -1,93 +1,83 @@
-import { Shield, Wallet, Zap, Lock, Eye, Globe } from "lucide-react";
-import { motion } from "motion/react";
+import { useEffect, useRef } from "react";
 
 const features = [
   {
-    icon: Shield,
-    title: "Cryptographic Consent",
-    description: "Ed25519 signatures prove human authorization. Chargeback-proof transactions with immutable consent chains.",
+    num: "01",
+    title: "Biscuit Tokens",
+    desc: "Cryptographic bearer credentials. Capability attenuation — permissions only decrease.",
   },
   {
-    icon: Wallet,
-    title: "Spending Controls",
-    description: "Set per-transaction, daily, weekly, and monthly limits. Agents can't exceed what you authorize.",
+    num: "02",
+    title: "Offline Verification",
+    desc: "No network round-trips. Edge verification in under 1ms.",
   },
   {
-    icon: Zap,
-    title: "Sub-50ms Latency",
-    description: "Authorization decisions in milliseconds. No perceptible delay for your AI agents or customers.",
+    num: "03",
+    title: "Protocol Agnostic",
+    desc: "Visa TAP, Stripe ACP, Google AP2, Mastercard Agent Pay.",
   },
   {
-    icon: Lock,
-    title: "Merchant Rules",
-    description: "Allowlist trusted merchants, block risky categories. Full control over where your agents can transact.",
+    num: "04",
+    title: "Merchant-First",
+    desc: "Built for the party losing $125B/year to chargebacks.",
   },
   {
-    icon: Eye,
-    title: "Complete Audit Trail",
-    description: "Every authorization logged immutably. Export for compliance, debug issues, analyze patterns.",
+    num: "05",
+    title: "Granular Policies",
+    desc: "Spending caps, merchant lists, time windows, categories.",
   },
   {
-    icon: Globe,
-    title: "Framework Agnostic",
-    description: "Works with LangChain, LlamaIndex, AutoGPT, or any custom agent. Simple REST API + SDKs.",
+    num: "06",
+    title: "Any Framework",
+    desc: "LangChain, CrewAI, AutoGen, OpenAI Agents SDK.",
   },
 ];
 
 export function Features() {
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("in-view");
+            const parent = e.target.parentElement;
+            if (parent) {
+              const idx = Array.from(parent.children).indexOf(e.target);
+              (e.target as HTMLElement).style.transitionDelay = `${idx * 0.06}s`;
+            }
+          }
+        });
+      },
+      { threshold: 0.15 }
+    );
+
+    const cards = gridRef.current?.querySelectorAll(".seq-feat");
+    cards?.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section id="features" className="relative px-6 lg:px-12 py-24 lg:py-32 overflow-hidden bg-[#050505]">
-      {/* Subtle gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-[#050505] to-black" />
-
-      <div className="relative z-10 max-w-6xl mx-auto">
-        {/* Section Header */}
-        <motion.div
-          className="text-center max-w-2xl mx-auto mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
-            <span className="text-sm text-gray-400">Why AgentAuth?</span>
-          </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-            Authorization Infrastructure
-            <br />
-            <span className="text-gray-500">Built for AI Commerce</span>
-          </h2>
-          <p className="text-lg text-gray-500 leading-relaxed">
-            Everything you need to let AI agents transact safely on behalf of humans.
-          </p>
-        </motion.div>
-
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <motion.div
-              key={feature.title}
-              className="group p-6 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all duration-300"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              {/* Icon */}
-              <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-5 group-hover:bg-white/10 transition-colors">
-                <feature.icon className="w-6 h-6 text-gray-400" />
-              </div>
-
-              {/* Content */}
-              <h3 className="text-lg font-semibold text-white mb-2">
-                {feature.title}
-              </h3>
-              <p className="text-gray-500 text-sm leading-relaxed">
-                {feature.description}
-              </p>
-            </motion.div>
-          ))}
+    <section className="seq-feat-sec" id="features">
+      <div className="seq-api-header">
+        <div className="seq-panel-tag" style={{ marginBottom: 14 }}>
+          Infrastructure
         </div>
+        <h2>
+          Built for <span>agentic commerce</span>
+        </h2>
+      </div>
+
+      <div className="seq-feat-grid" ref={gridRef}>
+        {features.map((f) => (
+          <div className="seq-feat" key={f.num}>
+            <div className="seq-f-n">{f.num}</div>
+            <div className="seq-f-t">{f.title}</div>
+            <div className="seq-f-b">{f.desc}</div>
+          </div>
+        ))}
       </div>
     </section>
   );
