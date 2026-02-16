@@ -5,7 +5,7 @@ All secrets MUST be provided via environment variables.
 Auto-generates secure defaults if not set (for easier deployment).
 """
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
+from pydantic import ConfigDict, field_validator
 from functools import lru_cache
 from typing import Optional, List
 import os
@@ -88,11 +88,12 @@ class Settings(BaseSettings):
         """Parse CORS origins from comma-separated string."""
         return [origin.strip() for origin in self.allowed_origins.split(",")]
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-        extra = "ignore"  # Allow extra env vars without validation errors
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
+    )
 
 
 @lru_cache()

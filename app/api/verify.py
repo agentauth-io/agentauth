@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.database import get_db
 from app.schemas.verify import VerifyRequest, VerifyResponse
 from app.services.verify_service import verify_service
+from app.middleware import require_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ router = APIRouter(prefix="/v1", tags=["Verification"])
 async def verify(
     request: VerifyRequest,
     db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key),
 ) -> VerifyResponse:
     """
     Verify authorization and return consent proof.

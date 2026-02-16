@@ -112,7 +112,8 @@ async def create_payment_intent(request: CreatePaymentIntentRequest):
             currency=intent.currency,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Payment intent creation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Failed to create payment intent")
 
 
 @router.post("/agent-purchase")
@@ -125,10 +126,10 @@ async def create_agent_purchase(
 ):
     """
     Create a payment intent for an AI agent purchase.
-    
+
     This endpoint is called after AgentAuth authorization is successful.
     It creates a Stripe PaymentIntent that can be confirmed with a saved payment method.
-    
+
     Args:
         authorization_code: The auth code from /v1/authorize
         amount: Amount in cents (e.g., 7999 for $79.99)
@@ -141,9 +142,22 @@ async def create_agent_purchase(
             status_code=503,
             detail="Payment processing not configured",
         )
-    
+
+    # Verify the authorization code is valid
+    from app.services.auth_service import _auth_cache
+    cached_auth = _auth_cache.get(authorization_code)
+    if not cached_auth:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired authorization code",
+        )
+    if cached_auth.get("is_used"):
+        raise HTTPException(
+            status_code=400,
+            detail="Authorization code has already been used",
+        )
+
     try:
-        # Create payment intent with metadata
         intent = await stripe_service.create_payment_intent(
             amount=amount,
             currency=currency.lower(),
@@ -154,7 +168,7 @@ async def create_agent_purchase(
                 "description": description,
             },
         )
-        
+
         return {
             "success": True,
             "payment_intent_id": intent.payment_intent_id,
@@ -164,7 +178,8 @@ async def create_agent_purchase(
             "authorization_code": authorization_code,
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Agent purchase failed: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Payment creation failed")
 
 
 @router.post("/subscribe", response_model=CreateSubscriptionResponse)
@@ -216,7 +231,8 @@ async def create_subscription(request: CreateSubscriptionRequest):
             current_period_end=subscription.current_period_end,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Subscription creation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Failed to create subscription")
 
 
 @router.get("/subscriptions/{subscription_id}", response_model=SubscriptionStatusResponse)
@@ -226,7 +242,8 @@ async def get_subscription_status(subscription_id: str):
         subscription = await stripe_service.get_subscription(subscription_id)
         return SubscriptionStatusResponse(**subscription)
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        logger.error(f"Subscription lookup failed: {e}", exc_info=True)
+        raise HTTPException(status_code=404, detail="Subscription not found")
 
 
 @router.delete("/subscriptions/{subscription_id}", response_model=CancelSubscriptionResponse)
@@ -236,7 +253,8 @@ async def cancel_subscription(subscription_id: str):
         result = await stripe_service.cancel_subscription(subscription_id)
         return CancelSubscriptionResponse(**result)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Subscription cancellation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Failed to cancel subscription")
 
 
 @router.post("/webhook")

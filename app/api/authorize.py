@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.database import get_db
 from app.schemas.authorize import AuthorizeRequest, AuthorizeResponse
 from app.services.auth_service import auth_service
+from app.middleware import require_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ router = APIRouter(prefix="/v1", tags=["Authorization"])
 async def authorize(
     request: AuthorizeRequest,
     db: AsyncSession = Depends(get_db),
+    api_key: dict = Depends(require_api_key),
 ) -> AuthorizeResponse:
     """
     Make an authorization decision.

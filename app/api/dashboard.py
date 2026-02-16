@@ -3,7 +3,10 @@ Dashboard API routes for monitoring and analytics.
 
 Provides aggregate stats, transaction logs, and real-time metrics.
 """
-from fastapi import APIRouter, Depends, Query
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+logger = logging.getLogger(__name__)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc
 from datetime import datetime, timedelta, timezone
@@ -80,20 +83,25 @@ async def get_dashboard(
                 "description": c.intent_description or "Authorization",
             })
         
-        # Get daily counts for chart (last 7 days)
+        # Get daily counts for chart (last 7 days) - single query instead of N+1
+        from sqlalchemy import cast, Date
+        seven_days_ago = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=6)
+        daily_result = await db.execute(
+            select(
+                cast(Consent.created_at, Date).label("day"),
+                func.count(Consent.id).label("count")
+            ).where(
+                Consent.created_at >= seven_days_ago
+            ).group_by(
+                cast(Consent.created_at, Date)
+            )
+        )
+        daily_counts = {row.day: row.count for row in daily_result.all()}
+
         daily_requests = []
         for i in range(6, -1, -1):
-            day = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i)
-            next_day = day + timedelta(days=1)
-            
-            result = await db.execute(
-                select(func.count(Consent.id)).where(
-                    Consent.created_at >= day,
-                    Consent.created_at < next_day
-                )
-            )
-            count = result.scalar() or 0
-            daily_requests.append(count)
+            day = (datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i)).date()
+            daily_requests.append(daily_counts.get(day, 0))
         
         return {
             "total_authorizations": total_authorizations,
@@ -105,7 +113,7 @@ async def get_dashboard(
             "daily_requests": daily_requests,
         }
     except Exception as e:
-        # Return empty state on error
+        logger.error(f"Dashboard data error: {e}", exc_info=True)
         return {
             "total_authorizations": 0,
             "transaction_volume": 0,
@@ -114,7 +122,6 @@ async def get_dashboard(
             "transactions": [],
             "active_consents": 0,
             "daily_requests": [0, 0, 0, 0, 0, 0, 0],
-            "error": str(e),
         }
 
 
@@ -179,7 +186,6 @@ async def get_dashboard_stats(
             "consents_today": 0,
             "avg_max_amount": 0,
             "api_status": "error",
-            "error": str(e),
             "last_updated": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -233,12 +239,12 @@ async def get_transactions(
             "offset": offset,
         }
     except Exception as e:
+        logger.error(f"Transactions query error: {e}", exc_info=True)
         return {
             "transactions": [],
             "total": 0,
             "limit": limit,
             "offset": offset,
-            "error": str(e),
         }
 
 
@@ -289,10 +295,10 @@ async def get_analytics(
             "period_days": days,
         }
     except Exception as e:
+        logger.error(f"Analytics query error: {e}", exc_info=True)
         return {
             "analytics": [],
             "period_days": days,
-            "error": str(e),
         }
 
 
@@ -312,14 +318,17 @@ async def debug_authorizations(
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key),
 ):
-    """Debug endpoint to check authorization records."""
+    """Debug endpoint to check authorization records. Only available in development."""
+    from app.config import get_settings
+    if get_settings().environment == "production":
+        raise HTTPException(status_code=404, detail="Not found")
+
     try:
-        # Check if table exists and has data
         result = await db.execute(
             select(Authorization).order_by(desc(Authorization.created_at)).limit(limit)
         )
         auths = result.scalars().all()
-        
+
         return {
             "count": len(auths),
             "authorizations": [
@@ -334,7 +343,5 @@ async def debug_authorizations(
             ]
         }
     except Exception as e:
-        return {
-            "error": str(e),
-            "error_type": type(e).__name__,
-        }
+        logger.error(f"Debug authorizations error: {e}", exc_info=True)
+        return {"count": 0, "authorizations": []}

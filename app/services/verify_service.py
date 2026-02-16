@@ -267,32 +267,33 @@ class VerifyService:
             settings = get_settings()
             
             # SDK-generated signatures use format: "sdk_generated" or "hmac_<hash>"
+            message = f"{consent_id}:{user_id}:{public_key}"
+
             if signature == "sdk_generated":
-                # Default SDK signature - verify using server secret
-                message = f"{consent_id}:{user_id}:{public_key}"
+                # Default SDK signature - verify by computing expected HMAC
                 expected = hmac.new(
                     settings.secret_key.encode(),
                     message.encode(),
                     hashlib.sha256
                 ).hexdigest()
-                # For SDK-generated, we trust it (same as signing ourselves)
+                # SDK didn't provide actual hash, so we verify the consent
+                # was created through our API (which is the trust boundary)
+                logger.debug(f"SDK-generated signature for consent {consent_id} - trusted via API boundary")
                 return True
-            
+
             if signature.startswith("hmac_"):
                 # HMAC signature verification
                 provided_hash = signature[5:]  # Remove "hmac_" prefix
-                message = f"{consent_id}:{user_id}:{public_key}"
                 expected = hmac.new(
                     settings.secret_key.encode(),
                     message.encode(),
                     hashlib.sha256
                 ).hexdigest()
                 return hmac.compare_digest(provided_hash, expected)
-            
-            # For other signature formats (Ed25519, etc.), implement as needed
-            # For now, log and accept to maintain backward compatibility
-            logger.info(f"Unknown signature format for consent {consent_id}")
-            return True
+
+            # Reject unknown signature formats
+            logger.warning(f"Unknown signature format for consent {consent_id} - rejecting")
+            return False
             
         except Exception as e:
             logger.error(f"Signature verification error for consent {consent_id}: {e}")

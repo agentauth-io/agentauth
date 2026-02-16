@@ -32,6 +32,8 @@ _consent_cache: Dict[str, tuple[dict, datetime]] = {}
 CACHE_TTL_SECONDS = 300  # 5 minutes
 
 # In-memory cache for authorization codes (for verification)
+# Limited to 50k entries; oldest entries evicted when full
+_AUTH_CACHE_MAX_SIZE = 50000
 _auth_cache: Dict[str, dict] = {}
 
 # Queue for async authorization storage
@@ -90,8 +92,10 @@ class AuthService:
             if cached.get("is_active") and not cached.get("revoked_at"):
                 expires_at = cached.get("expires_at")
                 if expires_at:
-                    from dateutil.parser import parse as parse_date
-                    if parse_date(expires_at).replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
+                    parsed = datetime.fromisoformat(str(expires_at))
+                    if parsed.tzinfo is None:
+                        parsed = parsed.replace(tzinfo=timezone.utc)
+                    if parsed > datetime.now(timezone.utc):
                         return cached
             # Cache hit but invalid
             return None
@@ -159,6 +163,18 @@ class AuthService:
         authorization_code = generate_authorization_code()
         
         # Cache authorization in memory for instant verification
+        # Evict expired entries if cache is getting large
+        if len(_auth_cache) > _AUTH_CACHE_MAX_SIZE:
+            cutoff = datetime.now(timezone.utc)
+            expired_keys = [k for k, v in _auth_cache.items() if v.get("expires_at", cutoff) < cutoff]
+            for k in expired_keys:
+                del _auth_cache[k]
+            # If still too large, remove oldest entries
+            if len(_auth_cache) > _AUTH_CACHE_MAX_SIZE:
+                oldest = sorted(_auth_cache.keys(), key=lambda k: _auth_cache[k].get("created_at", cutoff))
+                for k in oldest[:len(_auth_cache) - _AUTH_CACHE_MAX_SIZE + 1000]:
+                    del _auth_cache[k]
+
         _auth_cache[authorization_code] = {
             "consent_id": verification.payload.consent_id,
             "decision": "ALLOW",

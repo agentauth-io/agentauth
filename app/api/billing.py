@@ -13,10 +13,15 @@ from app.models.database import get_db
 from app.models.subscription import PlanType, PLAN_LIMITS
 from app.services import billing_service, stripe_service
 from app.config import get_settings
+from app.middleware import require_api_key
 
 settings = get_settings()
 
-router = APIRouter(prefix="/v1/billing", tags=["Billing"])
+router = APIRouter(
+    prefix="/v1/billing",
+    tags=["Billing"],
+    dependencies=[Depends(require_api_key)],
+)
 
 
 # --- Request/Response Schemas ---
@@ -185,7 +190,7 @@ async def create_checkout_session(
             session_id=checkout_session.id,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Operation failed")
 
 
 @router.post("/portal")
@@ -218,7 +223,7 @@ async def create_billing_portal(
         
         return {"portal_url": portal_session.url}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Operation failed")
 
 
 @router.post("/cancel")

@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
+from app.middleware import require_api_key
 
 # Import security modules
 from core.blockchain_audit import (
@@ -43,7 +44,11 @@ from app.ml.threat_intelligence import (
 )
 
 
-router = APIRouter(prefix="/v1/security", tags=["security"])
+router = APIRouter(
+    prefix="/v1/security",
+    tags=["security"],
+    dependencies=[Depends(require_api_key)],
+)
 
 
 # ==================== Request/Response Models ====================

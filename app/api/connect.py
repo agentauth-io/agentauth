@@ -97,7 +97,7 @@ async def create_connect_account(
         )
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Operation failed")
 
 
 @router.get("/accounts/{account_id}", response_model=ConnectAccountStatus)
@@ -131,7 +131,7 @@ async def get_connect_account_status(
         )
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Operation failed")
 
 
 @router.post("/accounts/{account_id}/onboarding-link")
@@ -156,7 +156,7 @@ async def refresh_onboarding_link(
         return {"onboarding_url": onboarding_url}
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Operation failed")
 
 
 @router.get("/accounts/{account_id}/dashboard-link")
@@ -175,7 +175,7 @@ async def get_dashboard_link(
         return {"dashboard_url": login_url}
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Operation failed")
 
 
 @router.get("/accounts/{account_id}/transactions", response_model=List[ConnectedAccountTransaction])
@@ -198,7 +198,7 @@ async def list_connect_transactions(
         return [ConnectedAccountTransaction(**tx) for tx in transactions]
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Operation failed")
 
 
 @router.get("/accounts/{account_id}/balance", response_model=ConnectBalanceResponse)
@@ -217,4 +217,4 @@ async def get_connect_balance(
         return ConnectBalanceResponse(**balance)
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Operation failed")

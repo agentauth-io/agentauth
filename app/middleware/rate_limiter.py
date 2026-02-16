@@ -16,10 +16,25 @@ from app.config import get_settings
 
 class RateLimitStore:
     """In-memory store for rate limit tracking (fallback when Redis unavailable)."""
-    
+
+    MAX_KEYS = 10000  # Prevent unbounded memory growth
+
     def __init__(self):
         self.requests: Dict[str, list] = defaultdict(list)
-    
+        self._last_cleanup = time.time()
+
+    def _cleanup_stale_keys(self, now: float):
+        """Periodically remove stale keys to prevent memory leaks."""
+        if now - self._last_cleanup < 60:  # Cleanup every 60 seconds
+            return
+        self._last_cleanup = now
+        stale_keys = [
+            k for k, v in self.requests.items()
+            if not v or max(v) < now - 120  # No activity in 2 minutes
+        ]
+        for k in stale_keys:
+            del self.requests[k]
+
     def is_rate_limited(
         self,
         key: str,
@@ -28,28 +43,31 @@ class RateLimitStore:
     ) -> Tuple[bool, int, int]:
         """
         Check if a key is rate limited.
-        
+
         Returns:
             (is_limited, remaining_requests, reset_time)
         """
         now = time.time()
         window_start = now - window_seconds
-        
-        # Clean old requests
+
+        # Periodic cleanup of stale keys
+        self._cleanup_stale_keys(now)
+
+        # Clean old requests for this key
         self.requests[key] = [
-            ts for ts in self.requests[key] 
+            ts for ts in self.requests[key]
             if ts > window_start
         ]
-        
+
         current_count = len(self.requests[key])
         remaining = max(0, max_requests - current_count)
-        
+
         if current_count >= max_requests:
             # Calculate reset time
             oldest = min(self.requests[key]) if self.requests[key] else now
             reset_in = int(oldest + window_seconds - now)
             return True, 0, reset_in
-        
+
         # Record this request
         self.requests[key].append(now)
         return False, remaining - 1, window_seconds

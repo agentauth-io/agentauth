@@ -22,7 +22,7 @@ router = APIRouter(prefix="/v1/webhooks", tags=["Webhooks"])
 
 class WebhookCreate(BaseModel):
     """Request to create a webhook."""
-    url: str = Field(..., description="Webhook endpoint URL")
+    url: HttpUrl = Field(..., description="Webhook endpoint URL (must be HTTPS in production)")
     events: List[str] = Field(
         default=["authorization.approved", "authorization.denied"],
         description="Events to subscribe to"
@@ -44,7 +44,7 @@ class WebhookResponse(BaseModel):
     url: str
     events: List[str]
     description: Optional[str]
-    secret: str
+    secret: Optional[str] = None  # Only shown on creation
     is_active: bool
     last_triggered_at: Optional[str]
     failure_count: int
@@ -73,7 +73,7 @@ async def list_webhooks(
             url=w.url,
             events=w.get_events_list(),
             description=w.description,
-            secret=w.secret,
+            secret=None,  # Never expose secrets in list responses
             is_active=w.is_active,
             last_triggered_at=w.last_triggered_at.isoformat() if w.last_triggered_at else None,
             failure_count=w.failure_count,
@@ -137,7 +137,7 @@ async def get_webhook(
         url=w.url,
         events=w.get_events_list(),
         description=w.description,
-        secret=w.secret,
+        secret=None,  # Never expose secrets in GET responses
         is_active=w.is_active,
         last_triggered_at=w.last_triggered_at.isoformat() if w.last_triggered_at else None,
         failure_count=w.failure_count,
@@ -174,7 +174,7 @@ async def update_webhook(
         url=w.url,
         events=w.get_events_list(),
         description=w.description,
-        secret=w.secret,
+        secret=None,  # Never expose secrets in update responses
         is_active=w.is_active,
         last_triggered_at=w.last_triggered_at.isoformat() if w.last_triggered_at else None,
         failure_count=w.failure_count,

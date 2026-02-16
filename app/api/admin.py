@@ -152,3 +152,24 @@ async def admin_logout():
     This endpoint exists for API completeness.
     """
     return {"message": "Logout successful", "action": "Remove token from client storage"}
+
+
+@router.post("/api-keys")
+async def admin_create_api_key(
+    owner: str = "default",
+    is_admin: bool = Depends(get_admin_user),
+):
+    """
+    Generate a new API key (admin-only).
+
+    Requires valid admin JWT token from POST /v1/admin/login.
+    """
+    from app.middleware.api_keys import generate_api_key
+    key_data = generate_api_key(owner)
+    return {
+        "key": key_data["key"],
+        "key_id": key_data["key_id"],
+        "owner": key_data["owner"],
+        "created_at": key_data["created_at"],
+        "message": "Save this key securely - it won't be shown again!",
+    }

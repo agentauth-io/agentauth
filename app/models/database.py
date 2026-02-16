@@ -15,10 +15,13 @@ from app.config import get_settings
 
 settings = get_settings()
 
-# Create SSL context for Neon/Railway PostgreSQL
+# Create SSL context for PostgreSQL connections
 ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
+if settings.environment == "development":
+    # Relaxed SSL for local/Neon dev poolers
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+# In production, ssl_context uses system CA certs with full verification by default
 
 # Process DATABASE_URL for asyncpg compatibility
 db_url = settings.database_url
@@ -35,7 +38,9 @@ elif not db_url.startswith("postgresql+asyncpg://"):
     # If it's already asyncpg format, use as-is
     pass
 
-print(f"Database URL (masked): {db_url[:30]}...{db_url[-20:]}")
+# Log at debug level - never print DB URLs
+import logging as _db_logging
+_db_logging.getLogger(__name__).debug(f"Database URL configured (length={len(db_url)})")
 
 # Create async engine with OPTIMIZED connection pooling
 engine = create_async_engine(
@@ -75,6 +80,10 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             raise
         finally:
             await session.close()
+
+
+# Alias for backward compatibility (health check imports this name)
+async_engine = engine
 
 
 async def init_db():

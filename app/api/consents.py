@@ -32,6 +32,12 @@ async def list_consents(
 ):
     """List all consents for dashboard monitoring with pagination."""
     try:
+        from sqlalchemy import func
+
+        # Get total count for proper pagination
+        count_result = await db.execute(select(func.count(Consent.id)))
+        total = count_result.scalar() or 0
+
         # Efficient query with pagination - uses index on created_at
         result = await db.execute(
             select(
@@ -50,7 +56,7 @@ async def list_consents(
             .limit(limit)
         )
         rows = result.all()
-        
+
         return {
             "consents": [
                 {
@@ -66,13 +72,16 @@ async def list_consents(
                 }
                 for row in rows
             ],
-            "total": len(rows),
+            "total": total,
             "limit": limit,
             "offset": offset,
         }
     except Exception as e:
         logger.error(f"Error listing consents: {e}", exc_info=True)
-        return {"consents": [], "total": 0, "error": "Failed to list consents"}
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to list consents"
+        )
 
 
 @router.post(
@@ -115,7 +124,7 @@ async def create_consent(
         logger.error(f"Failed to create consent: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create consent: {type(e).__name__}: {str(e)}"
+            detail="Failed to create consent. Please try again or contact support."
         )
 
 
