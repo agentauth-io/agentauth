@@ -305,11 +305,6 @@ class TestAuthorizationEngine:
         assert token_obj is None
         assert len(error) > 0
 
-    @pytest.mark.xfail(
-        reason="Pre-existing bug: token_id truncates hex to 12 chars but "
-               "verify() checks full token_id_hex — revocation IDs never match",
-        strict=False,
-    )
     def test_revoke_token(self):
         engine = self._make_engine()
         req = AuthorizationRequest(
@@ -486,11 +481,7 @@ class TestAgentAuthCore:
         assert valid is False
         assert data is None
 
-    @pytest.mark.xfail(
-        reason="Pre-existing bug: token_id truncates hex to 12 chars but "
-               "verify() checks full token_id_hex — revocation IDs never match",
-        strict=False,
-    )
+
     def test_revoke_token(self):
         core = self._make_core()
         resp = core.authorize(

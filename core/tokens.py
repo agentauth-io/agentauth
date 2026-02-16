@@ -474,8 +474,9 @@ class TokenVerifier:
         """
         token = AuthorizationToken.deserialize(token_data, self._key_manager)
         
-        # Check revocation
-        if token.header.token_id_hex in self._revoked_tokens:
+        # Check revocation (using truncated ID matching revoke() behavior)
+        truncated_id = token.header.token_id_hex[:12]
+        if truncated_id in self._revoked_tokens:
             raise TokenRevokedError("Token has been revoked")
         
         return token
