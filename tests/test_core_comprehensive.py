@@ -732,11 +732,6 @@ class TestPolicyEngine:
 class TestTokens:
     """Tests for token generation and verification."""
 
-    @pytest.mark.xfail(
-        reason="Pre-existing bug: token serialize/deserialize signature verification "
-               "fails even in core/tokens.py __main__ test (see core/tokens.py:544)",
-        strict=False,
-    )
     def test_generate_and_verify(self):
         ms = MasterSecret.generate()
         km = KeyManager(ms)

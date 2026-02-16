@@ -288,7 +288,9 @@ class AuthorizationToken:
         signature = data[46+encrypted_len:46+encrypted_len+64]
         
         # Verify signature
-        to_verify = data[:46+encrypted_len]
+        # serialize() signs header_bytes + encrypted (no length prefix)
+        header_bytes = data[:44]
+        to_verify = header_bytes + encrypted_payload
         if not key_manager.auth_signing_key.verify(to_verify, signature):
             raise TokenInvalidError("Signature verification failed")
         
