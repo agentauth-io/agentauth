@@ -90,10 +90,10 @@ async def client(test_engine) -> AsyncGenerator[AsyncClient, None]:
     running a real server. Overrides the database dependency to use
     in-memory SQLite. Includes a valid API key for authenticated requests.
     """
-    from app.middleware.api_keys import generate_api_key
+    from app.middleware.api_keys import generate_api_key_sync
 
-    # Generate a test API key
-    key_data = generate_api_key(owner="test_user")
+    # Generate a test API key (sync, cache-only for tests)
+    key_data = generate_api_key_sync(owner="test_user")
     test_api_key = key_data["key"]
 
     # Override get_db to use the test database

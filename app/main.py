@@ -15,8 +15,9 @@ from app.logging_config import setup_logging, api_logger
 __version__ = "0.2.0"
 from app.api import consents_router, authorize_router, verify_router, payments_router, dashboard_router, admin_router, limits_router, rules_router, analytics_router, webhooks_router, billing_router
 from app.api.connect import router as connect_router
-from app.models.database import init_db
-from app.middleware import RateLimitMiddleware, IdempotencyMiddleware, TenantContextMiddleware, generate_api_key, DEMO_KEY
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.database import init_db, get_db
+from app.middleware import RateLimitMiddleware, IdempotencyMiddleware, TenantContextMiddleware, SecurityHeadersMiddleware, generate_api_key, generate_api_key_sync, DEMO_KEY
 from app.services.cache_service import close_redis, get_cache_service
 
 settings = get_settings()
@@ -138,8 +139,9 @@ app = FastAPI(
     Get an API key from `POST /v1/api-keys`.
     """,
     version=__version__,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url="/docs" if settings.environment != "production" else None,
+    redoc_url="/redoc" if settings.environment != "production" else None,
+    openapi_url="/openapi.json" if settings.environment != "production" else None,
     lifespan=lifespan,
 )
 
@@ -158,6 +160,9 @@ class RequestIDMiddleware(_BaseMiddleware):
         return response
 
 app.add_middleware(RequestIDMiddleware)
+
+# Add security headers middleware
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Add rate limiting middleware (before CORS)
 app.add_middleware(
@@ -274,7 +279,10 @@ async def health_detailed():
 
 
 @app.post("/v1/api-keys", tags=["API Keys"])
-async def create_api_key_endpoint(owner: str = "default"):
+async def create_api_key_endpoint(
+    owner: str = "default",
+    db: AsyncSession = Depends(get_db),
+):
     """
     Generate a new API key.
 
@@ -286,7 +294,7 @@ async def create_api_key_endpoint(owner: str = "default"):
             status_code=403,
             detail="Use POST /v1/admin/login to authenticate, then POST /v1/admin/api-keys to generate keys."
         )
-    key_data = generate_api_key(owner)
+    key_data = await generate_api_key(db, owner)
     return {
         "key": key_data["key"],
         "key_id": key_data["key_id"],
@@ -309,11 +317,14 @@ async def get_demo_key():
 
 
 @app.post("/v1/test-key", tags=["API Keys"])
-async def create_test_key(owner: str = "test"):
+async def create_test_key(
+    owner: str = "test",
+    db: AsyncSession = Depends(get_db),
+):
     """Create a test API key. Only available in development."""
     if settings.environment == "production":
         raise HTTPException(status_code=404, detail="Not found")
-    key_data = generate_api_key(owner)
+    key_data = await generate_api_key(db, owner)
     return {
         "key": key_data["key"],
         "key_id": key_data["key_id"],

@@ -12,7 +12,10 @@ from sqlalchemy.dialects.postgresql import insert
 from app.models.subscription import Subscription, PlanType, SubscriptionStatus, PLAN_LIMITS
 from app.models.usage import UsageRecord, UsageSummary
 from app.services import stripe_service
+import logging
 from app.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
@@ -226,7 +229,7 @@ async def cancel_subscription(db: AsyncSession, user_id: str) -> Subscription:
         try:
             await stripe_service.cancel_subscription(subscription.stripe_subscription_id)
         except Exception as e:
-            print(f"Stripe cancel error: {e}")
+            logger.error(f"Stripe cancel error: {e}", exc_info=True)
     
     subscription.status = SubscriptionStatus.CANCELED
     subscription.canceled_at = datetime.now(timezone.utc)

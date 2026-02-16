@@ -13,6 +13,7 @@ from app.models.webhooks import Webhook, WebhookDelivery, WEBHOOK_EVENTS
 from app.models.subscription import Subscription, PlanType, SubscriptionStatus, PLAN_LIMITS
 from app.models.usage import UsageRecord, UsageSummary
 from app.models.connected_accounts import ConnectedAccount, AgentTransaction, AccountProvider, AccountStatus
+from app.models.api_key import ApiKey
 
 __all__ = [
     "Base", "get_db", "engine", 
@@ -23,4 +24,5 @@ __all__ = [
     "Subscription", "PlanType", "SubscriptionStatus", "PLAN_LIMITS",
     "UsageRecord", "UsageSummary",
     "ConnectedAccount", "AgentTransaction", "AccountProvider", "AccountStatus",
+    "ApiKey",
 ]

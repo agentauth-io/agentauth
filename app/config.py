@@ -10,6 +10,7 @@ from functools import lru_cache
 from typing import Optional, List
 import os
 import secrets
+import bcrypt
 
 
 # Generate secure runtime defaults (persists for app lifetime)
@@ -83,6 +84,34 @@ class Settings(BaseSettings):
             return _RUNTIME_SECRETS.get(info.field_name, secrets.token_urlsafe(32))
         return v
     
+    @field_validator("environment")
+    @classmethod
+    def validate_production_config(cls, v: str, info) -> str:
+        """In production, ensure critical env vars are explicitly set."""
+        if v == "production":
+            data = info.data
+            db_url = data.get("database_url", "")
+            if "localhost" in db_url or not db_url:
+                raise ValueError("DATABASE_URL must be set to a real database in production")
+            if not data.get("stripe_secret_key"):
+                raise ValueError("STRIPE_SECRET_KEY is required in production")
+            if not data.get("sentry_dsn"):
+                import logging
+                logging.getLogger(__name__).warning(
+                    "SENTRY_DSN not set in production — error tracking disabled"
+                )
+        return v
+
+    @property
+    def admin_password_bcrypt(self) -> bytes:
+        """Get bcrypt hash of admin password (computed once, cached)."""
+        if not hasattr(self, "_admin_pw_hash"):
+            object.__setattr__(
+                self, "_admin_pw_hash",
+                bcrypt.hashpw(self.admin_password.encode(), bcrypt.gensalt())
+            )
+        return self._admin_pw_hash
+
     @property
     def cors_origins(self) -> List[str]:
         """Parse CORS origins from comma-separated string."""

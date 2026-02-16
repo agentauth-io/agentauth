@@ -5,13 +5,14 @@ API endpoints for managing spending limits and viewing usage.
 """
 from decimal import Decimal
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.database import get_db
 from app.models.limits import SpendingLimit, UsageTracking
+from app.middleware.api_keys import get_current_user_id
 
 
 router = APIRouter(prefix="/v1/limits", tags=["Spending Limits"])
@@ -52,7 +53,7 @@ class UsageResponse(BaseModel):
 
 @router.get("", response_model=SpendingLimitsResponse)
 async def get_limits(
-    user_id: str = "default",  # In production, get from auth
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -90,7 +91,7 @@ async def get_limits(
 @router.put("", response_model=SpendingLimitsResponse)
 async def update_limits(
     update: SpendingLimitsUpdate,
-    user_id: str = "default",  # In production, get from auth
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -134,7 +135,7 @@ async def update_limits(
 
 @router.get("/usage", response_model=UsageResponse)
 async def get_usage(
-    user_id: str = "default",  # In production, get from auth
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -187,7 +188,7 @@ async def get_usage(
 @router.post("/reset")
 async def reset_usage(
     reset_type: str = "daily",  # "daily" or "monthly"
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db)
 ):
     """

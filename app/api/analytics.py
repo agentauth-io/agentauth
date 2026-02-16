@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.database import get_db
 from app.services.analytics import AnalyticsService
 from app.middleware import require_api_key
+from app.middleware.api_keys import get_current_user_id
 
 
 router = APIRouter(prefix="/v1/analytics", tags=["Analytics"])
@@ -61,7 +62,7 @@ class LogEntry(BaseModel):
 
 @router.get("/summary", response_model=SummaryResponse)
 async def get_summary(
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     days: int = Query(30, ge=1, le=365, description="Days to include in stats"),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
@@ -93,7 +94,7 @@ async def get_summary(
 
 @router.get("/trends", response_model=TrendResponse)
 async def get_trends(
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     days: int = Query(30, ge=1, le=365, description="Days to include in trends"),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
@@ -116,7 +117,7 @@ async def get_trends(
 
 @router.get("/logs", response_model=List[LogEntry])
 async def get_logs(
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     limit: int = Query(50, ge=1, le=500, description="Maximum logs to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     decision: Optional[str] = Query(None, description="Filter by decision: approved/denied"),
@@ -136,7 +137,7 @@ async def get_logs(
 
 @router.get("/agents")
 async def get_agent_stats(
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):
@@ -153,7 +154,7 @@ async def get_agent_stats(
 
 @router.get("/merchants")
 async def get_merchant_stats(
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):

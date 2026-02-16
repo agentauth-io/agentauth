@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.database import get_db
 from app.models.limits import MerchantRule, CategoryRule, RuleAction
 from app.middleware import require_api_key
+from app.middleware.api_keys import get_current_user_id
 
 
 router = APIRouter(prefix="/v1/rules", tags=["Rules"])
@@ -54,7 +55,7 @@ class CategoryRuleResponse(BaseModel):
 
 @router.get("/merchants", response_model=List[MerchantRuleResponse])
 async def list_merchant_rules(
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):
@@ -86,7 +87,7 @@ async def list_merchant_rules(
 @router.post("/merchants", response_model=MerchantRuleResponse)
 async def create_merchant_rule(
     rule: MerchantRuleCreate,
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):
@@ -121,7 +122,7 @@ async def create_merchant_rule(
 @router.delete("/merchants/{rule_id}")
 async def delete_merchant_rule(
     rule_id: UUID,
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):
@@ -151,7 +152,7 @@ async def delete_merchant_rule(
 
 @router.get("/categories", response_model=List[CategoryRuleResponse])
 async def list_category_rules(
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):
@@ -182,7 +183,7 @@ async def list_category_rules(
 @router.post("/categories", response_model=CategoryRuleResponse)
 async def create_category_rule(
     rule: CategoryRuleCreate,
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):
@@ -213,7 +214,7 @@ async def create_category_rule(
 @router.delete("/categories/{rule_id}")
 async def delete_category_rule(
     rule_id: UUID,
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):

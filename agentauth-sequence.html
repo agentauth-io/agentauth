@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentAuth — Authorization API for AI Agent Commerce</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#08080a;--fg:#e8e6e1;
+  --accent:#e8e6e1;--accent2:#a0a0b0;--accent3:#c8c8d0;
+  --dim:#b0b0c0;--dim2:#8080a0;
+  --font-display:'Syne',sans-serif;
+  --font-mono:'Space Mono',monospace;
+}
+html{scroll-behavior:auto;background:var(--bg);color:var(--fg)}
+body{font-family:var(--font-mono);font-size:14px;line-height:1.6;overflow-x:hidden;background:var(--bg)}
+
+/* ── Grain ── */
+.grain{position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-repeat:repeat;background-size:180px}
+
+/* ── Loader ── */
+#loader{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s,visibility .8s}
+#loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.loader-text{font-family:var(--font-mono);font-size:12px;color:#b0b0c0;letter-spacing:4px;text-transform:uppercase;margin-bottom:20px}
+.loader-bar-track{width:200px;height:2px;background:#1a1a24;border-radius:2px;overflow:hidden}
+.loader-bar{height:100%;width:0%;background:linear-gradient(90deg,#888,#e8e6e1);border-radius:2px;transition:width .1s linear}
+
+/* ── Nav ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;background:rgba(5,5,8,.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.04)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg)}
+.logo svg{width:22px;height:26px}
+.logo b{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:-.5px}
+.logo small{font-family:var(--font-mono);font-size:9px;color:var(--dim);border:1px solid rgba(255,255,255,.06);padding:2px 7px;border-radius:3px;letter-spacing:1px}
+.nav-r{display:flex;gap:20px;align-items:center}
+.nav-r a{font-size:12px;color:#b0b0c0;text-decoration:none;letter-spacing:.5px;transition:color .3s}
+.nav-r a:hover{color:var(--fg)}
+.nav-cta{background:var(--accent) !important;color:var(--bg) !important;padding:7px 16px;border-radius:6px;font-weight:700;font-size:11px;letter-spacing:.5px}
+
+/* ── Hero ── */
+.hero{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;text-align:center;padding:2rem}
+.hero-tag{font-family:var(--font-mono);font-size:11px;letter-spacing:5px;text-transform:uppercase;color:#a0a0b0;margin-bottom:20px;opacity:0;animation:fadeUp 1s .3s forwards}
+.hero h1{font-family:var(--font-display);font-size:clamp(2.6rem,7vw,6.5rem);font-weight:800;line-height:1;letter-spacing:-.04em;background:linear-gradient(135deg,#ffffff 0%,#b0b0be 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;max-width:850px;opacity:0;animation:fadeUp 1s .5s forwards}
+.hero p{margin-top:20px;color:#d0d0de;font-size:14px;max-width:480px;line-height:1.8;opacity:0;animation:fadeUp 1s .7s forwards}
+.hero-actions{margin-top:28px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;opacity:0;animation:fadeUp 1s .9s forwards}
+.btn{font-family:var(--font-mono);font-size:12px;font-weight:700;padding:12px 28px;border-radius:8px;text-decoration:none;cursor:pointer;border:none;transition:all .3s;letter-spacing:.5px}
+.btn-g{background:var(--accent);color:var(--bg)}.btn-g:hover{box-shadow:0 0 40px rgba(255,255,255,.1);transform:translateY(-2px)}
+.btn-o{background:transparent;color:var(--fg);border:1px solid rgba(255,255,255,.08)}.btn-o:hover{border-color:rgba(255,255,255,.2)}
+.hero-install{margin-top:32px;opacity:0;animation:fadeUp 1s 1s forwards}
+.ibar{display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:9px 18px;font-family:var(--font-mono);font-size:12px;cursor:pointer;transition:all .3s}
+.ibar:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)}
+.ibar .pr{color:#a0a0b8}.ibar .cm{color:var(--fg)}.ibar .cp{font-size:9px;color:#a0a0b8;border:1px solid rgba(255,255,255,.08);padding:2px 7px;border-radius:3px}
+.scroll-cue{position:absolute;bottom:36px;display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;animation:fadeUp 1s 1.2s forwards}
+.scroll-cue span{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#a0a0b8}
+.scroll-cue .arrow{width:1px;height:40px;background:linear-gradient(to bottom,#888,transparent);animation:pulse 2s infinite}
+
+/* ── Sequence Section ── */
+.sequence-section{position:relative;height:600vh}
+.sequence-canvas-wrap{position:sticky;top:0;width:100%;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#sequenceCanvas{display:block;max-width:100%;max-height:100%}
+
+/* ── Overlay Panels ── */
+.text-panels{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10}
+.text-panel{position:absolute;width:100%;height:100vh;display:flex;align-items:center;padding:0 7vw;opacity:0;transition:opacity .6s ease}
+.text-panel.visible{opacity:1}
+.text-panel .panel-inner{max-width:440px}
+.text-panel.right{justify-content:flex-end}
+.text-panel.center{justify-content:center;text-align:center}
+.text-panel.center .panel-inner{max-width:560px}
+.panel-tag{font-family:var(--font-mono);font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#c0c0cc;margin-bottom:14px}
+.panel-tag.blue{color:#b0b0c0}.panel-tag.amber{color:#c0c0c8}
+.panel-title{font-family:var(--font-display);font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:700;line-height:1.1;letter-spacing:-.02em;margin-bottom:14px}
+.panel-title span{color:#a0a0b8}
+.panel-desc{color:#c8c8d8;font-size:13px;line-height:1.85}
+.panel-code{margin-top:16px;background:rgba(5,5,8,.85);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px 16px;font-family:var(--font-mono);font-size:11px;line-height:2;color:#b0b0c0;pointer-events:auto;max-width:380px}
+.panel-code .w{color:#eeeef0}.panel-code .g{color:#d0d0d8}.panel-code .b{color:#b0b0c0}.panel-code .a{color:#c8c8d0}.panel-code .d{color:#9090a8}
+.panel-code .mth{font-weight:700;color:#e8e6e1}.panel-code .url{color:#c0c0d0}
+.stat-row{display:flex;gap:36px;margin-top:20px}
+.stat-num{font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--fg);line-height:1}
+.stat-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#a0a0b8;margin-top:5px}
+
+/* ── API Section ── */
+.api-sec{padding:12vh 7vw;max-width:1000px;margin:0 auto}
+.api-header{margin-bottom:60px}
+.api-header h2{font-family:var(--font-display);font-size:clamp(1.8rem,4vw,3rem);font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.api-header h2 span{color:#a0a0b8}
+.api-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.04);border-radius:12px;overflow:hidden;margin-bottom:28px}
+.api-c{background:rgba(10,10,14,.9);padding:24px 20px;transition:background .3s;opacity:0;transform:translateY(20px);transition:all .6s cubic-bezier(.16,1,.3,1)}
+.api-c.in-view{opacity:1;transform:translateY(0)}
+.api-c:hover{background:rgba(20,20,28,.9)}
+.ac-m{font-family:var(--font-mono);font-size:10px;font-weight:700;margin-bottom:7px;letter-spacing:1px}
+.ac-m.post{color:#e8e6e1}.ac-m.get{color:#a0a0b0}.ac-m.del{color:#888}
+.ac-e{font-family:var(--font-mono);font-size:12px;color:var(--fg);margin-bottom:5px}
+.ac-d{font-size:11px;color:#b0b0c0;line-height:1.7}
+.sdk-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.sdk{font-family:var(--font-mono);font-size:11px;padding:6px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:6px;color:#b8b8c8;display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.dot.py{background:#3572A5}.dot.ts{background:#3178c6}.dot.rs{background:#dea584}
+
+/* ── Features ── */
+.feat-sec{padding:10vh 7vw;max-width:1000px;margin:0 auto;border-top:1px solid rgba(255,255,255,.04)}
+.feat-sec .api-header{margin-bottom:48px}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.04);border-radius:12px;overflow:hidden}
+.feat{background:rgba(10,10,14,.9);padding:24px 20px;opacity:0;transform:translateY(20px);transition:all .6s cubic-bezier(.16,1,.3,1)}
+.feat.in-view{opacity:1;transform:translateY(0)}
+.feat:hover{background:rgba(20,20,28,.9)}
+.f-n{font-family:var(--font-mono);font-size:9px;color:var(--dim2);letter-spacing:2px;margin-bottom:8px}
+.f-t{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--fg);margin-bottom:5px}
+.f-b{font-size:11px;color:#b0b0c0;line-height:1.8}
+
+/* ── Terminal ── */
+.term-sec{padding:10vh 7vw;max-width:800px;margin:0 auto;border-top:1px solid rgba(255,255,255,.04)}
+.term-header{text-align:center;margin-bottom:36px}
+.term-header h2{font-family:var(--font-display);font-size:clamp(1.6rem,3.5vw,2.5rem);font-weight:800;letter-spacing:-.02em}
+.term-header h2 span{color:var(--dim)}
+.lt{background:rgba(10,10,14,.95);border:1px solid rgba(255,255,255,.05);border-radius:12px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.5);opacity:0;transform:translateY(20px);transition:all .7s cubic-bezier(.16,1,.3,1)}
+.lt.in-view{opacity:1;transform:translateY(0)}
+.lt-bar{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);gap:5px}
+.lt-d{width:8px;height:8px;border-radius:50%}.lt-d.r{background:#555}.lt-d.y{background:#777}.lt-d.g{background:#999}
+.lt-tabs{display:flex;gap:0;margin-left:12px}
+.lt-tab{font-family:var(--font-mono);font-size:10px;padding:4px 10px;color:var(--dim);border-radius:4px;cursor:pointer;transition:all .2s;letter-spacing:.5px}
+.lt-tab.active{color:var(--fg);background:rgba(255,255,255,.04)}
+.lt-body{padding:18px;font-family:var(--font-mono);font-size:11px;line-height:1.9;color:#b0b0c0;min-height:400px;overflow-x:auto;white-space:pre-wrap}
+.c-p{color:#c0c0cc}.c-c{color:var(--fg)}.c-s{color:#e8e6e1}.c-a{color:#d0d0d8}.c-bl{color:#b0b0c0}.c-d{color:#9090a8}.c-w{color:var(--fg)}.c-g{color:#e8e6e1}.c-r{color:#888}
+
+/* ── CTA ── */
+.cta-sec{padding:14vh 7vw;text-align:center;border-top:1px solid rgba(255,255,255,.04);position:relative}
+.cta-sec::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:300px;background:radial-gradient(ellipse,rgba(34,197,94,.03),transparent 60%);pointer-events:none}
+.cta-sec h2{font-family:var(--font-display);font-size:clamp(2rem,5vw,4rem);font-weight:800;letter-spacing:-.04em;line-height:1}
+.cta-sec h2 span{color:#a0a0b8}
+.cta-sec p{margin:16px auto 28px;color:#c0c0d0;font-size:13px;max-width:420px;line-height:1.8}
+footer{padding:40px 7vw;text-align:center;border-top:1px solid rgba(255,255,255,.04)}
+footer p{color:#8888a0;font-size:11px}
+footer a{color:#c0c0d0;text-decoration:none}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+@media(max-width:768px){
+  .text-panel{padding:0 5vw;align-items:flex-end;padding-bottom:8vh}
+  .text-panel.right{justify-content:flex-start}
+  .api-grid,.feat-grid{grid-template-columns:1fr}
+  .nav-r a:not(.nav-cta){display:none}
+  nav{padding:12px 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+
+<!-- Loader -->
+<div id="loader">
+  <div class="loader-text">Generating Authorization Sequence</div>
+  <div class="loader-bar-track"><div class="loader-bar" id="loaderBar"></div></div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <a href="#" class="logo">
+    <svg viewBox="0 0 24 28" fill="none"><path d="M12 1L2 5.5v7c0 7.5 4.5 13.5 10 14.5 5.5-1 10-7 10-14.5v-7L12 1Z" stroke="#e8e6e1" stroke-width="1.2"/><path d="M8.5 14l2.5 2.5 5-5" stroke="#e8e6e1" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <b>AgentAuth</b><small>API</small>
+  </a>
+  <div class="nav-r">
+    <a href="#api">API</a>
+    <a href="#features">Features</a>
+    <a href="#demo">Demo</a>
+    <a href="#" class="nav-cta">GET API KEY →</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-tag">Cryptographic Authorization Infrastructure</div>
+  <h1>Authorization API for AI Agent Commerce</h1>
+  <p>One API to prove every AI agent purchase was human-approved. Delegation tokens that make chargebacks mathematically impossible.</p>
+  <div class="hero-actions">
+    <a class="btn btn-g" href="#">Get API Key</a>
+    <a class="btn btn-o" href="#sequence">See How It Works ↓</a>
+  </div>
+  <div class="hero-install">
+    <div class="ibar" onclick="navigator.clipboard.writeText('npm install @agentauth/sdk')"><span class="pr">$</span><span class="cm">npm install @agentauth/sdk</span><span class="cp">COPY</span></div>
+  </div>
+  <div class="scroll-cue"><span>Scroll</span><div class="arrow"></div></div>
+</section>
+
+<!-- ═════════════════════════════════════
+     SCROLL SEQUENCE — 300 frames
+     Driven by scroll position
+     ═════════════════════════════════════ -->
+<section class="sequence-section" id="sequence">
+  <div class="sequence-canvas-wrap">
+    <canvas id="sequenceCanvas"></canvas>
+  </div>
+
+  <div class="text-panels" id="textPanels">
+
+    <!-- Panel 1: User Consent (0-16%) -->
+    <div class="text-panel" data-start="0.02" data-end="0.17" style="top:5vh">
+      <div class="panel-inner">
+        <div class="panel-tag blue">01 — User Consent</div>
+        <div class="panel-title">The user defines <span>what the agent can do</span></div>
+        <div class="panel-desc">"Buy me a flight under $500." AgentAuth captures this intent as a cryptographically signed consent — scoped by amount, merchant, time, and action.</div>
+        <div class="panel-code">
+          <span class="mth">POST</span> <span class="url">/v1/consents</span><br><br>
+          { <span class="w">"intent"</span>: <span class="g">"Buy flight NYC"</span>,<br>
+          &nbsp;&nbsp;<span class="w">"max_amount"</span>: <span class="a">500</span>,<br>
+          &nbsp;&nbsp;<span class="w">"currency"</span>: <span class="g">"USD"</span>,<br>
+          &nbsp;&nbsp;<span class="w">"expires_in"</span>: <span class="a">86400</span> }
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 2: Token Minting (20-36%) -->
+    <div class="text-panel right" data-start="0.20" data-end="0.37" style="top:120vh">
+      <div class="panel-inner">
+        <div class="panel-tag">02 — Token Minting</div>
+        <div class="panel-title">A Biscuit token <span>is minted</span></div>
+        <div class="panel-desc">Cryptographic bearer credential with embedded constraints. Biscuit tokens support capability attenuation — permissions can only decrease through delegation chains. ED25519 signed.</div>
+        <div class="panel-code">
+          <span class="d">// delegation_token</span><br>
+          { <span class="w">"token"</span>: <span class="g">"bsc_eyJ..."</span>,<br>
+          &nbsp;&nbsp;<span class="w">"type"</span>: <span class="g">"biscuit_v2"</span>,<br>
+          &nbsp;&nbsp;<span class="w">"signing"</span>: <span class="g">"ed25519"</span>,<br>
+          &nbsp;&nbsp;<span class="w">"attenuable"</span>: <span class="b">true</span>,<br>
+          &nbsp;&nbsp;<span class="w">"scope"</span>: <span class="g">"purchase ≤ $500"</span> }
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 3: Delegation Chain (40-58%) -->
+    <div class="text-panel" data-start="0.40" data-end="0.58" style="top:240vh">
+      <div class="panel-inner">
+        <div class="panel-tag amber">03 — Delegation Chain</div>
+        <div class="panel-title">Permissions <span>attenuate at each hop</span></div>
+        <div class="panel-desc">Agent A delegates to Agent B. At each hop, the token's scope mathematically shrinks. $500 → $347. A payment agent can never exceed the original spending limit.</div>
+        <div class="panel-code">
+          <span class="mth">POST</span> <span class="url">/v1/authorize</span><br><br>
+          { <span class="w">"action"</span>: <span class="g">"purchase"</span>,<br>
+          &nbsp;&nbsp;<span class="w">"amount"</span>: <span class="a">347</span>,<br>
+          &nbsp;&nbsp;<span class="w">"merchant_id"</span>: <span class="g">"merch_united"</span> }<br><br>
+          <span class="d">→</span> { <span class="w">"decision"</span>: <span class="g">"ALLOW"</span>, <span class="w">"latency"</span>: <span class="g">"0.4ms"</span> }
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 4: Verification (62-80%) -->
+    <div class="text-panel right" data-start="0.62" data-end="0.80" style="top:370vh">
+      <div class="panel-inner">
+        <div class="panel-tag">04 — Merchant Verification</div>
+        <div class="panel-title">Cryptographic proof <span>on file</span></div>
+        <div class="panel-desc">Merchant verifies offline in under 1ms. Zero network round-trips. The receipt is court-admissible evidence. Chargebacks become mathematically impossible.</div>
+        <div class="panel-code">
+          <span class="mth">POST</span> <span class="url">/v1/verify</span><br><br>
+          { <span class="w">"auth_code"</span>: <span class="g">"auth_7k9..."</span> }<br><br>
+          <span class="d">→</span> { <span class="w">"valid"</span>: <span class="b">true</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="w">"receipt"</span>: <span class="g">"rcp_x8m..."</span> }
+        </div>
+        <div class="stat-row">
+          <div><div class="stat-num">&lt;1ms</div><div class="stat-label">Verify</div></div>
+          <div><div class="stat-num">0</div><div class="stat-label">API Calls</div></div>
+          <div><div class="stat-num">100%</div><div class="stat-label">Defense</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel 5: Final (84-97%) -->
+    <div class="text-panel center" data-start="0.84" data-end="0.97" style="top:500vh">
+      <div class="panel-inner">
+        <div class="panel-tag">The Complete Authorization Flow</div>
+        <div class="panel-title">Consent → Token → Delegation → Proof</div>
+        <div class="panel-desc">Four API calls. One delegation chain. Irrefutable cryptographic evidence that the human authorized every AI agent purchase. Auth0 sold for $6.5B building this for humans. We're building it for agents.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ API ═══ -->
+<section class="api-sec" id="api">
+  <div class="api-header">
+    <div class="panel-tag" style="margin-bottom:14px">API Reference</div>
+    <h2>RESTful endpoints <span>for every step</span></h2>
+  </div>
+  <div class="api-grid">
+    <div class="api-c" data-observe><div class="ac-m post">POST</div><div class="ac-e">/v1/consents</div><div class="ac-d">Create signed consent with constraints</div></div>
+    <div class="api-c" data-observe><div class="ac-m post">POST</div><div class="ac-e">/v1/authorize</div><div class="ac-d">Verify delegation token against transaction</div></div>
+    <div class="api-c" data-observe><div class="ac-m post">POST</div><div class="ac-e">/v1/verify</div><div class="ac-d">Merchant verification with receipt</div></div>
+    <div class="api-c" data-observe><div class="ac-m get">GET</div><div class="ac-e">/v1/consents/:id</div><div class="ac-d">Retrieve consent for audit trail</div></div>
+    <div class="api-c" data-observe><div class="ac-m get">GET</div><div class="ac-e">/v1/dashboard</div><div class="ac-d">Real-time metrics & approval rates</div></div>
+    <div class="api-c" data-observe><div class="ac-m del">DELETE</div><div class="ac-e">/v1/consents/:id</div><div class="ac-d">Revoke consent, invalidate tokens</div></div>
+  </div>
+  <div class="sdk-row">
+    <div class="sdk"><span class="dot py"></span>pip install agentauth</div>
+    <div class="sdk"><span class="dot ts"></span>npm i @agentauth/sdk</div>
+    <div class="sdk"><span class="dot rs"></span>cargo add agentauth</div>
+  </div>
+</section>
+
+<!-- ═══ Features ═══ -->
+<section class="feat-sec" id="features">
+  <div class="api-header">
+    <div class="panel-tag" style="margin-bottom:14px">Infrastructure</div>
+    <h2>Built for <span>agentic commerce</span></h2>
+  </div>
+  <div class="feat-grid">
+    <div class="feat" data-observe><div class="f-n">01</div><div class="f-t">Biscuit Tokens</div><div class="f-b">Cryptographic bearer credentials. Capability attenuation — permissions only decrease.</div></div>
+    <div class="feat" data-observe><div class="f-n">02</div><div class="f-t">Offline Verification</div><div class="f-b">No network round-trips. Edge verification in under 1ms.</div></div>
+    <div class="feat" data-observe><div class="f-n">03</div><div class="f-t">Protocol Agnostic</div><div class="f-b">Visa TAP, Stripe ACP, Google AP2, Mastercard Agent Pay.</div></div>
+    <div class="feat" data-observe><div class="f-n">04</div><div class="f-t">Merchant-First</div><div class="f-b">Built for the party losing $125B/year to chargebacks.</div></div>
+    <div class="feat" data-observe><div class="f-n">05</div><div class="f-t">Granular Policies</div><div class="f-b">Spending caps, merchant lists, time windows, categories.</div></div>
+    <div class="feat" data-observe><div class="f-n">06</div><div class="f-t">Any Framework</div><div class="f-b">LangChain, CrewAI, AutoGen, OpenAI Agents SDK.</div></div>
+  </div>
+</section>
+
+<!-- ═══ Terminal Demo ═══ -->
+<section class="term-sec" id="demo">
+  <div class="term-header">
+    <div class="panel-tag" style="margin-bottom:14px;text-align:center">Live Demo</div>
+    <h2>Watch the API <span>in action</span></h2>
+  </div>
+  <div class="lt" data-observe>
+    <div class="lt-bar">
+      <div class="lt-d r"></div><div class="lt-d y"></div><div class="lt-d g"></div>
+      <div class="lt-tabs">
+        <div class="lt-tab active" data-t="cli">CLI</div>
+        <div class="lt-tab" data-t="dash">Dashboard</div>
+      </div>
+    </div>
+    <div class="lt-body" id="ltB"></div>
+  </div>
+</section>
+
+<!-- ═══ CTA ═══ -->
+<section class="cta-sec">
+  <h2>The auth layer <span>for agents</span></h2>
+  <p>Auth0 was $6.5B for human auth. AgentAuth does it for AI agents. One API. Cryptographic proof.</p>
+  <a class="btn btn-g" href="#">Get API Key — Free Tier</a>
+</section>
+
+<footer>
+  <p>© 2026 AgentAuth · <a href="https://agentauth.in">agentauth.in</a> · Cryptographic authorization for AI agent commerce</p>
+</footer>
+
+<script>
+// ═════════════════════════════════════════════
+// CONFIG
+// ═════════════════════════════════════════════
+const TOTAL_FRAMES=300,CANVAS_W=1000,CANVAS_H=1000;
+const TAU=Math.PI*2;
+
+// ═════════════════════════════════════════════
+// PROCEDURAL FRAME GENERATOR
+// Authorization flow visualization:
+// 0-60: Shield forms with lock
+// 60-120: Lock opens, hexagonal token assembles
+// 120-200: Delegation chain — nodes + flowing particles
+// 200-260: Shield verification with checkmark
+// 260-300: Final radiant state
+// ═════════════════════════════════════════════
+
+// Shield path points (normalized -1 to 1)
+function shieldPts(s){
+  return[
+    [0,-s],[s*.55,-s*.85],[s*.88,-s*.35],[s*.8,s*.2],
+    [s*.5,s*.7],[0,s*1.05],[-s*.5,s*.7],[-s*.8,s*.2],
+    [-s*.88,-s*.35],[-s*.55,-s*.85]
+  ];
+}
+function drawShield(ctx,cx,cy,s,progress,strokeColor,fillColor){
+  const pts=shieldPts(s);
+  const totalPts=pts.length;
+  const drawn=progress*totalPts;
+  ctx.beginPath();
+  for(let i=0;i<totalPts;i++){
+    const frac=Math.min(1,Math.max(0,drawn-i));
+    if(frac<=0)break;
+    const p0=pts[i],p1=pts[(i+1)%totalPts];
+    const px=cx+p0[0]+(p1[0]-p0[0])*frac*0;
+    const py=cy+p0[1]+(p1[1]-p0[1])*frac*0;
+    if(i===0){
+      ctx.moveTo(cx+p0[0],cy+p0[1]);
+    }
+    // Interpolate to next point
+    const nx=cx+p0[0]+(p1[0]-p0[0])*frac;
+    const ny=cy+p0[1]+(p1[1]-p0[1])*frac;
+    ctx.lineTo(nx,ny);
+  }
+  if(progress>=1)ctx.closePath();
+  if(fillColor){ctx.fillStyle=fillColor;ctx.fill()}
+  ctx.strokeStyle=strokeColor;ctx.stroke();
+}
+
+// Hexagon
+function drawHex(ctx,cx,cy,r,rot,progress,stroke,fill){
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);
+  const edges=6,drawn=progress*edges;
+  ctx.beginPath();
+  for(let i=0;i<edges;i++){
+    const frac=Math.min(1,Math.max(0,drawn-i));
+    if(frac<=0)break;
+    const a0=TAU/edges*i-TAU/12;
+    const a1=TAU/edges*(i+1)-TAU/12;
+    const x0=r*Math.cos(a0),y0=r*Math.sin(a0);
+    const x1=r*Math.cos(a1),y1=r*Math.sin(a1);
+    if(i===0)ctx.moveTo(x0,y0);
+    ctx.lineTo(x0+(x1-x0)*frac,y0+(y1-y0)*frac);
+  }
+  if(progress>=1){ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}}
+  ctx.strokeStyle=stroke;ctx.stroke();
+  ctx.restore();
+}
+
+// Particles system
+const PARTICLES=[];
+for(let i=0;i<150;i++){
+  const a=Math.random()*TAU,r=.3+Math.random()*.7;
+  PARTICLES.push({
+    bx:Math.cos(a)*r,by:Math.sin(a)*r,
+    speed:.3+Math.random()*.7,
+    size:.5+Math.random()*2,
+    bright:.2+Math.random()*.8,
+    phase:Math.random()*TAU
+  });
+}
+
+function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
+function cl(v,lo,hi){return Math.max(lo,Math.min(hi,v))}
+function lerp(a,b,t){return a+(b-a)*t}
+
+function renderFrame(ctx,frameIndex,w,h){
+  const t=frameIndex/TOTAL_FRAMES;
+  const cx=w/2,cy=h/2;
+  const sz=w*.35;
+
+  // Background — pure black
+  ctx.fillStyle='#08080a';
+  ctx.fillRect(0,0,w,h);
+
+  // Subtle metallic radial glow — white/silver center
+  const glowR=w*.5;
+  const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,glowR);
+  grd.addColorStop(0,'rgba(255,255,255,.025)');
+  grd.addColorStop(.4,'rgba(255,255,255,.01)');
+  grd.addColorStop(1,'transparent');
+  ctx.fillStyle=grd;ctx.fillRect(0,0,w,h);
+
+  // Minimal grid dots — very subtle
+  ctx.fillStyle='rgba(255,255,255,.012)';
+  const sp=60;
+  for(let gx=sp;gx<w;gx+=sp)for(let gy=sp;gy<h;gy+=sp){
+    const dist=Math.sqrt((gx-cx)**2+(gy-cy)**2)/sz;
+    if(dist<2.5){ctx.beginPath();ctx.arc(gx,gy,.5,0,TAU);ctx.fill()}
+  }
+
+  // ═══ PHASE 1: Shield + Lock (0 → 0.2) ═══
+  if(t<.35){
+    const p=cl(t/.2,0,1);
+    const shieldP=ease(cl(p/.6,0,1));
+    ctx.lineWidth=1.5;
+    drawShield(ctx,cx,cy,sz*.6,shieldP,`rgba(255,255,255,${.35*Math.min(1,p*2)})`,shieldP>=1?'rgba(255,255,255,.01)':null);
+
+    // Lock
+    const lockP=ease(cl((p-.3)/.4,0,1));
+    if(lockP>.01){
+      const ls=sz*.12*lockP;
+      ctx.strokeStyle=`rgba(255,255,255,${.5*lockP})`;ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(cx,cy-ls*.4,ls*.45,Math.PI,0);ctx.stroke();
+      ctx.strokeStyle=`rgba(255,255,255,${.4*lockP})`;ctx.lineWidth=1;
+      ctx.beginPath();ctx.roundRect(cx-ls*.55,cy-ls*.1,ls*1.1,ls*.85,4);ctx.stroke();
+      const khP=ease(cl((p-.6)/.3,0,1));
+      if(khP>.01){
+        ctx.fillStyle=`rgba(255,255,255,${.25*khP})`;
+        ctx.beginPath();ctx.arc(cx,cy+ls*.15,ls*.1*khP,0,TAU);ctx.fill();
+      }
+    }
+
+    // Constraint tags
+    if(p>.6){
+      const tp=ease(cl((p-.6)/.3,0,1));
+      const tags=['$500 MAX','24H TTL','PURCHASE','USD'];
+      tags.forEach((tg,i)=>{
+        const delay=i*.08;
+        const tagP=ease(cl((tp-delay)/.4,0,1));
+        if(tagP<.01)return;
+        const tx=cx+sz*.55,ty=cy-sz*.25+i*28;
+        ctx.globalAlpha=tagP;
+        ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=.5;
+        ctx.beginPath();ctx.roundRect(tx-38,ty-10,76,20,4);ctx.stroke();
+        ctx.font='500 9px "Space Mono",monospace';ctx.textAlign='center';
+        ctx.fillStyle='rgba(255,255,255,.4)';ctx.fillText(tg,tx,ty+3);
+        ctx.globalAlpha=1;
+      });
+    }
+  }
+
+  // ═══ PHASE 2: Token Minting (0.2 → 0.4) ═══
+  if(t>.15&&t<.55){
+    const p=cl((t-.2)/.2,0,1);
+    const fadeOut=cl(1-(t-.42)/.08,0,1);
+    const v=ease(p)*fadeOut;
+    if(v>.005){
+      const hexR=sz*.5;
+      ctx.lineWidth=1.5;
+      drawHex(ctx,cx,cy,hexR*v,t*-.2,ease(cl(p/.5,0,1)),`rgba(255,255,255,${.4*v})`,p>.7?`rgba(255,255,255,${.015*v})`:null);
+
+      // Inner hex
+      if(p>.3){
+        const ip=ease(cl((p-.3)/.3,0,1));
+        ctx.lineWidth=.5;
+        drawHex(ctx,cx,cy,hexR*.45*v,t*.15,ip,`rgba(255,255,255,${.12*ip*fadeOut})`,null);
+      }
+
+      // Subtle orbiting dots
+      if(p>.2){
+        const op=cl((p-.2)/.5,0,1);
+        for(let i=0;i<16;i++){
+          const a=TAU/16*i+t*TAU*2;
+          const r=hexR*v*1.12;
+          const px2=cx+Math.cos(a)*r,py2=cy+Math.sin(a)*r;
+          ctx.fillStyle=`rgba(255,255,255,${.06*op*fadeOut*(Math.sin(a*2)*.5+.5)})`;
+          ctx.beginPath();ctx.arc(px2,py2,1,0,TAU);ctx.fill();
+        }
+      }
+
+      // Labels
+      if(p>.4){
+        const lp=ease(cl((p-.4)/.3,0,1))*fadeOut;
+        ctx.textAlign='center';
+        ctx.font='700 13px "Space Mono",monospace';
+        ctx.fillStyle=`rgba(255,255,255,${.55*lp})`;
+        ctx.fillText('BISCUIT TOKEN',cx,cy-8);
+        ctx.font='400 10px "Space Mono",monospace';
+        ctx.fillStyle=`rgba(255,255,255,${.3*lp})`;
+        ctx.fillText('scope: purchase ≤ $500',cx,cy+12);
+        ctx.fillText('sign: ed25519 · attenuable',cx,cy+28);
+      }
+    }
+  }
+
+  // ═══ PHASE 3: Delegation Chain (0.4 → 0.67) ═══
+  if(t>.35&&t<.75){
+    const p=cl((t-.4)/.27,0,1);
+    const fadeOut=cl(1-(t-.7)/.05,0,1);
+
+    const nodes=[
+      {bx:-.45,by:-.25,l:'USER',s:'$500'},
+      {bx:-.1,by:.15,l:'AGENT A',s:'$500'},
+      {bx:.25,by:-.1,l:'AGENT B',s:'$347'},
+      {bx:.5,by:.18,l:'MERCHANT',s:'✓'},
+    ];
+
+    nodes.forEach((n,i)=>{
+      const nd=i*.12;
+      const np=ease(cl((p-nd)/.18,0,1))*fadeOut;
+      if(np<.005)return;
+      const nx2=cx+n.bx*sz*1.3,ny2=cy+n.by*sz;
+
+      // Connection line
+      if(i<nodes.length-1){
+        const next=nodes[i+1];
+        const lp2=ease(cl((p-nd-.06)/.18,0,1))*fadeOut;
+        if(lp2>.005){
+          const nx3=cx+next.bx*sz*1.3,ny3=cy+next.by*sz;
+          const ex=lerp(nx2,nx3,lp2),ey=lerp(ny2,ny3,lp2);
+          ctx.setLineDash([4,6]);
+          ctx.strokeStyle=`rgba(255,255,255,${.1*lp2})`;ctx.lineWidth=.8;
+          ctx.beginPath();ctx.moveTo(nx2,ny2);ctx.lineTo(ex,ey);ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Flowing dots
+          const fp=cl((p-nd-.1)/.5,0,1);
+          if(fp>.005){
+            for(let j=0;j<3;j++){
+              const pt2=(fp*3+j*.33)%1;
+              const ppx=lerp(nx2,nx3,pt2),ppy=lerp(ny2,ny3,pt2);
+              const fade=Math.sin(pt2*Math.PI);
+              ctx.fillStyle=`rgba(255,255,255,${.2*fade*lp2})`;
+              ctx.beginPath();ctx.arc(ppx,ppy,1.5,0,TAU);ctx.fill();
+            }
+          }
+        }
+      }
+
+      // Node ring
+      const nr=18*np;
+      ctx.strokeStyle=`rgba(255,255,255,${.3*np})`;ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(nx2,ny2,nr,0,TAU);ctx.stroke();
+      // Center dot
+      ctx.fillStyle=`rgba(255,255,255,${.7*np})`;
+      ctx.beginPath();ctx.arc(nx2,ny2,2.5*np,0,TAU);ctx.fill();
+      // Labels
+      ctx.font=`700 ${Math.round(10*np)}px "Space Mono",monospace`;
+      ctx.textAlign='center';ctx.fillStyle=`rgba(255,255,255,${.45*np})`;
+      ctx.fillText(n.s,nx2,ny2-nr-8);
+      ctx.font=`400 ${Math.round(8*np)}px "Space Mono",monospace`;
+      ctx.fillStyle=`rgba(255,255,255,${.3*np})`;
+      ctx.fillText(n.l,nx2,ny2+nr+12);
+    });
+
+    // Attenuation bar
+    if(p>.6){
+      const abP=ease(cl((p-.6)/.25,0,1))*fadeOut;
+      const bw=sz*1.1,bx=cx-bw/2,by=cy+sz*.45;
+      ctx.fillStyle=`rgba(255,255,255,${.02*abP})`;ctx.fillRect(bx,by,bw*abP,3);
+      ctx.fillStyle=`rgba(255,255,255,${.08*abP})`;ctx.fillRect(bx,by,bw*.694*abP,3);
+      ctx.font='400 9px "Space Mono",monospace';ctx.textAlign='center';
+      ctx.fillStyle=`rgba(255,255,255,${.25*abP})`;
+      ctx.fillText('$500 → $500 → $347   ATTENUATION →',cx,by+18);
+    }
+  }
+
+  // ═══ PHASE 4: Shield Verification (0.67 → 0.87) ═══
+  if(t>.6){
+    const p=cl((t-.67)/.2,0,1);
+    const v4=ease(p);
+    if(v4>.005){
+      const ss2=sz*.65;
+      ctx.lineWidth=2;
+      drawShield(ctx,cx,cy,ss2*Math.min(1,v4*1.2),ease(cl(p/.4,0,1)),
+        `rgba(255,255,255,${.4*v4})`,
+        p>.5?`rgba(255,255,255,${.015*ease((p-.5)*2)})`:null
+      );
+
+      // Checkmark
+      const ckP=ease(cl((p-.4)/.25,0,1));
+      if(ckP>.01){
+        const cs=ss2*.3;
+        ctx.strokeStyle=`rgba(255,255,255,${.7*ckP})`;ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
+        ctx.beginPath();
+        if(ckP<.4){
+          const f=ckP/.4;
+          ctx.moveTo(cx-cs*.45,cy+cs*.05);
+          ctx.lineTo(lerp(cx-cs*.45,cx-cs*.05,f),lerp(cy+cs*.05,cy+cs*.45,f));
+        }else{
+          const f=(ckP-.4)/.6;
+          ctx.moveTo(cx-cs*.45,cy+cs*.05);
+          ctx.lineTo(cx-cs*.05,cy+cs*.45);
+          ctx.lineTo(lerp(cx-cs*.05,cx+cs*.5,f),lerp(cy+cs*.45,cy-cs*.3,f));
+        }
+        ctx.stroke();ctx.lineCap='butt';ctx.lineJoin='miter';
+      }
+
+      // VERIFIED label
+      if(p>.6){
+        const lp=ease(cl((p-.6)/.2,0,1));
+        ctx.font=`800 16px "Syne",sans-serif`;ctx.textAlign='center';
+        ctx.fillStyle=`rgba(255,255,255,${.6*lp})`;
+        ctx.fillText('V E R I F I E D',cx,cy+ss2*1.05+32);
+        ctx.font='400 10px "Space Mono",monospace';
+        ctx.fillStyle=`rgba(255,255,255,${.3*lp})`;
+        ctx.fillText('receipt on file · court-admissible',cx,cy+ss2*1.05+54);
+      }
+
+      // Subtle pulse rings
+      if(p>.5){
+        const puP=(p-.5)/.5;
+        for(let i=0;i<2;i++){
+          const pp=((puP*2+i*.5)%1);
+          const prs=ss2*(1+pp*.4);
+          ctx.lineWidth=.5;
+          drawShield(ctx,cx,cy,prs,1,`rgba(255,255,255,${.025*(1-pp)})`,null);
+        }
+      }
+    }
+  }
+
+  // ═══ AMBIENT PARTICLES — sparse, white ═══
+  for(let i=0;i<PARTICLES.length;i+=2){
+    const pt=PARTICLES[i];
+    const angle=t*TAU*pt.speed+pt.phase;
+    const dist=sz*(.6+pt.by*.8);
+    const px=cx+Math.cos(angle)*dist*(.8+pt.bx*.4);
+    const py=cy+Math.sin(angle)*dist*(.6+pt.bx*.3);
+    const wander=Math.sin(t*10+pt.phase)*sz*.04;
+    const fpx=px+wander,fpy=py+Math.cos(t*8+pt.phase)*sz*.02;
+    const d=Math.sqrt((fpx-cx)**2+(fpy-cy)**2)/(sz*1.5);
+    const alpha=pt.bright*.04*(1-d);
+    if(alpha<.003||fpx<0||fpx>w||fpy<0||fpy>h)continue;
+    ctx.fillStyle=`rgba(255,255,255,${alpha})`;
+    ctx.beginPath();ctx.arc(fpx,fpy,pt.size*.5,0,TAU);ctx.fill();
+  }
+}
+
+// ═════════════════════════════════════════════
+// GENERATE & CACHE FRAMES
+// ═════════════════════════════════════════════
+const frames=[];
+const offscreen=document.createElement('canvas');
+offscreen.width=CANVAS_W;offscreen.height=CANVAS_H;
+const offCtx=offscreen.getContext('2d');
+
+const loaderBar=document.getElementById('loaderBar');
+const loader=document.getElementById('loader');
+
+let frameIdx=0;
+function generateBatch(){
+  const batch=12;
+  const end=Math.min(frameIdx+batch,TOTAL_FRAMES);
+  for(;frameIdx<end;frameIdx++){
+    renderFrame(offCtx,frameIdx,CANVAS_W,CANVAS_H);
+    const img=new Image();
+    img.src=offscreen.toDataURL('image/jpeg',.82);
+    frames.push(img);
+  }
+  loaderBar.style.width=(frameIdx/TOTAL_FRAMES*100)+'%';
+  if(frameIdx<TOTAL_FRAMES){
+    requestAnimationFrame(generateBatch);
+  }else{
+    setTimeout(()=>{loader.classList.add('hidden');initScrollEngine()},300);
+  }
+}
+requestAnimationFrame(generateBatch);
+
+// ═════════════════════════════════════════════
+// SCROLL ENGINE
+// ═════════════════════════════════════════════
+function initScrollEngine(){
+  const canvas=document.getElementById('sequenceCanvas');
+  const ctx=canvas.getContext('2d');
+  const section=document.getElementById('sequence');
+  const panels=document.querySelectorAll('.text-panel');
+
+  function resize(){
+    const dpr=Math.min(devicePixelRatio||1,2);
+    canvas.width=innerWidth*dpr;canvas.height=innerHeight*dpr;
+    canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resize();addEventListener('resize',resize);
+
+  let currentFrame=-1,ticking=false;
+
+  function onScroll(){if(!ticking){requestAnimationFrame(update);ticking=true}}
+
+  function update(){
+    ticking=false;
+    const rect=section.getBoundingClientRect();
+    const sH=section.scrollHeight-innerHeight;
+    const scrolled=-rect.top;
+    const frac=Math.max(0,Math.min(1,scrolled/sH));
+    const idx=Math.min(TOTAL_FRAMES-1,Math.floor(frac*TOTAL_FRAMES));
+
+    if(idx!==currentFrame&&frames[idx]){
+      currentFrame=idx;
+      const w=innerWidth,h=innerHeight;
+      ctx.clearRect(0,0,w,h);
+      const img=frames[idx];
+      const ia=img.naturalWidth/img.naturalHeight;
+      const va=w/h;
+      let dw,dh,dx,dy;
+      if(va>ia){dw=w;dh=w/ia;dx=0;dy=(h-dh)/2}
+      else{dh=h;dw=h*ia;dy=0;dx=(w-dw)/2}
+      ctx.drawImage(img,dx,dy,dw,dh);
+    }
+
+    panels.forEach(panel=>{
+      const start=parseFloat(panel.dataset.start);
+      const end=parseFloat(panel.dataset.end);
+      panel.classList.toggle('visible',frac>=start&&frac<=end);
+    });
+  }
+
+  addEventListener('scroll',onScroll,{passive:true});
+  update();
+
+  // Intersection observer for other sections
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){
+      e.target.classList.add('in-view');
+      e.target.style.transitionDelay=(Array.from(e.target.parentElement.children).indexOf(e.target)*.06)+'s';
+    }});
+  },{threshold:.15});
+  document.querySelectorAll('[data-observe]').forEach(el=>obs.observe(el));
+}
+
+// ═════════════════════════════════════════════
+// LIVE TERMINAL
+// ═════════════════════════════════════════════
+(function(){
+  const body=document.getElementById('ltB'),tabs=document.querySelectorAll('.lt-tab');
+  let running=false,started=false;
+  const script=[
+    {t:'c',v:'agentauth init --merchant merch_9x7'},{t:'d',ms:350},
+    {t:'o',v:'<span class="c-g">✓</span> <span class="c-w">AgentAuth initialized</span>\n  <span class="c-d">merchant_id:</span> <span class="c-s">merch_9x7</span>\n  <span class="c-d">api_key:</span>     <span class="c-s">sk_live_a3x...7k9</span>\n  <span class="c-d">endpoint:</span>   <span class="c-s">https://api.agentauth.in/v1</span>\n'},{t:'d',ms:600},
+    {t:'c',v:'agentauth consent create --user user_a3x \\\n  --intent "Buy flight NYC" --max-amount 500 --ttl 24h'},{t:'d',ms:500},
+    {t:'o',v:'<span class="c-g">✓</span> <span class="c-w">Consent created</span>\n  <span class="c-d">consent_id:</span>  <span class="c-s">cns_8f2a...</span>\n  <span class="c-d">token:</span>       <span class="c-s">bsc_eyJhbGci...</span>\n  <span class="c-d">scope:</span>       <span class="c-a">purchase ≤ $500</span>\n  <span class="c-d">signing:</span>     <span class="c-s">ed25519</span>\n  <span class="c-d">attenuable:</span>  <span class="c-bl">true</span>\n'},{t:'d',ms:800},
+    {t:'c',v:'agentauth authorize --token bsc_eyJ... \\\n  --action purchase --amount 347 --merchant merch_united'},{t:'d',ms:300},
+    {t:'o',v:'<span class="c-g">✓</span> <span class="c-w">ALLOW</span>\n  <span class="c-d">auth_code:</span> <span class="c-s">auth_7k9f...</span>\n  <span class="c-d">amount:</span>    <span class="c-a">$347.00</span> <span class="c-d">(within $500 limit)</span>\n  <span class="c-d">latency:</span>   <span class="c-s">0.4ms</span>\n'},{t:'d',ms:700},
+    {t:'c',v:'agentauth verify --code auth_7k9f... --amount 347'},{t:'d',ms:200},
+    {t:'o',v:'<span class="c-g">✓</span> <span class="c-w">VALID</span>\n  <span class="c-d">receipt:</span>       <span class="c-s">rcp_x8m2...</span>\n  <span class="c-d">consent_proof:</span> <span class="c-s">cpr_4j7n...</span>\n  <span class="c-d">latency:</span>      <span class="c-s">0.2ms</span>\n\n  <span class="c-g">Receipt saved for chargeback defense.</span>\n'},{t:'d',ms:600},
+    {t:'c',v:'agentauth dashboard --live'},{t:'d',ms:400},
+    {t:'o',v:'DASH'},
+  ];
+  const dashTxt=`<div style="font-family:'Space Mono',monospace;font-size:11px;line-height:1;color:#b0b0c0;white-space:normal">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border:1px solid rgba(255,255,255,.06);border-radius:6px;margin-bottom:14px;background:rgba(255,255,255,.02)">
+  <span style="color:#e8e6e1;font-weight:700;font-size:12px">AgentAuth Dashboard</span>
+  <span><span style="color:#8080a0">merch_9x7</span>&nbsp;&nbsp;<span style="color:#e8e6e1">●</span> <span style="color:#b0b0c0">Live</span></span>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.04);border-radius:6px;overflow:hidden;margin-bottom:14px">
+  <div style="background:rgba(10,10,14,.95);padding:12px 14px"><div style="color:#8080a0;font-size:9px;letter-spacing:1px;margin-bottom:6px">DATE</div><div style="color:#e8e6e1;font-size:13px;font-weight:700">Feb 09</div></div>
+  <div style="background:rgba(10,10,14,.95);padding:12px 14px"><div style="color:#8080a0;font-size:9px;letter-spacing:1px;margin-bottom:6px">AUTHORIZATIONS</div><div style="color:#e8e6e1;font-size:13px;font-weight:700">1,247</div></div>
+  <div style="background:rgba(10,10,14,.95);padding:12px 14px"><div style="color:#8080a0;font-size:9px;letter-spacing:1px;margin-bottom:6px">APPROVED</div><div style="color:#e8e6e1;font-size:13px;font-weight:700">98.4%</div></div>
+  <div style="background:rgba(10,10,14,.95);padding:12px 14px"><div style="color:#8080a0;font-size:9px;letter-spacing:1px;margin-bottom:6px">AVG LATENCY</div><div style="color:#e8e6e1;font-size:13px;font-weight:700">0.3ms</div></div>
+</div>
+
+<div style="padding:12px 14px;border:1px solid rgba(255,255,255,.04);border-radius:6px;margin-bottom:14px;background:rgba(255,255,255,.015)">
+  <div style="color:#8080a0;font-size:9px;letter-spacing:1px;margin-bottom:8px">VOLUME (24H)</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="flex:1;height:6px;background:rgba(255,255,255,.04);border-radius:3px;overflow:hidden">
+      <div style="width:88%;height:100%;background:linear-gradient(90deg,#888,#e8e6e1);border-radius:3px"></div>
+    </div>
+    <span style="color:#e8e6e1;font-weight:700;font-size:12px;white-space:nowrap">$48,290</span>
+  </div>
+</div>
+
+<div style="border:1px solid rgba(255,255,255,.04);border-radius:6px;overflow:hidden;margin-bottom:14px">
+  <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(255,255,255,.015)">
+    <span style="color:#8080a0;font-size:9px;letter-spacing:1px">RECENT AUTHORIZATIONS</span>
+  </div>
+  <div style="display:grid;grid-template-columns:72px 50px 48px 1fr;gap:0;font-size:10px">
+    <div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.03);color:#8080a0">17:08:43</div><div style="padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.03);color:#e8e6e1;font-weight:700">ALLOW</div><div style="padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.03);color:#c0c0c8;text-align:right">$347</div><div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.03);color:#8080a0">user_a3x → merch_united</div>
+    <div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.03);color:#8080a0">17:08:21</div><div style="padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.03);color:#e8e6e1;font-weight:700">ALLOW</div><div style="padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.03);color:#c0c0c8;text-align:right">$29</div><div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.03);color:#8080a0">user_b7m → merch_amazon</div>
+    <div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.03);color:#8080a0">17:07:58</div><div style="padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.03);color:#666;font-weight:700">DENY</div><div style="padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.03);color:#c0c0c8;text-align:right">$812</div><div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.03);color:#8080a0">user_c1p → over limit</div>
+    <div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.03);color:#8080a0">17:07:44</div><div style="padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.03);color:#e8e6e1;font-weight:700">ALLOW</div><div style="padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.03);color:#c0c0c8;text-align:right">$67</div><div style="padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.03);color:#8080a0">user_d9q → merch_shopify</div>
+    <div style="padding:8px 14px;color:#8080a0">17:07:12</div><div style="padding:8px 4px;color:#e8e6e1;font-weight:700">ALLOW</div><div style="padding:8px 4px;color:#c0c0c8;text-align:right">$124</div><div style="padding:8px 14px;color:#8080a0">user_e4w → merch_stripe</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.04);border-radius:6px;overflow:hidden">
+  <div style="background:rgba(10,10,14,.95);padding:12px 14px"><div style="color:#8080a0;font-size:9px;letter-spacing:1px;margin-bottom:6px">CHARGEBACKS DEFENDED</div><div style="color:#e8e6e1;font-size:13px;font-weight:700">23/23 <span style="color:#8080a0;font-weight:400;font-size:10px">(100%)</span></div></div>
+  <div style="background:rgba(10,10,14,.95);padding:12px 14px"><div style="color:#8080a0;font-size:9px;letter-spacing:1px;margin-bottom:6px">MONEY SAVED</div><div style="color:#e8e6e1;font-size:13px;font-weight:700">$12,847</div></div>
+</div>
+</div>`;
+
+  function run(){if(running)return;running=true;body.innerHTML='';let i=0;
+    function nx(){if(i>=script.length){running=false;return}const s=script[i];i++;
+      if(s.t==='c')typeC(s.v,nx);
+      else if(s.t==='o'){if(s.v==='DASH')body.innerHTML+=dashTxt;else body.innerHTML+=s.v;body.scrollTop=9e9;nx()}
+      else if(s.t==='d')setTimeout(nx,s.ms);}nx();}
+
+  function typeC(txt,cb){body.innerHTML+=`<span class="c-p">❯</span> `;let ci=0;
+    const full=txt.split('\n').join('\n  ');
+    function tc(){if(ci>=full.length){body.innerHTML+='\n';body.scrollTop=9e9;setTimeout(cb,120);return}
+      const ch=full[ci];body.innerHTML+=`<span class="c-c">${ch==='<'?'&lt;':ch==='>'?'&gt;':ch}</span>`;ci++;body.scrollTop=9e9;setTimeout(tc,10+Math.random()*18);}tc();}
+
+  tabs.forEach(tab=>tab.addEventListener('click',()=>{tabs.forEach(t2=>t2.classList.remove('active'));tab.classList.add('active');
+    if(tab.dataset.t==='dash')body.innerHTML=dashTxt;else{body.innerHTML='';running=false;run()}}));
+
+  new IntersectionObserver(es=>{if(es[0].isIntersecting&&!started){started=true;run()}},{threshold:.15}).observe(document.querySelector('.lt'));
+})();
+</script>
+</body>
+</html>

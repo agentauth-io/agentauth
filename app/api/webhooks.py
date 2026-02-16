@@ -13,6 +13,7 @@ from app.models.database import get_db
 from app.models.webhooks import WEBHOOK_EVENTS
 from app.services.webhooks import WebhooksService
 from app.middleware import require_api_key
+from app.middleware.api_keys import get_current_user_id
 
 
 router = APIRouter(prefix="/v1/webhooks", tags=["Webhooks"])
@@ -55,7 +56,7 @@ class WebhookResponse(BaseModel):
 
 @router.get("", response_model=List[WebhookResponse])
 async def list_webhooks(
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):
@@ -86,7 +87,7 @@ async def list_webhooks(
 @router.post("", response_model=WebhookResponse)
 async def create_webhook(
     webhook: WebhookCreate,
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):
@@ -119,7 +120,7 @@ async def create_webhook(
 @router.get("/{webhook_id}", response_model=WebhookResponse)
 async def get_webhook(
     webhook_id: UUID,
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):
@@ -149,7 +150,7 @@ async def get_webhook(
 async def update_webhook(
     webhook_id: UUID,
     update: WebhookUpdate,
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):
@@ -185,7 +186,7 @@ async def update_webhook(
 @router.delete("/{webhook_id}")
 async def delete_webhook(
     webhook_id: UUID,
-    user_id: str = "default",
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):

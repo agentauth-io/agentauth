@@ -92,7 +92,7 @@ spec:
           # Readiness probe - stop traffic if not ready
           readinessProbe:
             httpGet:
-              path: /v1/health
+              path: /health
               port: 8000
             initialDelaySeconds: 5
             periodSeconds: 10

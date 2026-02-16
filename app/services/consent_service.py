@@ -38,7 +38,8 @@ class ConsentService:
     async def create_consent(
         self,
         db: AsyncSession,
-        consent_data: ConsentCreate
+        consent_data: ConsentCreate,
+        developer_id: Optional[str] = None,
     ) -> ConsentResponse:
         """
         Create a new consent and generate a delegation token.
@@ -80,6 +81,7 @@ class ConsentService:
         consent = Consent(
             consent_id=consent_id,
             user_id=consent_data.user_id,
+            developer_id=developer_id,
             intent_description=consent_data.intent.description,
             intent_hash=intent_hash,
             constraints=constraints,
@@ -136,12 +138,14 @@ class ConsentService:
     async def get_consent(
         self,
         db: AsyncSession,
-        consent_id: str
+        consent_id: str,
+        developer_id: Optional[str] = None,
     ) -> Optional[Consent]:
-        """Get a consent by ID."""
-        result = await db.execute(
-            select(Consent).where(Consent.consent_id == consent_id)
-        )
+        """Get a consent by ID, optionally verifying ownership."""
+        query = select(Consent).where(Consent.consent_id == consent_id)
+        if developer_id is not None:
+            query = query.where(Consent.developer_id == developer_id)
+        result = await db.execute(query)
         return result.scalar_one_or_none()
     
     async def get_active_consent(
@@ -164,10 +168,11 @@ class ConsentService:
     async def revoke_consent(
         self,
         db: AsyncSession,
-        consent_id: str
+        consent_id: str,
+        developer_id: Optional[str] = None,
     ) -> bool:
-        """Revoke a consent."""
-        consent = await self.get_consent(db, consent_id)
+        """Revoke a consent, optionally verifying ownership."""
+        consent = await self.get_consent(db, consent_id, developer_id)
         if consent is None:
             return False
         

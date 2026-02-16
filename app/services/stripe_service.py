@@ -10,8 +10,10 @@ from app.config import get_settings
 
 settings = get_settings()
 
-# Initialize Stripe with API key
+# Initialize Stripe with API key and timeout
 stripe.api_key = settings.stripe_secret_key
+stripe.max_network_retries = 2
+STRIPE_TIMEOUT = 15  # seconds
 
 
 class PaymentIntentResponse(BaseModel):
@@ -59,7 +61,7 @@ async def create_payment_intent(
     if metadata:
         intent_params["metadata"] = metadata
     
-    intent = stripe.PaymentIntent.create(**intent_params)
+    intent = stripe.PaymentIntent.create(**intent_params, timeout=STRIPE_TIMEOUT)
     
     return PaymentIntentResponse(
         client_secret=intent.client_secret,
@@ -86,7 +88,7 @@ async def create_customer(
     if metadata:
         customer_params["metadata"] = metadata
     
-    customer = stripe.Customer.create(**customer_params)
+    customer = stripe.Customer.create(**customer_params, timeout=STRIPE_TIMEOUT)
     return customer.id
 
 
@@ -116,13 +118,14 @@ async def create_subscription(
     
     if payment_method_id:
         # Attach payment method to customer first
-        stripe.PaymentMethod.attach(payment_method_id, customer=customer_id)
+        stripe.PaymentMethod.attach(payment_method_id, customer=customer_id, timeout=STRIPE_TIMEOUT)
         stripe.Customer.modify(
             customer_id,
             invoice_settings={"default_payment_method": payment_method_id},
+            timeout=STRIPE_TIMEOUT,
         )
     
-    subscription = stripe.Subscription.create(**subscription_params)
+    subscription = stripe.Subscription.create(**subscription_params, timeout=STRIPE_TIMEOUT)
     
     # Get client secret for incomplete subscriptions
     client_secret = None
@@ -139,7 +142,7 @@ async def create_subscription(
 
 async def cancel_subscription(subscription_id: str) -> dict:
     """Cancel a subscription immediately."""
-    subscription = stripe.Subscription.delete(subscription_id)
+    subscription = stripe.Subscription.delete(subscription_id, timeout=STRIPE_TIMEOUT)
     return {
         "subscription_id": subscription.id,
         "status": subscription.status,
@@ -149,7 +152,7 @@ async def cancel_subscription(subscription_id: str) -> dict:
 
 async def get_subscription(subscription_id: str) -> dict:
     """Get subscription details."""
-    subscription = stripe.Subscription.retrieve(subscription_id)
+    subscription = stripe.Subscription.retrieve(subscription_id, timeout=STRIPE_TIMEOUT)
     return {
         "subscription_id": subscription.id,
         "status": subscription.status,

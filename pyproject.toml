@@ -43,6 +43,8 @@ dependencies = [
     "opentelemetry-instrumentation-sqlalchemy>=0.41b0",
     # Cryptography for Biscuit/UCAN Ed25519 signatures
     "cryptography>=42.0.0",
+    "bcrypt>=4.0.0",
+    "sentry-sdk[fastapi,sqlalchemy]>=2.0.0",
 ]
 
 [project.optional-dependencies]
@@ -56,6 +58,7 @@ dev = [
     "black>=24.1.0",
     "ruff>=0.1.0",
     "mypy>=1.8.0",
+    "aiosqlite>=0.20.0",
 ]
 
 [tool.setuptools.packages.find]

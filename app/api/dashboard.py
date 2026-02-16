@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 logger = logging.getLogger(__name__)
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc
+from sqlalchemy import select, func, desc, cast, Date
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -17,57 +17,69 @@ from app.models.database import get_db
 from app.models.consent import Consent
 from app.models.authorization import Authorization
 from app.middleware import require_api_key
+from app.middleware.api_keys import get_current_user_id
 
 settings = get_settings()
 
 router = APIRouter(prefix="/v1/dashboard", tags=["Dashboard"])
 
 
+def _user_consents(user_id: str):
+    """Base filter: consents belonging to the authenticated developer."""
+    return Consent.developer_id == user_id
+
+
 @router.get("")
 async def get_dashboard(
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key),
 ):
     """
     Get complete dashboard data for the frontend.
-    
-    Returns stats, transactions, and chart data in the format expected by the Dashboard component.
+
+    Returns stats, transactions, and chart data for the authenticated user only.
     """
     try:
+        owner_filter = _user_consents(user_id)
+
         # Get total consents (as authorizations)
-        total_result = await db.execute(select(func.count(Consent.id)))
+        total_result = await db.execute(
+            select(func.count(Consent.id)).where(owner_filter)
+        )
         total_authorizations = total_result.scalar() or 0
-        
+
         # Get active consents
         active_result = await db.execute(
-            select(func.count(Consent.id)).where(Consent.is_active == True)
+            select(func.count(Consent.id)).where(owner_filter, Consent.is_active == True)
         )
         active_consents = active_result.scalar() or 0
-        
+
         # Calculate transaction volume from constraints
         all_consents = await db.execute(
-            select(Consent.constraints).limit(1000)
+            select(Consent.constraints).where(owner_filter).limit(1000)
         )
         constraints_list = all_consents.scalars().all()
-        
+
         transaction_volume = 0
         for constraints in constraints_list:
             if constraints and isinstance(constraints, dict):
                 max_amount = constraints.get("max_amount", 0)
                 if max_amount:
                     transaction_volume += max_amount
-        
+
         # Calculate approval rate (if we have authorizations)
         approval_rate = 100.0 if total_authorizations > 0 else 0
-        
+
         # Get recent transactions
         recent_result = await db.execute(
             select(Consent)
+            .where(owner_filter)
             .order_by(desc(Consent.created_at))
             .limit(10)
         )
         recent_consents = recent_result.scalars().all()
-        
+
         transactions = []
         for c in recent_consents:
             constraints = c.constraints or {}
@@ -82,15 +94,15 @@ async def get_dashboard(
                 "created_at": c.created_at.isoformat() if c.created_at else None,
                 "description": c.intent_description or "Authorization",
             })
-        
+
         # Get daily counts for chart (last 7 days) - single query instead of N+1
-        from sqlalchemy import cast, Date
         seven_days_ago = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=6)
         daily_result = await db.execute(
             select(
                 cast(Consent.created_at, Date).label("day"),
                 func.count(Consent.id).label("count")
             ).where(
+                owner_filter,
                 Consent.created_at >= seven_days_ago
             ).group_by(
                 cast(Consent.created_at, Date)
@@ -102,7 +114,7 @@ async def get_dashboard(
         for i in range(6, -1, -1):
             day = (datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i)).date()
             daily_requests.append(daily_counts.get(day, 0))
-        
+
         return {
             "total_authorizations": total_authorizations,
             "transaction_volume": round(transaction_volume, 2),
@@ -127,39 +139,43 @@ async def get_dashboard(
 
 @router.get("/stats")
 async def get_dashboard_stats(
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key),
 ):
     """
     Get aggregate dashboard statistics.
-    
+
     Returns counts for consents, authorizations, and payment metrics.
     """
     try:
+        owner_filter = _user_consents(user_id)
+
         # Get total consents
-        total_result = await db.execute(select(func.count(Consent.id)))
+        total_result = await db.execute(
+            select(func.count(Consent.id)).where(owner_filter)
+        )
         total_consents = total_result.scalar() or 0
-        
+
         # Get active consents
         active_result = await db.execute(
-            select(func.count(Consent.id)).where(Consent.is_active == True)
+            select(func.count(Consent.id)).where(owner_filter, Consent.is_active == True)
         )
         active_consents = active_result.scalar() or 0
-        
+
         # Get today's consents
         today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         today_result = await db.execute(
-            select(func.count(Consent.id)).where(Consent.created_at >= today)
+            select(func.count(Consent.id)).where(owner_filter, Consent.created_at >= today)
         )
         today_consents = today_result.scalar() or 0
-        
+
         # Calculate average max amount from constraints
-        # This is a simplified version - in production you'd want proper aggregation
         avg_amount_result = await db.execute(
-            select(Consent.constraints).limit(100)
+            select(Consent.constraints).where(owner_filter).limit(100)
         )
         constraints_list = avg_amount_result.scalars().all()
-        
+
         total_amount = 0
         amount_count = 0
         for constraints in constraints_list:
@@ -168,9 +184,9 @@ async def get_dashboard_stats(
                 if max_amount:
                     total_amount += max_amount
                     amount_count += 1
-        
+
         avg_max_amount = total_amount / amount_count if amount_count > 0 else 0
-        
+
         return {
             "total_consents": total_consents,
             "active_consents": active_consents,
@@ -194,6 +210,7 @@ async def get_dashboard_stats(
 async def get_transactions(
     limit: int = Query(default=50, le=100),
     offset: int = Query(default=0, ge=0),
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key),
 ):
@@ -201,23 +218,27 @@ async def get_transactions(
     Get recent transactions/consents for the dashboard.
     """
     try:
+        owner_filter = _user_consents(user_id)
+
         # Get consents ordered by creation date
         result = await db.execute(
             select(Consent)
+            .where(owner_filter)
             .order_by(desc(Consent.created_at))
             .offset(offset)
             .limit(limit)
         )
         consents = result.scalars().all()
-        
+
         # Get total count
-        count_result = await db.execute(select(func.count(Consent.id)))
+        count_result = await db.execute(
+            select(func.count(Consent.id)).where(owner_filter)
+        )
         total = count_result.scalar() or 0
-        
+
         transactions = []
         for c in consents:
             constraints = c.constraints or {}
-            # Note: agent_id is not in Consent model, extract from scope if available
             scope = c.scope or {}
             agent_name = scope.get("agent_name", "Agent")
             transactions.append({
@@ -231,7 +252,7 @@ async def get_transactions(
                 "created_at": c.created_at.isoformat() if c.created_at else None,
                 "expires_at": c.expires_at.isoformat() if c.expires_at else None,
             })
-        
+
         return {
             "transactions": transactions,
             "total": total,
@@ -251,45 +272,56 @@ async def get_transactions(
 @router.get("/analytics")
 async def get_analytics(
     days: int = Query(default=7, le=30),
+    user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key),
 ):
     """
     Get analytics data for charts.
-    
+
     Returns daily counts for the specified number of days.
     """
     try:
+        owner_filter = _user_consents(user_id)
+
+        # Single query for consent counts by day
+        start_day = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days)
+        consent_daily = await db.execute(
+            select(
+                cast(Consent.created_at, Date).label("day"),
+                func.count(Consent.id).label("count")
+            ).where(
+                owner_filter,
+                Consent.created_at >= start_day
+            ).group_by(
+                cast(Consent.created_at, Date)
+            )
+        )
+        consent_counts = {row.day: row.count for row in consent_daily.all()}
+
+        # Single query for authorization counts by day
+        auth_daily = await db.execute(
+            select(
+                cast(Authorization.created_at, Date).label("day"),
+                func.count(Authorization.id).label("count")
+            ).where(
+                Authorization.developer_id == user_id,
+                Authorization.created_at >= start_day
+            ).group_by(
+                cast(Authorization.created_at, Date)
+            )
+        )
+        auth_counts = {row.day: row.count for row in auth_daily.all()}
+
         analytics = []
-        
         for i in range(days, -1, -1):
-            day = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i)
-            next_day = day + timedelta(days=1)
-            
-            # Count consents for this day
-            result = await db.execute(
-                select(func.count(Consent.id)).where(
-                    Consent.created_at >= day,
-                    Consent.created_at < next_day
-                )
-            )
-            consent_count = result.scalar() or 0
-            
-            # Count authorizations for this day
-            auth_result = await db.execute(
-                select(func.count(Authorization.id)).where(
-                    Authorization.created_at >= day,
-                    Authorization.created_at < next_day
-                )
-            )
-            auth_count = auth_result.scalar() or 0
-            
+            day = (datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i)).date()
             analytics.append({
                 "date": day.strftime("%Y-%m-%d"),
-                "consents": consent_count,
-                "authorizations": auth_count,
+                "consents": consent_counts.get(day, 0),
+                "authorizations": auth_counts.get(day, 0),
             })
-        
+
         return {
             "analytics": analytics,
             "period_days": days,
@@ -308,7 +340,7 @@ async def dashboard_health():
     return {
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "version": "1.0.3",  # Cache fix for consent creation
+        "version": "1.0.4",
     }
 
 

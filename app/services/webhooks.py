@@ -12,7 +12,10 @@ from typing import Optional, List, Dict, Any
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+import logging
 from fastapi import BackgroundTasks
+
+logger = logging.getLogger(__name__)
 
 from app.models.webhooks import Webhook, WebhookDelivery, WEBHOOK_EVENTS
 
@@ -221,8 +224,7 @@ class WebhooksService:
                 status = "success" if response.status_code < 400 else "failed"
                 
         except Exception as e:
-            # Log error (in production, use proper logging)
-            print(f"Webhook delivery failed: {e}")
+            logger.error(f"Webhook delivery failed: {e}", exc_info=True)
     
     def _generate_signature(self, payload: str, secret: str) -> str:
         """Generate HMAC-SHA256 signature for webhook payload."""

@@ -1,0 +1,51 @@
+# =============================================================================
+# AgentAuth Helm Chart - Staging Values
+# =============================================================================
+
+replicaCount: 2
+
+image:
+  pullPolicy: Always
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+ingress:
+  hosts:
+    - host: api-staging.agentauth.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: agentauth-staging-tls
+      hosts:
+        - api-staging.agentauth.io
+
+config:
+  environment: staging
+  logLevel: DEBUG
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+postgresql:
+  primary:
+    persistence:
+      size: 20Gi
+
+redis:
+  master:
+    persistence:
+      size: 5Gi

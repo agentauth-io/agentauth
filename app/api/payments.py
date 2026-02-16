@@ -4,10 +4,12 @@ Payment API routes for Stripe integration.
 Handles payment intents, subscriptions, and webhooks.
 """
 import logging
-from fastapi import APIRouter, HTTPException, Request, Header
+from fastapi import APIRouter, HTTPException, Request, Header, Depends
 from typing import Optional
 
 from app.config import get_settings
+from app.middleware import require_api_key
+from app.middleware.api_keys import get_current_user_id
 
 logger = logging.getLogger(__name__)
 from app.schemas.payment import (
@@ -77,10 +79,14 @@ async def get_pricing():
 
 
 @router.post("/create-intent", response_model=CreatePaymentIntentResponse)
-async def create_payment_intent(request: CreatePaymentIntentRequest):
+async def create_payment_intent(
+    request: CreatePaymentIntentRequest,
+    user_id: str = Depends(get_current_user_id),
+    api_key: dict = Depends(require_api_key),
+):
     """
     Create a payment intent for one-time payment.
-    
+
     Use this for single purchases. Returns a client_secret to complete
     payment on the frontend with Stripe.js.
     """
@@ -89,22 +95,26 @@ async def create_payment_intent(request: CreatePaymentIntentRequest):
             status_code=503,
             detail="Payment processing not configured. Contact support.",
         )
-    
+
     try:
         # Optionally create customer if email provided
         customer_id = None
         if request.customer_email:
             customer_id = await stripe_service.create_customer(
-                email=request.customer_email
+                email=request.customer_email,
+                metadata={"agentauth_user_id": user_id},
             )
-        
+
         intent = await stripe_service.create_payment_intent(
             amount=request.amount,
             currency=request.currency,
             customer_id=customer_id,
-            metadata=request.metadata,
+            metadata={
+                **(request.metadata or {}),
+                "agentauth_user_id": user_id,
+            },
         )
-        
+
         return CreatePaymentIntentResponse(
             client_secret=intent.client_secret,
             payment_intent_id=intent.payment_intent_id,
@@ -123,6 +133,8 @@ async def create_agent_purchase(
     currency: str = "USD",
     description: str = "",
     customer_email: Optional[str] = None,
+    user_id: str = Depends(get_current_user_id),
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Create a payment intent for an AI agent purchase.
@@ -157,6 +169,14 @@ async def create_agent_purchase(
             detail="Authorization code has already been used",
         )
 
+    # Verify the authorization belongs to the authenticated user
+    auth_user = cached_auth.get("user_id")
+    if auth_user and auth_user != user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Authorization code does not belong to this user",
+        )
+
     try:
         intent = await stripe_service.create_payment_intent(
             amount=amount,
@@ -166,6 +186,7 @@ async def create_agent_purchase(
                 "authorization_code": authorization_code,
                 "source": "agentauth_ai_agent",
                 "description": description,
+                "agentauth_user_id": user_id,
             },
         )
 
@@ -183,10 +204,14 @@ async def create_agent_purchase(
 
 
 @router.post("/subscribe", response_model=CreateSubscriptionResponse)
-async def create_subscription(request: CreateSubscriptionRequest):
+async def create_subscription(
+    request: CreateSubscriptionRequest,
+    user_id: str = Depends(get_current_user_id),
+    api_key: dict = Depends(require_api_key),
+):
     """
-    Create a subscription for a customer.
-    
+    Create a subscription for the authenticated user.
+
     Creates a Stripe customer and subscription. Returns client_secret
     to complete payment setup on frontend.
     """
@@ -195,34 +220,35 @@ async def create_subscription(request: CreateSubscriptionRequest):
             status_code=503,
             detail="Payment processing not configured. Contact support.",
         )
-    
+
     # Map tier to price ID
     price_id = request.price_id
     if price_id == "pro":
         price_id = settings.stripe_price_pro
     elif price_id == "enterprise":
         price_id = settings.stripe_price_enterprise
-    
+
     if not price_id:
         raise HTTPException(
             status_code=400,
             detail="Invalid pricing tier or price not configured.",
         )
-    
+
     try:
         # Create customer
         customer_id = await stripe_service.create_customer(
             email=request.email,
             name=request.name,
+            metadata={"agentauth_user_id": user_id},
         )
-        
+
         # Create subscription
         subscription = await stripe_service.create_subscription(
             customer_id=customer_id,
             price_id=price_id,
             payment_method_id=request.payment_method_id,
         )
-        
+
         return CreateSubscriptionResponse(
             subscription_id=subscription.subscription_id,
             customer_id=customer_id,
@@ -236,22 +262,44 @@ async def create_subscription(request: CreateSubscriptionRequest):
 
 
 @router.get("/subscriptions/{subscription_id}", response_model=SubscriptionStatusResponse)
-async def get_subscription_status(subscription_id: str):
-    """Get the status of a subscription."""
+async def get_subscription_status(
+    subscription_id: str,
+    user_id: str = Depends(get_current_user_id),
+    api_key: dict = Depends(require_api_key),
+):
+    """Get the status of a subscription owned by the authenticated user."""
     try:
         subscription = await stripe_service.get_subscription(subscription_id)
+        # Verify the subscription belongs to the authenticated user via metadata
+        metadata = subscription.get("metadata", {})
+        if metadata.get("agentauth_user_id") and metadata["agentauth_user_id"] != user_id:
+            raise HTTPException(status_code=404, detail="Subscription not found")
         return SubscriptionStatusResponse(**subscription)
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Subscription lookup failed: {e}", exc_info=True)
         raise HTTPException(status_code=404, detail="Subscription not found")
 
 
 @router.delete("/subscriptions/{subscription_id}", response_model=CancelSubscriptionResponse)
-async def cancel_subscription(subscription_id: str):
-    """Cancel a subscription immediately."""
+async def cancel_subscription(
+    subscription_id: str,
+    user_id: str = Depends(get_current_user_id),
+    api_key: dict = Depends(require_api_key),
+):
+    """Cancel a subscription owned by the authenticated user."""
     try:
+        # Verify ownership before canceling
+        subscription = await stripe_service.get_subscription(subscription_id)
+        metadata = subscription.get("metadata", {})
+        if metadata.get("agentauth_user_id") and metadata["agentauth_user_id"] != user_id:
+            raise HTTPException(status_code=404, detail="Subscription not found")
+
         result = await stripe_service.cancel_subscription(subscription_id)
         return CancelSubscriptionResponse(**result)
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Subscription cancellation failed: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail="Failed to cancel subscription")
@@ -264,66 +312,58 @@ async def stripe_webhook(
 ):
     """
     Handle Stripe webhook events.
-    
+
     Processes payment and subscription events from Stripe.
+    Note: Webhooks are authenticated via Stripe signature, not API key.
     """
     if not stripe_signature:
         raise HTTPException(status_code=400, detail="Missing Stripe signature")
-    
+
     payload = await request.body()
-    
+
     try:
         event = stripe_service.verify_webhook_signature(payload, stripe_signature)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid signature")
-    
+
     # Handle different event types
     event_type = event.get("type", "")
-    
+
     if event_type == "payment_intent.succeeded":
-        # Payment completed successfully
         payment_intent = event["data"]["object"]
         logger.info(f"Payment succeeded: {payment_intent['id']}")
-        # Record successful payment in audit log
         await _record_payment_event("payment_succeeded", payment_intent)
-        
+
     elif event_type == "payment_intent.payment_failed":
-        # Payment failed
         payment_intent = event["data"]["object"]
         logger.warning(f"Payment failed: {payment_intent['id']}")
-        # Record failed payment for analytics
         await _record_payment_event("payment_failed", payment_intent)
-        
+
     elif event_type == "customer.subscription.created":
         subscription = event["data"]["object"]
         logger.info(f"Subscription created: {subscription['id']}")
-        # Grant access to user based on subscription plan
         await _handle_subscription_created(subscription)
-        
+
     elif event_type == "customer.subscription.updated":
         subscription = event["data"]["object"]
         logger.info(f"Subscription updated: {subscription['id']}")
-        # Update user access level based on new plan
         await _handle_subscription_updated(subscription)
-        
+
     elif event_type == "customer.subscription.deleted":
         subscription = event["data"]["object"]
         logger.info(f"Subscription canceled: {subscription['id']}")
-        # Revoke premium access
         await _handle_subscription_deleted(subscription)
-        
+
     elif event_type == "invoice.payment_succeeded":
         invoice = event["data"]["object"]
         logger.info(f"Invoice paid: {invoice['id']}")
-        # Send receipt email
         await _handle_invoice_paid(invoice)
-        
+
     elif event_type == "invoice.payment_failed":
         invoice = event["data"]["object"]
         logger.warning(f"Invoice payment failed: {invoice['id']}")
-        # Notify user about failed payment
         await _handle_invoice_failed(invoice)
-    
+
     return {"received": True}
 
 
@@ -332,8 +372,6 @@ async def stripe_webhook(
 async def _record_payment_event(event_type: str, payment_intent: dict) -> None:
     """Record a payment event to the audit log."""
     logger.debug(f"Recording payment event: {event_type} for {payment_intent.get('id')}")
-    # In production, this would write to an audit/events table
-    # For now, structured logging is sufficient for observability
 
 
 async def _handle_subscription_created(subscription: dict) -> None:
@@ -341,7 +379,6 @@ async def _handle_subscription_created(subscription: dict) -> None:
     customer_id = subscription.get("customer")
     plan_id = subscription.get("items", {}).get("data", [{}])[0].get("price", {}).get("id")
     logger.info(f"Granting access for customer {customer_id} on plan {plan_id}")
-    # In production: Update user record with subscription tier
 
 
 async def _handle_subscription_updated(subscription: dict) -> None:
@@ -349,26 +386,22 @@ async def _handle_subscription_updated(subscription: dict) -> None:
     customer_id = subscription.get("customer")
     status = subscription.get("status")
     logger.info(f"Updating subscription status for customer {customer_id}: {status}")
-    # In production: Update user's access tier based on new plan
 
 
 async def _handle_subscription_deleted(subscription: dict) -> None:
     """Handle subscription cancellation - revoke premium access."""
     customer_id = subscription.get("customer")
     logger.info(f"Revoking premium access for customer {customer_id}")
-    # In production: Downgrade user to free tier
 
 
 async def _handle_invoice_paid(invoice: dict) -> None:
     """Handle successful invoice payment - send receipt."""
     customer_email = invoice.get("customer_email")
-    amount = invoice.get("amount_paid", 0) / 100  # Convert from cents
+    amount = invoice.get("amount_paid", 0) / 100
     logger.info(f"Invoice paid: ${amount:.2f} for {customer_email}")
-    # In production: Send receipt email via email service
 
 
 async def _handle_invoice_failed(invoice: dict) -> None:
     """Handle failed invoice payment - notify user."""
     customer_email = invoice.get("customer_email")
     logger.warning(f"Payment failed for {customer_email}")
-    # In production: Send payment failure notification email

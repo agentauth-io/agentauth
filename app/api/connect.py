@@ -3,6 +3,7 @@ Stripe Connect API routes for connected accounts management.
 
 Handles account linking, onboarding, and transaction tracking.
 """
+import logging
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
@@ -13,7 +14,9 @@ from app.models.database import get_db
 from app.services import stripe_service
 from app.config import get_settings
 from app.middleware import require_api_key
+from app.middleware.api_keys import get_current_user_id
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
 
 router = APIRouter(prefix="/v1/connect", tags=["Stripe Connect"])
@@ -64,7 +67,7 @@ class ConnectBalanceResponse(BaseModel):
 @router.post("/accounts", response_model=CreateConnectAccountResponse)
 async def create_connect_account(
     request: CreateConnectAccountRequest,
-    user_id: str = Query(..., description="User ID"),
+    user_id: str = Depends(get_current_user_id),
     api_key: dict = Depends(require_api_key),
 ):
     """
@@ -97,7 +100,8 @@ async def create_connect_account(
         )
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Operation failed")
+        logger.error(f"Create connect account failed: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail="Failed to create Stripe account")
 
 
 @router.get("/accounts/{account_id}", response_model=ConnectAccountStatus)
@@ -131,7 +135,8 @@ async def get_connect_account_status(
         )
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Operation failed")
+        logger.error(f"Get connect account failed: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail="Failed to retrieve account status")
 
 
 @router.post("/accounts/{account_id}/onboarding-link")
@@ -156,7 +161,8 @@ async def refresh_onboarding_link(
         return {"onboarding_url": onboarding_url}
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Operation failed")
+        logger.error(f"Onboarding link creation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail="Failed to generate onboarding link")
 
 
 @router.get("/accounts/{account_id}/dashboard-link")
@@ -175,7 +181,8 @@ async def get_dashboard_link(
         return {"dashboard_url": login_url}
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Operation failed")
+        logger.error(f"Dashboard link creation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail="Failed to generate dashboard link")
 
 
 @router.get("/accounts/{account_id}/transactions", response_model=List[ConnectedAccountTransaction])
@@ -198,7 +205,8 @@ async def list_connect_transactions(
         return [ConnectedAccountTransaction(**tx) for tx in transactions]
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Operation failed")
+        logger.error(f"List transactions failed: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail="Failed to list transactions")
 
 
 @router.get("/accounts/{account_id}/balance", response_model=ConnectBalanceResponse)
@@ -217,4 +225,5 @@ async def get_connect_balance(
         return ConnectBalanceResponse(**balance)
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Operation failed")
+        logger.error(f"Get balance failed: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail="Failed to retrieve balance")

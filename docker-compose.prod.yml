@@ -45,7 +45,7 @@ services:
   # PostgreSQL (persistent storage)
   # ==========================================================================
   postgres:
-    image: postgres:16-alpine
+    image: postgres:15-alpine
     environment:
       - POSTGRES_USER=agentauth
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -92,8 +92,8 @@ services:
       - "8080:80"
       # - "8443:443"  # Enable for production with SSL
     volumes:
-      - ./nginx.dev.conf:/etc/nginx/nginx.conf:ro
-      # - ./nginx.conf:/etc/nginx/nginx.conf:ro  # Production config with SSL
+      # - ./nginx.dev.conf:/etc/nginx/nginx.conf:ro  # Development config
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
       # - ./certs:/etc/nginx/certs:ro
     depends_on:
       - api
