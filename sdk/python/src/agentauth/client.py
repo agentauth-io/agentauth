@@ -3,7 +3,7 @@ AgentAuth SDK Client
 
 Sync and async clients for the AgentAuth API.
 """
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import httpx
 
 from agentauth.models import (
