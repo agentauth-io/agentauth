@@ -30,9 +30,10 @@ service:
       path: /health
       port: 8000
       interval: 30
-      timeout: 10
+      timeout: 30
       healthy_threshold: 2
-      unhealthy_threshold: 3
+      unhealthy_threshold: 5
+      initial_delay: 15
   
   # Environment variables (set these in Koyeb dashboard for secrets)
   env:
