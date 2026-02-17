@@ -12,10 +12,12 @@ from app.api.rules import router as rules_router
 from app.api.analytics import router as analytics_router
 from app.api.webhooks import router as webhooks_router
 from app.api.billing import router as billing_router
+from app.api.agents import router as agents_router
+from app.api.auth import router as auth_router
 
 __all__ = [
     "consents_router", "authorize_router", "verify_router", 
     "payments_router", "dashboard_router", "admin_router",
     "limits_router", "rules_router", "analytics_router", "webhooks_router",
-    "billing_router",
+    "billing_router", "agents_router", "auth_router",
 ]
