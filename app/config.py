@@ -89,15 +89,18 @@ class Settings(BaseSettings):
     def validate_production_config(cls, v: str, info) -> str:
         """In production, ensure critical env vars are explicitly set."""
         if v == "production":
+            import logging
+            logger = logging.getLogger(__name__)
             data = info.data
             db_url = data.get("database_url", "")
             if "localhost" in db_url or not db_url:
                 raise ValueError("DATABASE_URL must be set to a real database in production")
             if not data.get("stripe_secret_key"):
-                raise ValueError("STRIPE_SECRET_KEY is required in production")
+                logger.warning(
+                    "STRIPE_SECRET_KEY not set in production — billing features disabled"
+                )
             if not data.get("sentry_dsn"):
-                import logging
-                logging.getLogger(__name__).warning(
+                logger.warning(
                     "SENTRY_DSN not set in production — error tracking disabled"
                 )
         return v
