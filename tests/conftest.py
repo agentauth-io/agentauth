@@ -4,17 +4,22 @@ Pytest configuration and fixtures for AgentAuth tests.
 Handles proper async test isolation and database connection management.
 Uses in-memory SQLite for testing so no external PostgreSQL is required.
 """
-import pytest
-import asyncio
-from typing import AsyncGenerator
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+import os
 
-from app.main import app as fastapi_app
-from app.models.database import Base, get_db
+# MUST set before any app imports to ensure proper JWT algorithm
+os.environ["JWT_ALGORITHM"] = "HS256"
+
+import asyncio
+from collections.abc import AsyncGenerator
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # Import all models so their tables are registered on Base.metadata
 import app.models  # noqa: F401
+from app.main import app as fastapi_app
+from app.models.database import Base, get_db
 
 # In-memory SQLite for testing - no external database needed
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"

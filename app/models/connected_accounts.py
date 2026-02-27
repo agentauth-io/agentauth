@@ -3,12 +3,11 @@ Connected Accounts Model
 
 Stores user-linked financial accounts (Stripe Connect, etc.)
 """
-from datetime import datetime, timezone
-from typing import Optional
-from sqlalchemy import Column, String, DateTime, Boolean, Enum, ForeignKey, JSON
-from sqlalchemy.orm import relationship
-from uuid import uuid4
 import enum
+from datetime import datetime, timezone
+from uuid import uuid4
+
+from sqlalchemy import JSON, Boolean, Column, DateTime, Enum, ForeignKey, String
 
 from app.models.database import Base
 
@@ -33,45 +32,45 @@ class AccountStatus(str, enum.Enum):
 class ConnectedAccount(Base):
     """
     A financial account connected by a user.
-    
-    This stores the link between AgentAuth users and their 
+
+    This stores the link between AgentAuth users and their
     external financial accounts (Stripe Connect, bank accounts, etc.)
     """
     __tablename__ = "connected_accounts"
-    
+
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     user_id = Column(String(255), nullable=False, index=True)
     tenant_id = Column(String(36), nullable=True, index=True)
-    
+
     # Provider details
     provider = Column(Enum(AccountProvider), nullable=False)
     provider_account_id = Column(String(255), nullable=False, unique=True)  # e.g., acct_xxx for Stripe
-    
+
     # Account info
     account_name = Column(String(255), nullable=True)  # Display name
     account_email = Column(String(255), nullable=True)
     country = Column(String(2), nullable=True)  # ISO country code
     currency = Column(String(3), nullable=True)  # Default currency
-    
+
     # Status
     status = Column(Enum(AccountStatus), default=AccountStatus.PENDING, nullable=False)
     details_submitted = Column(Boolean, default=False)
     charges_enabled = Column(Boolean, default=False)
     payouts_enabled = Column(Boolean, default=False)
-    
+
     # Capabilities and metadata
     capabilities = Column(JSON, nullable=True)  # Provider-specific capabilities
     account_metadata = Column(JSON, nullable=True)  # Renamed from 'metadata' to avoid SQLAlchemy conflict
-    
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
     connected_at = Column(DateTime, nullable=True)  # When fully connected
     disconnected_at = Column(DateTime, nullable=True)
-    
+
     def __repr__(self):
         return f"<ConnectedAccount {self.provider.value}:{self.provider_account_id} ({self.status.value})>"
-    
+
     def to_dict(self) -> dict:
         """Convert to dictionary for API responses."""
         return {
@@ -95,57 +94,57 @@ class ConnectedAccount(Base):
 class AgentTransaction(Base):
     """
     Transactions made by AI agents.
-    
-    Tracks both authorized purchases via AgentAuth and 
+
+    Tracks both authorized purchases via AgentAuth and
     actual payment outcomes from connected accounts.
     """
     __tablename__ = "agent_transactions"
-    
+
     id = Column(String(36), primary_key=True, default=lambda: str(uuid4()))
     user_id = Column(String(255), nullable=False, index=True)
     tenant_id = Column(String(36), nullable=True, index=True)
-    
+
     # Link to AgentAuth authorization
     authorization_id = Column(String(36), ForeignKey("authorizations.id"), nullable=True)
     consent_id = Column(String(36), ForeignKey("consents.id"), nullable=True)
-    
+
     # Link to connected account
     connected_account_id = Column(String(36), ForeignKey("connected_accounts.id"), nullable=True)
-    
+
     # Transaction details
     agent_id = Column(String(255), nullable=True, index=True)
     agent_name = Column(String(255), nullable=True)
-    
+
     # Payment provider reference
     provider = Column(Enum(AccountProvider), nullable=True)
     provider_transaction_id = Column(String(255), nullable=True, index=True)  # e.g., pi_xxx for Stripe
     provider_charge_id = Column(String(255), nullable=True)
-    
+
     # Amount
     amount = Column(String(50), nullable=False)  # Store as string for precision
     currency = Column(String(3), default="USD", nullable=False)
-    
+
     # Merchant info
     merchant_id = Column(String(255), nullable=True)
     merchant_name = Column(String(255), nullable=True)
     merchant_category = Column(String(100), nullable=True)
-    
+
     # Status
     authorization_status = Column(String(20), nullable=True)  # ALLOW, DENY, PENDING
     payment_status = Column(String(20), nullable=True)  # succeeded, failed, pending, refunded
-    
+
     # Description and metadata
     description = Column(String(500), nullable=True)
     transaction_metadata = Column(JSON, nullable=True)  # Renamed from 'metadata'
-    
+
     # Timestamps
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     authorized_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
-    
+
     def __repr__(self):
         return f"<AgentTransaction {self.id[:8]} ${self.amount} {self.payment_status}>"
-    
+
     def to_dict(self) -> dict:
         """Convert to dictionary for API responses."""
         return {

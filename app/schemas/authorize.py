@@ -2,7 +2,8 @@
 Authorization schemas - request/response models for /v1/authorize
 """
 from datetime import datetime
-from typing import Optional, Literal
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -11,33 +12,42 @@ class Transaction(BaseModel):
     amount: float = Field(
         ...,
         gt=0,
-        description="Transaction amount",
+        le=1_000_000,  # Maximum $1M per transaction
+        description="Transaction amount (must be positive and <= $1,000,000)",
         examples=[347.00]
     )
     currency: str = Field(
         default="USD",
         min_length=3,
         max_length=3,
-        description="ISO 4217 currency code"
+        pattern=r"^[A-Z]{3}$",  # ISO 4217 currency code format
+        description="ISO 4217 currency code (uppercase, 3 letters)"
     )
-    merchant_id: Optional[str] = Field(
+    merchant_id: str | None = Field(
         None,
-        description="Unique merchant identifier",
+        min_length=1,
+        max_length=255,
+        description="Unique merchant identifier (1-255 characters)",
         examples=["delta_airlines"]
     )
-    merchant_name: Optional[str] = Field(
+    merchant_name: str | None = Field(
         None,
-        description="Human-readable merchant name",
+        min_length=1,
+        max_length=255,
+        description="Human-readable merchant name (1-255 characters)",
         examples=["Delta Airlines"]
     )
-    merchant_category: Optional[str] = Field(
+    merchant_category: str | None = Field(
         None,
-        description="Merchant Category Code (MCC)",
+        min_length=1,
+        max_length=50,
+        description="Merchant Category Code (MCC, 1-50 characters)",
         examples=["4511"]
     )
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
-        description="Transaction description"
+        max_length=1000,
+        description="Transaction description (max 1000 characters)"
     )
 
 
@@ -53,7 +63,7 @@ class AuthorizeRequest(BaseModel):
         examples=["payment", "search", "compare"]
     )
     transaction: Transaction
-    
+
     model_config = {
         "json_schema_extra": {
             "examples": [
@@ -78,32 +88,32 @@ class AuthorizeResponse(BaseModel):
         ...,
         description="Authorization decision"
     )
-    authorization_code: Optional[str] = Field(
+    authorization_code: str | None = Field(
         None,
         description="One-time code for merchant to verify (only if ALLOW)"
     )
-    expires_at: Optional[datetime] = Field(
+    expires_at: datetime | None = Field(
         None,
         description="When the authorization code expires"
     )
-    consent_id: Optional[str] = Field(
+    consent_id: str | None = Field(
         None,
         description="Reference to the original consent"
     )
-    reason: Optional[str] = Field(
+    reason: str | None = Field(
         None,
         description="Reason code for denial",
         examples=["amount_exceeded", "currency_mismatch", "merchant_not_allowed"]
     )
-    message: Optional[str] = Field(
+    message: str | None = Field(
         None,
         description="Human-readable explanation"
     )
-    step_up_url: Optional[str] = Field(
+    step_up_url: str | None = Field(
         None,
         description="URL for user confirmation (only if STEP_UP)"
     )
-    
+
     model_config = {
         "json_schema_extra": {
             "examples": [

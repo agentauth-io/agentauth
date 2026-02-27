@@ -4,15 +4,14 @@ Consent Service - CRUD operations for user consents
 import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.consent import Consent
-from app.schemas.consent import ConsentCreate, ConsentResponse, ConsentConstraints
-from app.services.token_service import token_service
 from app.config import get_settings
+from app.models.consent import Consent
+from app.schemas.consent import ConsentConstraints, ConsentCreate, ConsentResponse
+from app.services.token_service import token_service
 
 settings = get_settings()
 
@@ -30,20 +29,20 @@ def hash_intent(intent: str) -> str:
 class ConsentService:
     """
     Consent Service - manages user consents.
-    
+
     Consents are the root of trust in AgentAuth.
     Everything flows from user consent.
     """
-    
+
     async def create_consent(
         self,
         db: AsyncSession,
         consent_data: ConsentCreate,
-        developer_id: Optional[str] = None,
+        developer_id: str | None = None,
     ) -> ConsentResponse:
         """
         Create a new consent and generate a delegation token.
-        
+
         This is the first step in the AgentAuth flow:
         1. User expresses intent ("buy flight under $500")
         2. We capture and store the consent
@@ -53,14 +52,14 @@ class ConsentService:
         expires_at = now + timedelta(
             seconds=consent_data.options.expires_in_seconds
         )
-        
+
         # Make timestamps timezone-naive for DB compatibility
-        now_naive = now.replace(tzinfo=None)
+        now.replace(tzinfo=None)
         expires_at_naive = expires_at.replace(tzinfo=None)
-        
+
         consent_id = generate_consent_id()
         intent_hash = hash_intent(consent_data.intent.description)
-        
+
         # Build constraints dict
         constraints = {
             "max_amount": consent_data.constraints.max_amount,
@@ -70,13 +69,13 @@ class ConsentService:
             constraints["allowed_merchants"] = consent_data.constraints.allowed_merchants
         if consent_data.constraints.allowed_categories:
             constraints["allowed_categories"] = consent_data.constraints.allowed_categories
-        
+
         # Build scope dict
         scope = {
             "single_use": consent_data.options.single_use,
             "requires_confirmation": consent_data.options.requires_confirmation,
         }
-        
+
         # Create database record
         consent = Consent(
             consent_id=consent_id,
@@ -91,10 +90,10 @@ class ConsentService:
             expires_at=expires_at_naive,
             is_active=True,
         )
-        
+
         db.add(consent)
         await db.flush()  # Get the ID without committing
-        
+
         # PRE-WARM the authorization cache so first auth is instant
         try:
             from app.services.auth_service import _consent_cache
@@ -109,7 +108,7 @@ class ConsentService:
             _consent_cache[consent_id] = (cache_data, datetime.now(timezone.utc))
         except Exception:
             pass  # Cache warming is optional
-        
+
         # Generate delegation token
         delegation_token = token_service.create_delegation_token(
             consent_id=consent_id,
@@ -122,7 +121,7 @@ class ConsentService:
             expires_at=expires_at,
             single_use=consent_data.options.single_use,
         )
-        
+
         return ConsentResponse(
             consent_id=consent_id,
             delegation_token=delegation_token,
@@ -134,52 +133,52 @@ class ConsentService:
                 allowed_categories=consent_data.constraints.allowed_categories,
             )
         )
-    
+
     async def get_consent(
         self,
         db: AsyncSession,
         consent_id: str,
-        developer_id: Optional[str] = None,
-    ) -> Optional[Consent]:
+        developer_id: str | None = None,
+    ) -> Consent | None:
         """Get a consent by ID, optionally verifying ownership."""
         query = select(Consent).where(Consent.consent_id == consent_id)
         if developer_id is not None:
             query = query.where(Consent.developer_id == developer_id)
         result = await db.execute(query)
         return result.scalar_one_or_none()
-    
+
     async def get_active_consent(
         self,
         db: AsyncSession,
         consent_id: str
-    ) -> Optional[Consent]:
+    ) -> Consent | None:
         """Get an active (not expired, not revoked) consent."""
         now = datetime.now(timezone.utc)
         result = await db.execute(
             select(Consent).where(
                 Consent.consent_id == consent_id,
-                Consent.is_active == True,
-                Consent.revoked_at == None,
+                Consent.is_active,
+                Consent.revoked_at is None,
                 Consent.expires_at > now
             )
         )
         return result.scalar_one_or_none()
-    
+
     async def revoke_consent(
         self,
         db: AsyncSession,
         consent_id: str,
-        developer_id: Optional[str] = None,
+        developer_id: str | None = None,
     ) -> bool:
         """Revoke a consent, optionally verifying ownership."""
         consent = await self.get_consent(db, consent_id, developer_id)
         if consent is None:
             return False
-        
+
         consent.revoked_at = datetime.now(timezone.utc)
         consent.is_active = False
         await db.flush()
-        
+
         # Invalidate the authorization cache so revoked consents are
         # rejected immediately instead of being served from stale cache.
         try:
@@ -187,7 +186,7 @@ class ConsentService:
             _consent_cache.pop(consent_id, None)
         except Exception:
             pass  # Cache invalidation is best-effort
-        
+
         return True
 
 

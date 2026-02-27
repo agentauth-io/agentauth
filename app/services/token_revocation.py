@@ -3,9 +3,9 @@ Token revocation service.
 
 Maintains a blacklist of revoked JWT token IDs (JTIs).
 """
-import time
 import logging
-from datetime import datetime, timezone
+import time
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

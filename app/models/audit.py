@@ -1,90 +1,53 @@
 """
-Audit log model - immutable record of all authorization events
+Audit model for comprehensive security logging.
 """
 import uuid
 from datetime import datetime, timezone
-from typing import Optional
 
-from sqlalchemy import String, Text, DateTime, JSON
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import JSON, Column, DateTime, Index, String, Text
 
 from app.models.database import Base
 
 
-class AuditLog(Base):
+class AuditEntry(Base):
     """
-    Audit log table - append-only record of all authorization events.
-    
-    This provides a complete audit trail for compliance and dispute resolution.
-    """
-    __tablename__ = "audit_log"
+    Audit log entry for security and compliance.
 
-    # Primary key
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4
+    All sensitive operations are logged with cryptographic signatures
+    for tamper evidence.
+    """
+    __tablename__ = "audit_entries"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    event_id = Column(String(64), unique=True, nullable=False, index=True)
+
+    # Event details
+    event_type = Column(String(50), nullable=False, index=True)
+    actor_id = Column(String(255), nullable=False, index=True)
+    actor_type = Column(String(50), nullable=False)  # user, agent, system, admin
+    action = Column(String(100), nullable=False)
+
+    # Resource details
+    resource_id = Column(String(255), nullable=True, index=True)
+    resource_type = Column(String(50), nullable=True)
+
+    # Outcome
+    outcome = Column(String(20), nullable=False)  # success, failure, denied
+    reason = Column(String(255), nullable=True)
+
+    # Additional context
+    event_metadata = Column(JSON, nullable=False, default=dict)
+    ip_address = Column(String(45), nullable=True)  # IPv6 compatible
+    user_agent = Column(Text, nullable=True)
+
+    # Cryptographic signature for tamper evidence
+    signature = Column(String(128), nullable=False)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
+
+    __table_args__ = (
+        Index("ix_audit_event_type_created", "event_type", "created_at"),
+        Index("ix_audit_actor_created", "actor_id", "created_at"),
+        Index("ix_audit_outcome_created", "outcome", "created_at"),
     )
-    
-    # Event identification
-    event_id: Mapped[str] = mapped_column(
-        String(64),
-        unique=True,
-        index=True,
-        nullable=False
-    )
-    
-    # Event type
-    event_type: Mapped[str] = mapped_column(
-        String(50),
-        nullable=False,
-        index=True
-    )
-    # Event types:
-    # - consent_created
-    # - consent_revoked
-    # - authorization_requested
-    # - authorization_granted
-    # - authorization_denied
-    # - verification_requested
-    # - verification_completed
-    
-    # Timestamp
-    timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        nullable=False,
-        index=True
-    )
-    
-    # Actors involved
-    user_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
-    agent_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    merchant_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    
-    # Related entities
-    consent_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
-    authorization_code: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    
-    # Event data (full context)
-    event_data: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
-    # Structure varies by event_type, but typically includes:
-    # {
-    #   "action": "payment",
-    #   "amount": 347,
-    #   "currency": "USD",
-    #   "decision": "ALLOW",
-    #   "reason": null,
-    #   ...
-    # }
-    
-    # Cryptographic chain (for integrity)
-    record_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    previous_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    
-    # Platform signature for non-repudiation
-    signature: Mapped[str] = mapped_column(Text, nullable=False)
-    
-    def __repr__(self) -> str:
-        return f"<AuditLog {self.event_id} type={self.event_type}>"

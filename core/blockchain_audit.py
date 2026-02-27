@@ -16,36 +16,34 @@ import threading
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
-import base64
-import struct
+from typing import Any, Optional
 
 
 class AuditEventType(str, Enum):
     """Types of audit events."""
-    
+
     AUTHORIZATION_REQUEST = "authorization.request"
     AUTHORIZATION_APPROVED = "authorization.approved"
     AUTHORIZATION_DENIED = "authorization.denied"
     AUTHORIZATION_REVOKED = "authorization.revoked"
-    
+
     POLICY_CREATED = "policy.created"
     POLICY_UPDATED = "policy.updated"
     POLICY_DELETED = "policy.deleted"
     POLICY_TOGGLED = "policy.toggled"
-    
+
     AGENT_REGISTERED = "agent.registered"
     AGENT_REVOKED = "agent.revoked"
     AGENT_UPDATED = "agent.updated"
-    
+
     KEY_ROTATED = "key.rotated"
     KEY_CREATED = "key.created"
     KEY_REVOKED = "key.revoked"
-    
+
     SECURITY_ALERT = "security.alert"
     SECURITY_BREACH_ATTEMPT = "security.breach_attempt"
-    
+
     SYSTEM_STARTUP = "system.startup"
     SYSTEM_SHUTDOWN = "system.shutdown"
     SYSTEM_CONFIG_CHANGE = "system.config_change"
@@ -54,25 +52,25 @@ class AuditEventType(str, Enum):
 @dataclass
 class AuditEntry:
     """A single audit log entry."""
-    
+
     id: str
     timestamp: datetime
     event_type: AuditEventType
     actor_id: str
     actor_type: str  # "agent", "user", "system"
-    resource_id: Optional[str]
-    resource_type: Optional[str]
+    resource_id: str | None
+    resource_type: str | None
     action: str
     outcome: str  # "success", "failure", "pending"
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    request_id: Optional[str] = None
-    ip_address: Optional[str] = None
-    user_agent: Optional[str] = None
-    
+    metadata: dict[str, Any] = field(default_factory=dict)
+    request_id: str | None = None
+    ip_address: str | None = None
+    user_agent: str | None = None
+
     # Cryptographic fields
     previous_hash: str = ""
     signature: str = ""
-    
+
     @property
     def content_hash(self) -> str:
         """Generate hash of entry content (excluding signature)."""
@@ -92,8 +90,8 @@ class AuditEntry:
         }
         content_bytes = json.dumps(content, sort_keys=True).encode()
         return hashlib.sha3_256(content_bytes).hexdigest()
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "timestamp": self.timestamp.isoformat(),
@@ -111,9 +109,9 @@ class AuditEntry:
             "previous_hash": self.previous_hash,
             "signature": self.signature,
         }
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AuditEntry":
+    def from_dict(cls, data: dict[str, Any]) -> "AuditEntry":
         return cls(
             id=data["id"],
             timestamp=datetime.fromisoformat(data["timestamp"]),
@@ -136,12 +134,12 @@ class AuditEntry:
 @dataclass
 class MerkleNode:
     """Node in a Merkle tree."""
-    
+
     hash: str
     left: Optional["MerkleNode"] = None
     right: Optional["MerkleNode"] = None
-    data: Optional[str] = None  # Only for leaf nodes
-    
+    data: str | None = None  # Only for leaf nodes
+
     @property
     def is_leaf(self) -> bool:
         return self.data is not None
@@ -150,14 +148,14 @@ class MerkleNode:
 @dataclass
 class MerkleProof:
     """Proof that a value exists in a Merkle tree."""
-    
+
     leaf_hash: str
     root_hash: str
-    proof_hashes: List[Tuple[str, str]]  # List of (hash, position: "left" or "right")
+    proof_hashes: list[tuple[str, str]]  # List of (hash, position: "left" or "right")
     leaf_index: int
     tree_size: int
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         return {
             "leaf_hash": self.leaf_hash,
             "root_hash": self.root_hash,
@@ -169,13 +167,13 @@ class MerkleProof:
 
 class MerkleTree:
     """Merkle tree for efficient proof of inclusion."""
-    
+
     def __init__(self, hash_func=None):
         self.hash_func = hash_func or (lambda x: hashlib.sha3_256(x.encode()).hexdigest())
-        self.leaves: List[str] = []
-        self.root: Optional[MerkleNode] = None
+        self.leaves: list[str] = []
+        self.root: MerkleNode | None = None
         self._lock = threading.Lock()
-    
+
     def add_leaf(self, data: str) -> int:
         """Add a leaf to the tree. Returns the leaf index."""
         with self._lock:
@@ -183,8 +181,8 @@ class MerkleTree:
             self.leaves.append(leaf_hash)
             self._rebuild()
             return len(self.leaves) - 1
-    
-    def add_leaves(self, data_list: List[str]) -> List[int]:
+
+    def add_leaves(self, data_list: list[str]) -> list[int]:
         """Add multiple leaves to the tree."""
         with self._lock:
             indices = []
@@ -194,16 +192,16 @@ class MerkleTree:
                 indices.append(len(self.leaves) - 1)
             self._rebuild()
             return indices
-    
+
     def _rebuild(self) -> None:
         """Rebuild the tree from leaves."""
         if not self.leaves:
             self.root = None
             return
-        
+
         # Create leaf nodes
         nodes = [MerkleNode(hash=h, data=h) for h in self.leaves]
-        
+
         # Build tree bottom-up
         while len(nodes) > 1:
             next_level = []
@@ -214,37 +212,36 @@ class MerkleTree:
                 parent = MerkleNode(hash=combined_hash, left=left, right=right)
                 next_level.append(parent)
             nodes = next_level
-        
+
         self.root = nodes[0]
-    
+
     @property
-    def root_hash(self) -> Optional[str]:
+    def root_hash(self) -> str | None:
         return self.root.hash if self.root else None
-    
-    def get_proof(self, index: int) -> Optional[MerkleProof]:
+
+    def get_proof(self, index: int) -> MerkleProof | None:
         """Get a proof of inclusion for the leaf at the given index."""
         if index < 0 or index >= len(self.leaves):
             return None
-        
+
         if not self.root:
             return None
-        
+
         proof_hashes = []
         current_index = index
         level_size = len(self.leaves)
-        level_offset = 0
-        
+
         # Build level by level
         nodes = [MerkleNode(hash=h, data=h) for h in self.leaves]
-        
+
         while level_size > 1:
             sibling_index = current_index ^ 1  # XOR to get sibling
-            
+
             if sibling_index < len(nodes):
                 sibling = nodes[sibling_index]
                 position = "right" if current_index % 2 == 0 else "left"
                 proof_hashes.append((sibling.hash, position))
-            
+
             # Build next level
             next_level = []
             for i in range(0, len(nodes), 2):
@@ -252,11 +249,11 @@ class MerkleTree:
                 right = nodes[i + 1] if i + 1 < len(nodes) else nodes[i]
                 combined_hash = self.hash_func(left.hash + right.hash)
                 next_level.append(MerkleNode(hash=combined_hash, left=left, right=right))
-            
+
             nodes = next_level
             current_index //= 2
             level_size = len(nodes)
-        
+
         return MerkleProof(
             leaf_hash=self.leaves[index],
             root_hash=self.root_hash,
@@ -264,32 +261,32 @@ class MerkleTree:
             leaf_index=index,
             tree_size=len(self.leaves),
         )
-    
+
     def verify_proof(self, proof: MerkleProof) -> bool:
         """Verify a proof of inclusion."""
         current_hash = proof.leaf_hash
-        
+
         for sibling_hash, position in proof.proof_hashes:
             if position == "right":
                 current_hash = self.hash_func(current_hash + sibling_hash)
             else:
                 current_hash = self.hash_func(sibling_hash + current_hash)
-        
+
         return current_hash == proof.root_hash
 
 
 @dataclass
 class Block:
     """A block in the audit chain."""
-    
+
     index: int
     timestamp: datetime
-    entries: List[AuditEntry]
+    entries: list[AuditEntry]
     merkle_root: str
     previous_block_hash: str
     nonce: int = 0
     hash: str = ""
-    
+
     def compute_hash(self) -> str:
         """Compute the hash of this block."""
         content = {
@@ -302,8 +299,8 @@ class Block:
         }
         content_bytes = json.dumps(content, sort_keys=True).encode()
         return hashlib.sha3_256(content_bytes).hexdigest()
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    def to_dict(self) -> dict[str, Any]:
         return {
             "index": self.index,
             "timestamp": self.timestamp.isoformat(),
@@ -318,22 +315,22 @@ class Block:
 
 class BlockchainAuditTrail:
     """Immutable blockchain-based audit trail."""
-    
+
     GENESIS_HASH = "0" * 64
     MAX_BLOCK_SIZE = 100  # Max entries per block
-    
-    def __init__(self, signing_key: Optional[bytes] = None):
+
+    def __init__(self, signing_key: bytes | None = None):
         self.signing_key = signing_key or hashlib.sha256(b"default_key").digest()
-        self.chain: List[Block] = []
-        self.pending_entries: List[AuditEntry] = []
+        self.chain: list[Block] = []
+        self.pending_entries: list[AuditEntry] = []
         self.merkle_tree = MerkleTree()
-        self.entry_index: Dict[str, int] = {}  # entry_id -> block_index
+        self.entry_index: dict[str, int] = {}  # entry_id -> block_index
         self._lock = threading.Lock()
         self._entry_counter = 0
-        
+
         # Create genesis block
         self._create_genesis_block()
-    
+
     def _create_genesis_block(self) -> None:
         """Create the genesis (first) block."""
         genesis_entry = AuditEntry(
@@ -350,7 +347,7 @@ class BlockchainAuditTrail:
             previous_hash=self.GENESIS_HASH,
         )
         genesis_entry.signature = self._sign_entry(genesis_entry)
-        
+
         block = Block(
             index=0,
             timestamp=genesis_entry.timestamp,
@@ -359,17 +356,17 @@ class BlockchainAuditTrail:
             previous_block_hash=self.GENESIS_HASH,
         )
         block.hash = block.compute_hash()
-        
+
         self.chain.append(block)
         self.merkle_tree.add_leaf(genesis_entry.content_hash)
         self.entry_index["genesis"] = 0
-    
+
     def _generate_entry_id(self) -> str:
         """Generate a unique entry ID."""
         self._entry_counter += 1
         timestamp = int(time.time() * 1000)
         return f"audit-{timestamp}-{self._entry_counter:06d}"
-    
+
     def _sign_entry(self, entry: AuditEntry) -> str:
         """Sign an audit entry."""
         signature = hmac.new(
@@ -378,12 +375,12 @@ class BlockchainAuditTrail:
             hashlib.sha3_256
         ).hexdigest()
         return signature
-    
+
     def _verify_entry_signature(self, entry: AuditEntry) -> bool:
         """Verify an entry's signature."""
         expected = self._sign_entry(entry)
         return hmac.compare_digest(expected, entry.signature)
-    
+
     def log(
         self,
         event_type: AuditEventType,
@@ -391,12 +388,12 @@ class BlockchainAuditTrail:
         actor_type: str,
         action: str,
         outcome: str,
-        resource_id: Optional[str] = None,
-        resource_type: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        request_id: Optional[str] = None,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
+        resource_id: str | None = None,
+        resource_type: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        request_id: str | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
     ) -> str:
         """Log an audit entry. Returns the entry ID."""
         with self._lock:
@@ -407,7 +404,7 @@ class BlockchainAuditTrail:
                 previous_hash = self.chain[-1].entries[-1].content_hash
             else:
                 previous_hash = self.GENESIS_HASH
-            
+
             entry = AuditEntry(
                 id=self._generate_entry_id(),
                 timestamp=datetime.now(timezone.utc),
@@ -425,25 +422,25 @@ class BlockchainAuditTrail:
                 previous_hash=previous_hash,
             )
             entry.signature = self._sign_entry(entry)
-            
+
             self.pending_entries.append(entry)
-            
+
             # Create block if we have enough entries
             if len(self.pending_entries) >= self.MAX_BLOCK_SIZE:
                 self._create_block()
-            
+
             return entry.id
-    
-    def _create_block(self) -> Optional[Block]:
+
+    def _create_block(self) -> Block | None:
         """Create a new block from pending entries."""
         if not self.pending_entries:
             return None
-        
+
         # Build Merkle tree for this block
         entry_hashes = [e.content_hash for e in self.pending_entries]
         block_merkle = MerkleTree()
         block_merkle.add_leaves(entry_hashes)
-        
+
         block = Block(
             index=len(self.chain),
             timestamp=datetime.now(timezone.utc),
@@ -452,23 +449,23 @@ class BlockchainAuditTrail:
             previous_block_hash=self.chain[-1].hash if self.chain else self.GENESIS_HASH,
         )
         block.hash = block.compute_hash()
-        
+
         # Add to global Merkle tree
         for entry in self.pending_entries:
-            leaf_index = self.merkle_tree.add_leaf(entry.content_hash)
+            self.merkle_tree.add_leaf(entry.content_hash)
             self.entry_index[entry.id] = block.index
-        
+
         self.chain.append(block)
         self.pending_entries.clear()
-        
+
         return block
-    
-    def flush(self) -> Optional[Block]:
+
+    def flush(self) -> Block | None:
         """Force creation of a block from pending entries."""
         with self._lock:
             return self._create_block()
-    
-    def get_entry(self, entry_id: str) -> Optional[AuditEntry]:
+
+    def get_entry(self, entry_id: str) -> AuditEntry | None:
         """Get an audit entry by ID."""
         block_index = self.entry_index.get(entry_id)
         if block_index is None:
@@ -477,14 +474,14 @@ class BlockchainAuditTrail:
                 if entry.id == entry_id:
                     return entry
             return None
-        
+
         block = self.chain[block_index]
         for entry in block.entries:
             if entry.id == entry_id:
                 return entry
         return None
-    
-    def get_proof(self, entry_id: str) -> Optional[MerkleProof]:
+
+    def get_proof(self, entry_id: str) -> MerkleProof | None:
         """Get a Merkle proof for an entry."""
         # Find the entry's position in the global tree
         position = 0
@@ -494,20 +491,20 @@ class BlockchainAuditTrail:
                     return self.merkle_tree.get_proof(position)
                 position += 1
         return None
-    
-    def verify_entry(self, entry_id: str) -> Dict[str, Any]:
+
+    def verify_entry(self, entry_id: str) -> dict[str, Any]:
         """Verify an entry's integrity."""
         entry = self.get_entry(entry_id)
         if not entry:
             return {"valid": False, "error": "Entry not found"}
-        
+
         result = {
             "entry_id": entry_id,
             "signature_valid": self._verify_entry_signature(entry),
             "chain_valid": True,
             "merkle_proof_valid": False,
         }
-        
+
         # Verify chain integrity up to this entry
         block_index = self.entry_index.get(entry_id)
         if block_index is not None:
@@ -520,22 +517,22 @@ class BlockchainAuditTrail:
                 if block.compute_hash() != block.hash:
                     result["chain_valid"] = False
                     break
-        
+
         # Verify Merkle proof
         proof = self.get_proof(entry_id)
         if proof:
             result["merkle_proof_valid"] = self.merkle_tree.verify_proof(proof)
             result["merkle_proof"] = proof.to_dict()
-        
+
         result["valid"] = all([
             result["signature_valid"],
             result["chain_valid"],
             result["merkle_proof_valid"],
         ])
-        
+
         return result
-    
-    def verify_chain(self) -> Dict[str, Any]:
+
+    def verify_chain(self) -> dict[str, Any]:
         """Verify the entire chain's integrity."""
         result = {
             "valid": True,
@@ -543,50 +540,50 @@ class BlockchainAuditTrail:
             "entries_verified": 0,
             "errors": [],
         }
-        
+
         for i, block in enumerate(self.chain):
             # Verify block hash
             if block.compute_hash() != block.hash:
                 result["valid"] = False
                 result["errors"].append(f"Block {i}: Invalid hash")
                 continue
-            
+
             # Verify chain link
             if i > 0:
                 if block.previous_block_hash != self.chain[i - 1].hash:
                     result["valid"] = False
                     result["errors"].append(f"Block {i}: Chain broken")
-            
+
             # Verify entry signatures and chaining
             for j, entry in enumerate(block.entries):
                 if not self._verify_entry_signature(entry):
                     result["valid"] = False
                     result["errors"].append(f"Block {i}, Entry {j}: Invalid signature")
-                
+
                 result["entries_verified"] += 1
-            
+
             result["blocks_verified"] += 1
-        
+
         return result
-    
+
     def query(
         self,
-        event_type: Optional[AuditEventType] = None,
-        actor_id: Optional[str] = None,
-        resource_id: Optional[str] = None,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
+        event_type: AuditEventType | None = None,
+        actor_id: str | None = None,
+        resource_id: str | None = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
         limit: int = 100,
-    ) -> List[AuditEntry]:
+    ) -> list[AuditEntry]:
         """Query audit entries."""
         results = []
-        
+
         # Search in reverse chronological order
         for block in reversed(self.chain):
             for entry in reversed(block.entries):
                 if len(results) >= limit:
                     return results
-                
+
                 # Apply filters
                 if event_type and entry.event_type != event_type:
                     continue
@@ -598,14 +595,14 @@ class BlockchainAuditTrail:
                     continue
                 if end_time and entry.timestamp > end_time:
                     continue
-                
+
                 results.append(entry)
-        
+
         # Also search pending entries
         for entry in reversed(self.pending_entries):
             if len(results) >= limit:
                 break
-            
+
             if event_type and entry.event_type != event_type:
                 continue
             if actor_id and entry.actor_id != actor_id:
@@ -616,12 +613,12 @@ class BlockchainAuditTrail:
                 continue
             if end_time and entry.timestamp > end_time:
                 continue
-            
+
             results.append(entry)
-        
+
         return results
-    
-    def export_chain(self) -> Dict[str, Any]:
+
+    def export_chain(self) -> dict[str, Any]:
         """Export the entire chain for backup/replication."""
         return {
             "version": "1.0",
@@ -631,11 +628,11 @@ class BlockchainAuditTrail:
             "merkle_root": self.merkle_tree.root_hash,
             "total_entries": sum(len(b.entries) for b in self.chain) + len(self.pending_entries),
         }
-    
-    def get_stats(self) -> Dict[str, Any]:
+
+    def get_stats(self) -> dict[str, Any]:
         """Get chain statistics."""
         total_entries = sum(len(b.entries) for b in self.chain) + len(self.pending_entries)
-        
+
         return {
             "total_blocks": len(self.chain),
             "total_entries": total_entries,
@@ -647,7 +644,7 @@ class BlockchainAuditTrail:
 
 
 # Singleton instance
-_audit_trail: Optional[BlockchainAuditTrail] = None
+_audit_trail: BlockchainAuditTrail | None = None
 
 
 def get_audit_trail() -> BlockchainAuditTrail:

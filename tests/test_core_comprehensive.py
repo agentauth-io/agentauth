@@ -5,17 +5,19 @@ Comprehensive tests for crypto, engine, and policy modules
 to improve coverage from 37-38% → 65%+.
 """
 import time
+
 import pytest
+
 from core.crypto import (
+    EncryptionKey,
+    KeyManager,
     MasterSecret,
     SigningKeyPair,
-    EncryptionKey,
     constant_time_compare,
-    secure_random_bytes,
-    secure_random_hex,
-    KeyManager,
     generate_id,
     hash_sha256,
+    secure_random_bytes,
+    secure_random_hex,
 )
 from core.engine import (
     AuthorizationRequest,
@@ -26,24 +28,19 @@ from core.engine import (
     SpendingTracker,
 )
 from core.policy import (
-    Policy,
-    PolicyBuilder,
-    PolicyEffect,
-    PolicyEngine,
-    PolicyDecision,
-    PolicyCombineAlgorithm,
     Condition,
     ConditionOperator,
+    Policy,
+    PolicyBuilder,
+    PolicyCombineAlgorithm,
+    PolicyEffect,
+    PolicyEngine,
     PolicyRule,
 )
 from core.tokens import (
     TokenGenerator,
     TokenVerifier,
-    TokenType,
-    TokenFlag,
-    AuthorizationToken,
 )
-
 
 # ============================================================================
 # Crypto Tests
@@ -737,7 +734,7 @@ class TestTokens:
         km = KeyManager(ms)
         gen = TokenGenerator(km)
         ver = TokenVerifier(km)
-        
+
         token = gen.create_authorization(
             agent_id="agent-1",
             user_id="user-1",
@@ -754,7 +751,7 @@ class TestTokens:
         ms = MasterSecret.generate()
         km = KeyManager(ms)
         gen = TokenGenerator(km)
-        
+
         token = gen.create_authorization(
             agent_id="agent-1",
             user_id="user-1",
@@ -769,7 +766,7 @@ class TestTokens:
         km = KeyManager(ms)
         gen = TokenGenerator(km)
         ver = TokenVerifier(km)
-        
+
         token = gen.create_authorization(
             agent_id="agent-1",
             user_id="user-1",

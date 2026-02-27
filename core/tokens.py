@@ -42,19 +42,17 @@ Security Properties:
 - Encrypted payload hides sensitive details
 """
 
+import base64
+import json
 import struct
 import time
-import json
-import hashlib
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
 from enum import IntEnum
-import base64
+from typing import Any
 
 from .crypto import (
-    KeyManager, SigningKeyPair, EncryptionKey,
-    secure_random_bytes, generate_id, constant_time_compare,
-    hash_sha256
+    KeyManager,
+    secure_random_bytes,
 )
 
 
@@ -109,7 +107,7 @@ class TokenHeader:
     timestamp: int = field(default_factory=lambda: int(time.time()))
     expiry: int = field(default_factory=lambda: int(time.time()) + 3600)
     token_id: bytes = field(default_factory=lambda: secure_random_bytes(16))
-    
+
     def to_bytes(self) -> bytes:
         """Serialize header to bytes."""
         return struct.pack(
@@ -122,17 +120,17 @@ class TokenHeader:
             0,  # Reserved
             self.token_id
         )
-    
+
     @classmethod
     def from_bytes(cls, data: bytes) -> "TokenHeader":
         """Deserialize header from bytes."""
         if len(data) < 44:
             raise TokenInvalidError("Header too short")
-        
+
         version, token_type, flags, timestamp, expiry, _, token_id = struct.unpack(
             '>BBHqqq16s', data[:44]
         )
-        
+
         return cls(
             version=version,
             token_type=TokenType(token_type),
@@ -141,11 +139,11 @@ class TokenHeader:
             expiry=expiry,
             token_id=token_id
         )
-    
+
     def is_expired(self) -> bool:
         """Check if token has expired."""
         return time.time() > self.expiry
-    
+
     @property
     def token_id_hex(self) -> str:
         """Get token ID as hex string."""
@@ -162,13 +160,13 @@ class TokenPayload:
     user_id: str
     action: str
     resource: str
-    amount: Optional[float] = None
-    merchant: Optional[str] = None
-    category: Optional[str] = None
-    constraints: Dict[str, Any] = field(default_factory=dict)
-    policy_hash: Optional[str] = None
+    amount: float | None = None
+    merchant: str | None = None
+    category: str | None = None
+    constraints: dict[str, Any] = field(default_factory=dict)
+    policy_hash: str | None = None
     nonce: bytes = field(default_factory=lambda: secure_random_bytes(16))
-    
+
     def to_json(self) -> str:
         """Serialize to JSON."""
         data = {
@@ -189,7 +187,7 @@ class TokenPayload:
         if self.policy_hash:
             data["policy_hash"] = self.policy_hash
         return json.dumps(data, separators=(',', ':'))
-    
+
     @classmethod
     def from_json(cls, json_str: str) -> "TokenPayload":
         """Deserialize from JSON."""
@@ -206,11 +204,11 @@ class TokenPayload:
             policy_hash=data.get("policy_hash"),
             nonce=bytes.fromhex(data["nonce"])
         )
-    
+
     def to_bytes(self) -> bytes:
         """Convert to bytes for encryption."""
         return self.to_json().encode('utf-8')
-    
+
     @classmethod
     def from_bytes(cls, data: bytes) -> "TokenPayload":
         """Parse from decrypted bytes."""
@@ -221,7 +219,7 @@ class TokenPayload:
 class AuthorizationToken:
     """
     Complete authorization token.
-    
+
     This is the cryptographic proof that an action was authorized
     by AgentAuth on behalf of a user.
     """
@@ -229,17 +227,17 @@ class AuthorizationToken:
     payload: TokenPayload
     signature: bytes = field(default=b'', repr=False)
     _encrypted_payload: bytes = field(default=b'', repr=False)
-    
+
     def serialize(self, key_manager: KeyManager) -> bytes:
         """
         Serialize and sign the token.
-        
+
         Returns:
             Complete token as bytes (header + encrypted_payload + signature)
         """
         # Serialize header
         header_bytes = self.header.to_bytes()
-        
+
         # Encrypt payload
         payload_bytes = self.payload.to_bytes()
         associated_data = header_bytes  # Bind to header
@@ -247,11 +245,11 @@ class AuthorizationToken:
             payload_bytes, associated_data
         )
         self._encrypted_payload = encrypted
-        
+
         # Sign header + encrypted payload
         to_sign = header_bytes + encrypted
         self.signature = key_manager.auth_signing_key.sign(to_sign)
-        
+
         # Combine: header + len(encrypted) + encrypted + signature
         return (
             header_bytes +
@@ -259,41 +257,41 @@ class AuthorizationToken:
             encrypted +
             self.signature
         )
-    
+
     @classmethod
     def deserialize(cls, data: bytes, key_manager: KeyManager) -> "AuthorizationToken":
         """
         Deserialize and verify a token.
-        
+
         Raises:
             TokenInvalidError: If signature verification fails
             TokenExpiredError: If token has expired
         """
         if len(data) < 44 + 2 + 28 + 64:  # header + len + min_encrypted + sig
             raise TokenInvalidError("Token too short")
-        
+
         # Parse header
         header = TokenHeader.from_bytes(data[:44])
-        
+
         # Check expiry
         if header.is_expired():
             raise TokenExpiredError(f"Token expired at {header.expiry}")
-        
+
         # Parse encrypted payload length
         encrypted_len = struct.unpack('>H', data[44:46])[0]
         if len(data) < 46 + encrypted_len + 64:
             raise TokenInvalidError("Token truncated")
-        
+
         encrypted_payload = data[46:46+encrypted_len]
         signature = data[46+encrypted_len:46+encrypted_len+64]
-        
+
         # Verify signature
         # serialize() signs header_bytes + encrypted (no length prefix)
         header_bytes = data[:44]
         to_verify = header_bytes + encrypted_payload
         if not key_manager.auth_signing_key.verify(to_verify, signature):
             raise TokenInvalidError("Signature verification failed")
-        
+
         # Decrypt payload
         header_bytes = data[:44]
         try:
@@ -302,32 +300,32 @@ class AuthorizationToken:
             )
         except Exception as e:
             raise TokenInvalidError(f"Payload decryption failed: {e}")
-        
+
         payload = TokenPayload.from_bytes(payload_bytes)
-        
+
         return cls(
             header=header,
             payload=payload,
             signature=signature,
             _encrypted_payload=encrypted_payload
         )
-    
+
     def to_base64(self, key_manager: KeyManager) -> str:
         """Serialize to URL-safe base64 string."""
         return base64.urlsafe_b64encode(self.serialize(key_manager)).decode()
-    
+
     @classmethod
     def from_base64(cls, b64_str: str, key_manager: KeyManager) -> "AuthorizationToken":
         """Deserialize from base64 string."""
         data = base64.urlsafe_b64decode(b64_str)
         return cls.deserialize(data, key_manager)
-    
+
     @property
     def token_id(self) -> str:
         """Get human-readable token ID."""
         return f"aa_tx_{self.header.token_id_hex[:12]}"
-    
-    def summary(self) -> Dict[str, Any]:
+
+    def summary(self) -> dict[str, Any]:
         """Get token summary for display."""
         return {
             "token_id": self.token_id,
@@ -345,31 +343,31 @@ class AuthorizationToken:
 class TokenGenerator:
     """
     Generates authorization tokens.
-    
+
     This is the core token minting capability.
     """
-    
+
     def __init__(self, key_manager: KeyManager):
         self._key_manager = key_manager
-        self._issued_tokens: Dict[str, float] = {}  # token_id -> issue_time
-    
+        self._issued_tokens: dict[str, float] = {}  # token_id -> issue_time
+
     def create_authorization(
         self,
         agent_id: str,
         user_id: str,
         action: str,
         resource: str,
-        amount: Optional[float] = None,
-        merchant: Optional[str] = None,
-        category: Optional[str] = None,
+        amount: float | None = None,
+        merchant: str | None = None,
+        category: str | None = None,
         ttl_seconds: int = 3600,
         flags: int = TokenFlag.NONE,
-        constraints: Optional[Dict[str, Any]] = None,
-        policy_hash: Optional[str] = None
+        constraints: dict[str, Any] | None = None,
+        policy_hash: str | None = None
     ) -> AuthorizationToken:
         """
         Create a new authorization token.
-        
+
         Args:
             agent_id: ID of the agent making the request
             user_id: ID of the user who owns the agent
@@ -382,12 +380,12 @@ class TokenGenerator:
             flags: Token flags
             constraints: Additional constraints
             policy_hash: Hash of policy that authorized this
-            
+
         Returns:
             Signed authorization token
         """
         now = int(time.time())
-        
+
         header = TokenHeader(
             version=1,
             token_type=TokenType.AUTHORIZATION,
@@ -395,7 +393,7 @@ class TokenGenerator:
             timestamp=now,
             expiry=now + ttl_seconds,
         )
-        
+
         payload = TokenPayload(
             agent_id=agent_id,
             user_id=user_id,
@@ -407,29 +405,29 @@ class TokenGenerator:
             constraints=constraints or {},
             policy_hash=policy_hash,
         )
-        
+
         token = AuthorizationToken(header=header, payload=payload)
-        
+
         # Pre-serialize to generate signature
         token.serialize(self._key_manager)
-        
+
         # Track issued token
         self._issued_tokens[header.token_id_hex] = now
-        
+
         return token
-    
+
     def create_delegation(
         self,
         agent_id: str,
         user_id: str,
-        permissions: List[str],
+        permissions: list[str],
         ttl_seconds: int = 86400,  # 24 hours default
     ) -> AuthorizationToken:
         """
         Create a delegation token granting ongoing permissions.
         """
         now = int(time.time())
-        
+
         header = TokenHeader(
             version=1,
             token_type=TokenType.DELEGATION,
@@ -437,7 +435,7 @@ class TokenGenerator:
             timestamp=now,
             expiry=now + ttl_seconds,
         )
-        
+
         payload = TokenPayload(
             agent_id=agent_id,
             user_id=user_id,
@@ -445,51 +443,51 @@ class TokenGenerator:
             resource="*",
             constraints={"permissions": permissions}
         )
-        
+
         token = AuthorizationToken(header=header, payload=payload)
         token.serialize(self._key_manager)
-        
+
         return token
 
 
 class TokenVerifier:
     """
     Verifies authorization tokens.
-    
+
     This is used by merchants/processors to validate tokens.
     """
-    
+
     def __init__(self, key_manager: KeyManager):
         self._key_manager = key_manager
         self._revoked_tokens: set = set()  # In production: distributed store
-    
+
     def verify(self, token_data: bytes) -> AuthorizationToken:
         """
         Verify a token and return the parsed token if valid.
-        
+
         Raises:
             TokenExpiredError: If expired
             TokenRevokedError: If revoked
             TokenInvalidError: If invalid signature or format
         """
         token = AuthorizationToken.deserialize(token_data, self._key_manager)
-        
+
         # Check revocation (using truncated ID matching revoke() behavior)
         truncated_id = token.header.token_id_hex[:12]
         if truncated_id in self._revoked_tokens:
             raise TokenRevokedError("Token has been revoked")
-        
+
         return token
-    
+
     def verify_base64(self, b64_str: str) -> AuthorizationToken:
         """Verify a base64-encoded token."""
         data = base64.urlsafe_b64decode(b64_str)
         return self.verify(data)
-    
+
     def revoke(self, token_id: str):
         """
         Revoke a token.
-        
+
         In production, this would be stored in a distributed cache
         with TTL matching token expiry.
         """
@@ -497,7 +495,7 @@ class TokenVerifier:
         if token_id.startswith("aa_tx_"):
             token_id = token_id[6:]
         self._revoked_tokens.add(token_id)
-    
+
     def is_revoked(self, token_id: str) -> bool:
         """Check if a token is revoked."""
         if token_id.startswith("aa_tx_"):
@@ -509,14 +507,14 @@ class TokenVerifier:
 if __name__ == "__main__":
     print("AgentAuth Core Token Module Test")
     print("=" * 50)
-    
+
     # Initialize key manager
     km = KeyManager()
-    print(f"[+] Key manager initialized")
-    
+    print("[+] Key manager initialized")
+
     # Create token generator
     generator = TokenGenerator(km)
-    
+
     # Generate authorization token
     token = generator.create_authorization(
         agent_id="agent_shopping_123",
@@ -529,33 +527,33 @@ if __name__ == "__main__":
         ttl_seconds=3600,
         flags=TokenFlag.ONE_TIME
     )
-    
-    print(f"\n[+] Generated token:")
+
+    print("\n[+] Generated token:")
     print(f"    Token ID: {token.token_id}")
     print(f"    Agent: {token.payload.agent_id}")
     print(f"    Amount: ${token.payload.amount}")
     print(f"    Merchant: {token.payload.merchant}")
     print(f"    Expires: {token.header.expiry}")
-    
+
     # Serialize to base64
     token_b64 = token.to_base64(km)
     print(f"\n[+] Token (base64): {token_b64[:60]}...")
     print(f"    Length: {len(token_b64)} bytes")
-    
+
     # Verify token
     verifier = TokenVerifier(km)
     verified = verifier.verify_base64(token_b64)
-    print(f"\n[+] Verification: PASS")
+    print("\n[+] Verification: PASS")
     print(f"    Token summary: {verified.summary()}")
-    
+
     # Test revocation
     verifier.revoke(token.token_id)
-    print(f"\n[+] Token revoked")
-    
+    print("\n[+] Token revoked")
+
     try:
         verifier.verify_base64(token_b64)
         print("[!] FAIL: Should have raised TokenRevokedError")
     except TokenRevokedError:
         print("[+] Revocation check: PASS")
-    
+
     print("\n[*] All token tests passed!")

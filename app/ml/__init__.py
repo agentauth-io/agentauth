@@ -5,11 +5,18 @@ Real-time ML for fraud detection and anomaly detection.
 Target: <100ms end-to-end inference latency.
 """
 
+from app.ml.anomaly_detection import (
+    AnomalyDetectionService,
+    AnomalyResult,
+    IsolationForest,
+    detect_anomaly,
+    get_anomaly_service,
+)
 from app.ml.feature_store import (
     FeatureStore,
     FeatureVector,
-    UserBehaviorFeatures,
     TransactionFeatures,
+    UserBehaviorFeatures,
     get_feature_store,
     get_fraud_features,
     record_transaction,
@@ -18,15 +25,8 @@ from app.ml.fraud_model import (
     FraudDetectionModel,
     FraudDetectionService,
     FraudPrediction,
-    get_fraud_service,
     detect_fraud,
-)
-from app.ml.anomaly_detection import (
-    AnomalyDetectionService,
-    AnomalyResult,
-    IsolationForest,
-    get_anomaly_service,
-    detect_anomaly,
+    get_fraud_service,
 )
 
 __all__ = [

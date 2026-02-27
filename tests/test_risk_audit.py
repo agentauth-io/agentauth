@@ -2,28 +2,25 @@
 Comprehensive tests for core/risk.py and core/audit.py modules.
 Targets the two lowest-coverage core modules to push toward 80% target.
 """
-import time
 import json
-import os
-import tempfile
-import pytest
-from collections import defaultdict
+import time
 
-from core.risk import (
-    RiskLevel,
-    RiskFactor,
-    RiskFactorScore,
-    RiskAssessment,
-    TransactionHistory,
-    RiskScoringEngine,
-)
+import pytest
+
 from core.audit import (
-    AuditEventType,
     AuditEntry,
+    AuditEventType,
     AuditLog,
 )
-from core.crypto import MasterSecret, KeyManager, SigningKeyPair
-
+from core.crypto import MasterSecret, SigningKeyPair
+from core.risk import (
+    RiskAssessment,
+    RiskFactor,
+    RiskFactorScore,
+    RiskLevel,
+    RiskScoringEngine,
+    TransactionHistory,
+)
 
 # ─── Risk Module Tests ───────────────────────────────────────────────────────
 

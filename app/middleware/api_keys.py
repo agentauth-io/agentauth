@@ -3,16 +3,16 @@ API Key Authentication
 
 Database-backed API key management with in-memory LRU cache.
 """
-import secrets
 import hashlib
 import logging
+import secrets
 import time
-from datetime import datetime, timezone
-from typing import Optional
-from fastapi import Request, HTTPException, status, Depends
+from datetime import datetime, timedelta, timezone
+
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import APIKeyHeader
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.database import get_db
 
@@ -41,12 +41,17 @@ def _evict_cache():
             del _KEY_CACHE[k]
 
 
-async def generate_api_key(db: AsyncSession, owner: str = "default") -> dict:
+async def generate_api_key(db: AsyncSession, owner: str = "default", ttl_days: int = 90) -> dict:
     """
     Generate a new API key and persist to database.
 
+    Args:
+        db: Database session
+        owner: Owner identifier
+        ttl_days: Time-to-live in days (default 90)
+
     Returns:
-        {key: "aa_live_xxx", key_id: "xxx", owner: "..."}
+        {key: "aa_live_xxx", key_id: "xxx", owner: "...", expires_at: "..."}
     """
     from app.models.api_key import ApiKey
 
@@ -55,12 +60,16 @@ async def generate_api_key(db: AsyncSession, owner: str = "default") -> dict:
     full_key = f"aa_live_{raw_key}"
     key_hash = hashlib.sha256(full_key.encode()).hexdigest()
 
+    # Calculate expiry
+    expires_at = datetime.now(timezone.utc) + timedelta(days=ttl_days)
+
     api_key = ApiKey(
         key_hash=key_hash,
         key_id=key_id,
         owner=owner,
         permissions=["read", "write"],
         rate_limit=1000,
+        expires_at=expires_at,
     )
     db.add(api_key)
     await db.flush()
@@ -69,6 +78,7 @@ async def generate_api_key(db: AsyncSession, owner: str = "default") -> dict:
         "key_id": key_id,
         "owner": owner,
         "created_at": api_key.created_at.isoformat() if api_key.created_at else datetime.now(timezone.utc).isoformat(),
+        "expires_at": expires_at.isoformat(),
         "permissions": ["read", "write"],
         "rate_limit": 1000,
     }
@@ -81,6 +91,7 @@ async def generate_api_key(db: AsyncSession, owner: str = "default") -> dict:
         "key_id": key_id,
         "owner": owner,
         "created_at": key_data["created_at"],
+        "expires_at": key_data["expires_at"],
     }
 
 
@@ -112,7 +123,7 @@ def generate_api_key_sync(owner: str = "default") -> dict:
     }
 
 
-async def verify_api_key(api_key: str, db: Optional[AsyncSession] = None) -> Optional[dict]:
+async def verify_api_key(api_key: str, db: AsyncSession | None = None) -> dict | None:
     """Verify an API key against cache first, then database."""
     if not api_key:
         return None
@@ -131,7 +142,7 @@ async def verify_api_key(api_key: str, db: Optional[AsyncSession] = None) -> Opt
         result = await db.execute(
             select(ApiKey).where(
                 ApiKey.key_hash == key_hash,
-                ApiKey.is_active == True,
+                ApiKey.is_active,
             )
         )
         row = result.scalar_one_or_none()
@@ -158,10 +169,10 @@ async def verify_api_key(api_key: str, db: Optional[AsyncSession] = None) -> Opt
 
 
 async def get_api_key_optional(
-    api_key: Optional[str] = Depends(api_key_header),
+    api_key: str | None = Depends(api_key_header),
     request: Request = None,
     db: AsyncSession = Depends(get_db),
-) -> Optional[dict]:
+) -> dict | None:
     """
     Optional API key dependency.
     Returns key metadata if valid, None otherwise.
@@ -178,7 +189,7 @@ async def get_api_key_optional(
 
 
 async def require_api_key(
-    api_key: Optional[str] = Depends(api_key_header),
+    api_key: str | None = Depends(api_key_header),
     request: Request = None,
     db: AsyncSession = Depends(get_db),
 ) -> dict:

@@ -3,18 +3,17 @@ Rules API
 
 API endpoints for managing merchant and category rules.
 """
-from typing import List, Optional
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.database import get_db
-from app.models.limits import MerchantRule, CategoryRule, RuleAction
 from app.middleware import require_api_key
 from app.middleware.api_keys import get_current_user_id
-
+from app.models.database import get_db
+from app.models.limits import CategoryRule, MerchantRule, RuleAction
 
 router = APIRouter(prefix="/v1/rules", tags=["Rules"])
 
@@ -25,7 +24,7 @@ class MerchantRuleCreate(BaseModel):
     """Request to create a merchant rule."""
     merchant_pattern: str = Field(..., description="Merchant pattern (supports wildcards like *.amazon.com)")
     action: str = Field("block", description="Action: 'allow' or 'block'")
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class MerchantRuleResponse(BaseModel):
@@ -33,7 +32,7 @@ class MerchantRuleResponse(BaseModel):
     id: UUID
     merchant_pattern: str
     action: str
-    description: Optional[str]
+    description: str | None
     is_active: bool
 
 
@@ -53,7 +52,7 @@ class CategoryRuleResponse(BaseModel):
 
 # Merchant Rules Endpoints
 
-@router.get("/merchants", response_model=List[MerchantRuleResponse])
+@router.get("/merchants", response_model=list[MerchantRuleResponse])
 async def list_merchant_rules(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
@@ -61,17 +60,17 @@ async def list_merchant_rules(
 ):
     """
     List all merchant rules.
-    
+
     Returns whitelist and blacklist rules for merchants.
     """
     result = await db.execute(
         select(MerchantRule).where(
             MerchantRule.user_id == user_id,
-            MerchantRule.is_active == True
+            MerchantRule.is_active
         ).order_by(MerchantRule.created_at.desc())
     )
     rules = result.scalars().all()
-    
+
     return [
         MerchantRuleResponse(
             id=rule.id,
@@ -93,13 +92,13 @@ async def create_merchant_rule(
 ):
     """
     Create a new merchant rule.
-    
+
     Examples:
     - Block all gambling: merchant_pattern="*.gambling.com", action="block"
     - Only allow Amazon: merchant_pattern="*.amazon.com", action="allow"
     """
     action = RuleAction.ALLOW if rule.action.lower() == "allow" else RuleAction.BLOCK
-    
+
     new_rule = MerchantRule(
         user_id=user_id,
         merchant_pattern=rule.merchant_pattern,
@@ -109,7 +108,7 @@ async def create_merchant_rule(
     db.add(new_rule)
     await db.commit()
     await db.refresh(new_rule)
-    
+
     return MerchantRuleResponse(
         id=new_rule.id,
         merchant_pattern=new_rule.merchant_pattern,
@@ -128,7 +127,7 @@ async def delete_merchant_rule(
 ):
     """
     Delete a merchant rule.
-    
+
     Soft-deletes by setting is_active=False.
     """
     result = await db.execute(
@@ -138,19 +137,19 @@ async def delete_merchant_rule(
         )
     )
     rule = result.scalar_one_or_none()
-    
+
     if not rule:
         raise HTTPException(status_code=404, detail="Rule not found")
-    
+
     rule.is_active = False
     await db.commit()
-    
+
     return {"status": "success", "message": "Rule deleted"}
 
 
 # Category Rules Endpoints
 
-@router.get("/categories", response_model=List[CategoryRuleResponse])
+@router.get("/categories", response_model=list[CategoryRuleResponse])
 async def list_category_rules(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
@@ -158,17 +157,17 @@ async def list_category_rules(
 ):
     """
     List all category rules.
-    
+
     Returns rules for spending categories.
     """
     result = await db.execute(
         select(CategoryRule).where(
             CategoryRule.user_id == user_id,
-            CategoryRule.is_active == True
+            CategoryRule.is_active
         ).order_by(CategoryRule.created_at.desc())
     )
     rules = result.scalars().all()
-    
+
     return [
         CategoryRuleResponse(
             id=rule.id,
@@ -189,11 +188,11 @@ async def create_category_rule(
 ):
     """
     Create a new category rule.
-    
+
     Categories: saas, ecommerce, travel, entertainment, gambling, crypto, food, utilities
     """
     action = RuleAction.ALLOW if rule.action.lower() == "allow" else RuleAction.BLOCK
-    
+
     new_rule = CategoryRule(
         user_id=user_id,
         category=rule.category.lower(),
@@ -202,7 +201,7 @@ async def create_category_rule(
     db.add(new_rule)
     await db.commit()
     await db.refresh(new_rule)
-    
+
     return CategoryRuleResponse(
         id=new_rule.id,
         category=new_rule.category,
@@ -228,13 +227,13 @@ async def delete_category_rule(
         )
     )
     rule = result.scalar_one_or_none()
-    
+
     if not rule:
         raise HTTPException(status_code=404, detail="Rule not found")
-    
+
     rule.is_active = False
     await db.commit()
-    
+
     return {"status": "success", "message": "Rule deleted"}
 
 
@@ -244,7 +243,7 @@ async def delete_category_rule(
 async def get_available_categories():
     """
     Get list of available categories.
-    
+
     These are suggested categories - you can use any category name.
     """
     return {

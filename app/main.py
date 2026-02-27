@@ -5,19 +5,43 @@ The authorization layer for AI agent purchases.
 """
 from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import FastAPI, Depends, HTTPException
+
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from app.config import get_settings
-from app.logging_config import setup_logging, api_logger
+from app.logging_config import api_logger, setup_logging
 
 __version__ = "0.3.0"
-from app.api import consents_router, authorize_router, verify_router, payments_router, dashboard_router, admin_router, limits_router, rules_router, analytics_router, webhooks_router, billing_router, agents_router, auth_router
-from app.api.connect import router as connect_router
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.database import init_db, get_db
-from app.middleware import RateLimitMiddleware, IdempotencyMiddleware, TenantContextMiddleware, SecurityHeadersMiddleware, generate_api_key, generate_api_key_sync, DEMO_KEY
+
+from app.api import (
+    admin_router,
+    agents_router,
+    analytics_router,
+    auth_router,
+    authorize_router,
+    billing_router,
+    consents_router,
+    dashboard_router,
+    limits_router,
+    payments_router,
+    rules_router,
+    verify_router,
+    webhooks_router,
+)
+from app.api.api_keys import router as api_keys_router
+from app.api.connect import router as connect_router
+from app.middleware import (
+    DEMO_KEY,
+    IdempotencyMiddleware,
+    RateLimitMiddleware,
+    SecurityHeadersMiddleware,
+    TenantContextMiddleware,
+    generate_api_key,
+)
+from app.models.database import get_db, init_db
 from app.services.cache_service import close_redis, get_cache_service
 
 settings = get_settings()
@@ -34,7 +58,7 @@ if settings.sentry_dsn:
         import sentry_sdk
         from sentry_sdk.integrations.fastapi import FastApiIntegration
         from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
-        
+
         sentry_sdk.init(
             dsn=settings.sentry_dsn,
             environment=settings.environment,
@@ -53,7 +77,7 @@ if settings.sentry_dsn:
 async def lifespan(app: FastAPI):
     """Application lifespan handler - startup and shutdown."""
     api_logger.info("Starting AgentAuth API...")
-    
+
     # Startup: Initialize database tables
     # Note: In production, use Alembic migrations instead
     try:
@@ -63,14 +87,14 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         api_logger.warning(f"Database init failed: {e}")
         # Continue anyway - API will work but DB operations will fail
-    
+
     # Initialize Redis connection (optional - will fail gracefully if unavailable)
     try:
-        cache = get_cache_service()
+        get_cache_service()
         api_logger.info("Redis cache service initialized")
     except Exception as e:
         api_logger.warning(f"Redis init failed (using in-memory fallback): {e}")
-    
+
     # Initialize OpenTelemetry tracing (optional)
     try:
         from app.tracing import init_tracing
@@ -78,7 +102,7 @@ async def lifespan(app: FastAPI):
         api_logger.info("OpenTelemetry tracing initialized")
     except Exception as e:
         api_logger.debug(f"Tracing init skipped: {e}")
-    
+
     # Start background worker for async auth queue flushing
     try:
         from app.services.auth_service import start_background_worker
@@ -86,10 +110,10 @@ async def lifespan(app: FastAPI):
         api_logger.info("Authorization background worker started")
     except Exception as e:
         api_logger.warning(f"Background worker failed: {e}")
-    
+
     api_logger.info("AgentAuth API started successfully")
     yield
-    
+
     # Shutdown
     api_logger.info("Shutting down AgentAuth API...")
     try:
@@ -106,35 +130,35 @@ app = FastAPI(
     title="AgentAuth",
     description="""
     ## The Authorization Layer for AI Agent Purchases
-    
+
     AgentAuth provides cryptographic proof that a human authorized an AI agent's purchase.
-    
+
     ### Core Flows
-    
+
     1. **Consent** (`POST /v1/consents`)
        - User authorizes agent with spending limits
        - Returns delegation token for agent
-    
+
     2. **Authorize** (`POST /v1/authorize`)
        - Agent requests permission for specific transaction
        - Returns ALLOW/DENY decision
-    
+
     3. **Verify** (`POST /v1/verify`)
        - Merchant verifies authorization code
        - Returns consent proof for chargeback defense
-    
+
     ### Spending Controls
-    
+
     4. **Limits** (`/v1/limits`)
        - Set daily, monthly, per-transaction limits
        - View current usage
-    
+
     5. **Rules** (`/v1/rules`)
        - Merchant whitelists/blacklists
        - Category controls
-    
+
     ### Authentication
-    
+
     Use `X-API-Key` header or `Authorization: Bearer aa_live_xxx` for authenticated requests.
     Get an API key from `POST /v1/api-keys`.
     """,
@@ -148,7 +172,9 @@ app = FastAPI(
 
 # Add request ID middleware (outermost, runs first)
 import uuid as _uuid
+
 from starlette.middleware.base import BaseHTTPMiddleware as _BaseMiddleware
+
 
 class RequestIDMiddleware(_BaseMiddleware):
     """Adds X-Request-ID header to all responses for tracing."""
@@ -159,7 +185,32 @@ class RequestIDMiddleware(_BaseMiddleware):
         response.headers["X-Request-ID"] = request_id
         return response
 
+
+class RequestSizeLimitMiddleware(_BaseMiddleware):
+    """Limits request body size to prevent DoS attacks."""
+    MAX_BODY_SIZE = 10 * 1024 * 1024  # 10MB
+
+    async def dispatch(self, request, call_next):
+        # Check content-length header if present
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                length = int(content_length)
+                if length > self.MAX_BODY_SIZE:
+                    return JSONResponse(
+                        status_code=413,
+                        content={
+                            "error": "request_entity_too_large",
+                            "detail": f"Request body too large. Maximum size is {self.MAX_BODY_SIZE // (1024*1024)}MB"
+                        }
+                    )
+            except ValueError:
+                pass  # Invalid content-length, let the request proceed
+        return await call_next(request)
+
+
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(RequestSizeLimitMiddleware)
 
 # Add security headers middleware
 app.add_middleware(SecurityHeadersMiddleware)
@@ -194,7 +245,16 @@ app.add_middleware(
     allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=[
+        "Accept",
+        "Accept-Language",
+        "Authorization",
+        "Content-Language",
+        "Content-Type",
+        "X-API-Key",
+        "X-Request-ID",
+        "X-Idempotency-Key",
+    ],
 )
 
 
@@ -213,6 +273,7 @@ app.include_router(billing_router)
 app.include_router(agents_router)
 app.include_router(auth_router)
 app.include_router(connect_router)
+app.include_router(api_keys_router)
 
 
 @app.get("/", tags=["Root"])
@@ -236,18 +297,20 @@ async def health():
 @app.get("/health/detailed", tags=["Health"])
 async def health_detailed():
     """Detailed health check with component status."""
+    import time
+
+    from sqlalchemy import text
+
     from app.models.database import async_engine
     from app.services.cache_service import get_cache_service
-    from sqlalchemy import text
-    import time
-    
+
     checks = {
         "api": {"status": "healthy", "latency_ms": 0},
         "database": {"status": "unknown", "latency_ms": 0},
         "cache": {"status": "unknown", "latency_ms": 0},
     }
     overall_status = "healthy"
-    
+
     # Check database
     try:
         start = time.perf_counter()
@@ -259,7 +322,7 @@ async def health_detailed():
         checks["database"]["status"] = "unhealthy"
         checks["database"]["error"] = str(e)
         overall_status = "degraded"
-    
+
     # Check Redis cache
     try:
         start = time.perf_counter()
@@ -271,7 +334,7 @@ async def health_detailed():
         checks["cache"]["status"] = "unavailable"
         checks["cache"]["error"] = str(e)
         # Cache is optional, don't degrade status
-    
+
     return {
         "status": overall_status,
         "version": __version__,
@@ -367,7 +430,7 @@ async def metrics():
         cache_stats = await cache.get_stats()
     except Exception:
         cache_stats = {"status": "unavailable"}
-    
+
     return {
         "cache": cache_stats,
         "infrastructure": {

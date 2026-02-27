@@ -4,12 +4,10 @@ Agents API endpoints.
 Provides CRUD operations for agent registrations.
 """
 from datetime import datetime, timezone
-from typing import Optional, List
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.database import get_db
 from app.middleware.api_keys import require_api_key
 
 router = APIRouter(prefix="/v1/agents", tags=["agents"])
@@ -19,7 +17,7 @@ class Agent(BaseModel):
     """Agent registration model."""
     id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     status: str = "active"
     permissions: list[str] = []
     created_at: str
@@ -28,7 +26,7 @@ class Agent(BaseModel):
 class AgentCreate(BaseModel):
     """Request body for creating an agent."""
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     permissions: list[str] = ["read", "write"]
 
 

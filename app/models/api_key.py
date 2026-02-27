@@ -2,8 +2,10 @@
 API Key model for persistent key storage.
 """
 import uuid
-from datetime import datetime, timezone
-from sqlalchemy import Column, String, Boolean, Integer, DateTime, JSON, Index
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Integer, String
+
 from app.models.database import Base
 
 
@@ -20,8 +22,9 @@ class ApiKey(Base):
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
     last_used_at = Column(DateTime(timezone=True), nullable=True)
-    expires_at = Column(DateTime(timezone=True), nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=True, default=lambda: datetime.now(timezone.utc) + timedelta(days=90))
 
     __table_args__ = (
         Index("ix_api_keys_active_hash", "key_hash", "is_active"),
+        Index("ix_api_keys_owner_active", "owner", "is_active"),
     )

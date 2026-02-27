@@ -1,0 +1,724 @@
+/* ═══════════════════════════════════════════════════════════════
+   NUCLEUS — AgentAuth Admin Dashboard
+   Cyberpunk-dark aesthetic matching agentauth.in
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+/* ── Tokens ── */
+:root {
+  --nuc-bg: #08080a;
+  --nuc-surface: rgba(255,255,255,0.03);
+  --nuc-surface-hover: rgba(255,255,255,0.06);
+  --nuc-border: rgba(232,230,225,0.08);
+  --nuc-border-hover: rgba(232,230,225,0.15);
+  --nuc-text: #e8e6e1;
+  --nuc-text-dim: #86868b;
+  --nuc-text-muted: #48484a;
+  --nuc-accent: #0071e3;
+  --nuc-accent-glow: rgba(0,113,227,0.25);
+  --nuc-green: #4ade80;
+  --nuc-green-dim: rgba(74,222,128,0.15);
+  --nuc-red: #f87171;
+  --nuc-red-dim: rgba(248,113,113,0.15);
+  --nuc-yellow: #fbbf24;
+  --nuc-yellow-dim: rgba(251,191,36,0.15);
+  --nuc-radius: 0.75rem;
+  --nuc-font-display: 'Syne', 'Inter', sans-serif;
+  --nuc-font-body: 'Inter', -apple-system, sans-serif;
+  --nuc-font-mono: 'Space Mono', 'SF Mono', monospace;
+}
+
+/* ── Shell ── */
+.nuc-shell {
+  display: flex;
+  min-height: 100vh;
+  background: var(--nuc-bg);
+  color: var(--nuc-text);
+  font-family: var(--nuc-font-body);
+}
+
+/* ── Sidebar ── */
+.nuc-sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: rgba(255,255,255,0.02);
+  border-right: 1px solid var(--nuc-border);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 50;
+}
+
+.nuc-sidebar-brand {
+  padding: 1.5rem 1.25rem;
+  border-bottom: 1px solid var(--nuc-border);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.nuc-sidebar-brand .nuc-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--nuc-accent), #4f46e5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.nuc-sidebar-brand h1 {
+  font-family: var(--nuc-font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--nuc-text);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.nuc-sidebar-brand span {
+  font-family: var(--nuc-font-mono);
+  font-size: 0.6rem;
+  color: var(--nuc-text-dim);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nuc-nav {
+  padding: 0.75rem 0.6rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nuc-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  color: var(--nuc-text-dim);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  width: 100%;
+}
+
+.nuc-nav-item:hover {
+  color: var(--nuc-text);
+  background: var(--nuc-surface-hover);
+}
+
+.nuc-nav-item.active {
+  color: var(--nuc-text);
+  background: var(--nuc-surface);
+  border-color: var(--nuc-border-hover);
+  box-shadow: 0 0 12px var(--nuc-accent-glow);
+}
+
+.nuc-nav-item .nav-icon {
+  font-size: 1rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nuc-nav-spacer { flex: 1; }
+
+.nuc-sidebar-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--nuc-border);
+}
+
+.nuc-env-badge {
+  font-family: var(--nuc-font-mono);
+  font-size: 0.6rem;
+  color: var(--nuc-green);
+  background: var(--nuc-green-dim);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Main content ── */
+.nuc-main {
+  margin-left: 240px;
+  flex: 1;
+  min-height: 100vh;
+  padding: 2rem 2.5rem;
+}
+
+.nuc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.nuc-header h2 {
+  font-family: var(--nuc-font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.nuc-header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* ── Cards ── */
+.nuc-card {
+  background: var(--nuc-surface);
+  border: 1px solid var(--nuc-border);
+  border-radius: var(--nuc-radius);
+  padding: 1.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.nuc-card:hover {
+  border-color: var(--nuc-border-hover);
+}
+
+/* ── Stat cards ── */
+.nuc-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.nuc-stat-card {
+  background: var(--nuc-surface);
+  border: 1px solid var(--nuc-border);
+  border-radius: var(--nuc-radius);
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.nuc-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--nuc-accent), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.nuc-stat-card:hover::before {
+  opacity: 1;
+}
+
+.nuc-stat-card:hover {
+  border-color: var(--nuc-border-hover);
+  box-shadow: 0 0 20px var(--nuc-accent-glow);
+  transform: translateY(-1px);
+}
+
+.nuc-stat-label {
+  font-size: 0.7rem;
+  font-family: var(--nuc-font-mono);
+  color: var(--nuc-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+}
+
+.nuc-stat-value {
+  font-family: var(--nuc-font-display);
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 0.4rem;
+}
+
+.nuc-stat-change {
+  font-size: 0.72rem;
+  font-family: var(--nuc-font-mono);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.nuc-stat-change.up { color: var(--nuc-green); }
+.nuc-stat-change.down { color: var(--nuc-red); }
+
+/* ── Chart area ── */
+.nuc-chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.nuc-chart-card {
+  background: var(--nuc-surface);
+  border: 1px solid var(--nuc-border);
+  border-radius: var(--nuc-radius);
+  padding: 1.25rem;
+}
+
+.nuc-chart-title {
+  font-family: var(--nuc-font-mono);
+  font-size: 0.7rem;
+  color: var(--nuc-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+}
+
+/* CSS-only bar chart */
+.nuc-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 120px;
+  padding-top: 8px;
+}
+
+.nuc-bar {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--nuc-accent), rgba(0,113,227,0.3));
+  min-height: 4px;
+  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+.nuc-bar:hover {
+  background: linear-gradient(180deg, #3b9dff, var(--nuc-accent));
+}
+
+.nuc-bar-label {
+  font-family: var(--nuc-font-mono);
+  font-size: 0.55rem;
+  color: var(--nuc-text-muted);
+  text-align: center;
+  margin-top: 6px;
+}
+
+.nuc-bar-labels {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.nuc-bar-labels span {
+  flex: 1;
+  text-align: center;
+  font-family: var(--nuc-font-mono);
+  font-size: 0.55rem;
+  color: var(--nuc-text-muted);
+}
+
+/* ── Live Activity Feed ── */
+.nuc-feed {
+  max-height: 320px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.06) transparent;
+}
+
+.nuc-feed-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  font-family: var(--nuc-font-mono);
+  font-size: 0.72rem;
+  animation: nucFadeSlideIn 0.35s ease-out;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.nuc-feed-item:hover {
+  background: var(--nuc-surface-hover);
+}
+
+.nuc-feed-method {
+  font-weight: 700;
+  width: 36px;
+  flex-shrink: 0;
+}
+
+.nuc-feed-method.POST { color: var(--nuc-green); }
+.nuc-feed-method.GET { color: var(--nuc-accent); }
+.nuc-feed-method.DELETE { color: var(--nuc-red); }
+
+.nuc-feed-path {
+  color: var(--nuc-text);
+  flex: 1;
+}
+
+.nuc-feed-result {
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.nuc-feed-result.allow {
+  color: var(--nuc-green);
+  background: var(--nuc-green-dim);
+}
+
+.nuc-feed-result.deny {
+  color: var(--nuc-red);
+  background: var(--nuc-red-dim);
+}
+
+.nuc-feed-result.ok {
+  color: var(--nuc-accent);
+  background: rgba(0,113,227,0.12);
+}
+
+.nuc-feed-latency {
+  color: var(--nuc-text-muted);
+  font-size: 0.6rem;
+  width: 48px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.nuc-feed-time {
+  color: var(--nuc-text-muted);
+  font-size: 0.6rem;
+  width: 52px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+@keyframes nucFadeSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Table ── */
+.nuc-table-wrap {
+  overflow-x: auto;
+}
+
+.nuc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.nuc-table th {
+  font-family: var(--nuc-font-mono);
+  font-size: 0.65rem;
+  color: var(--nuc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--nuc-border);
+  font-weight: 400;
+}
+
+.nuc-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  color: var(--nuc-text);
+  vertical-align: middle;
+}
+
+.nuc-table tr:hover td {
+  background: var(--nuc-surface-hover);
+}
+
+.nuc-table .mono {
+  font-family: var(--nuc-font-mono);
+  font-size: 0.72rem;
+}
+
+/* ── Status badges ── */
+.nuc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--nuc-font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nuc-badge.active {
+  color: var(--nuc-green);
+  background: var(--nuc-green-dim);
+}
+
+.nuc-badge.expired {
+  color: var(--nuc-text-muted);
+  background: rgba(255,255,255,0.04);
+}
+
+.nuc-badge.revoked {
+  color: var(--nuc-red);
+  background: var(--nuc-red-dim);
+}
+
+/* ── Modules grid ── */
+.nuc-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.nuc-module-card {
+  background: var(--nuc-surface);
+  border: 1px solid var(--nuc-border);
+  border-radius: var(--nuc-radius);
+  padding: 1.25rem;
+  transition: all 0.2s;
+}
+
+.nuc-module-card:hover {
+  border-color: var(--nuc-border-hover);
+}
+
+.nuc-module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.nuc-module-name {
+  font-family: var(--nuc-font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.nuc-module-status {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--nuc-font-mono);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.nuc-module-status.healthy { color: var(--nuc-green); }
+.nuc-module-status.warning { color: var(--nuc-yellow); }
+.nuc-module-status.error { color: var(--nuc-red); }
+
+.nuc-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  animation: nucPulse 2s ease-in-out infinite;
+}
+
+.nuc-pulse.healthy { background: var(--nuc-green); box-shadow: 0 0 6px var(--nuc-green); }
+.nuc-pulse.warning { background: var(--nuc-yellow); box-shadow: 0 0 6px var(--nuc-yellow); }
+.nuc-pulse.error { background: var(--nuc-red); box-shadow: 0 0 6px var(--nuc-red); }
+
+@keyframes nucPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+.nuc-module-desc {
+  font-size: 0.75rem;
+  color: var(--nuc-text-dim);
+  line-height: 1.4;
+}
+
+.nuc-module-meta {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  font-family: var(--nuc-font-mono);
+  font-size: 0.6rem;
+  color: var(--nuc-text-muted);
+}
+
+/* ── Buttons ── */
+.nuc-btn {
+  font-family: var(--nuc-font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--nuc-border);
+  background: var(--nuc-surface);
+  color: var(--nuc-text);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.nuc-btn:hover {
+  background: var(--nuc-surface-hover);
+  border-color: var(--nuc-border-hover);
+}
+
+.nuc-btn-primary {
+  background: var(--nuc-text);
+  color: var(--nuc-bg);
+  border-color: transparent;
+}
+
+.nuc-btn-primary:hover {
+  background: #fff;
+  box-shadow: 0 0 16px rgba(232,230,225,0.15);
+}
+
+.nuc-btn-danger {
+  color: var(--nuc-red);
+  border-color: var(--nuc-red-dim);
+}
+
+.nuc-btn-danger:hover {
+  background: var(--nuc-red-dim);
+}
+
+.nuc-btn-sm {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+}
+
+/* ── Input ── */
+.nuc-input {
+  font-family: var(--nuc-font-body);
+  font-size: 0.85rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--nuc-border);
+  background: var(--nuc-surface);
+  color: var(--nuc-text);
+  outline: none;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.nuc-input:focus {
+  border-color: var(--nuc-accent);
+  box-shadow: 0 0 0 3px var(--nuc-accent-glow);
+}
+
+.nuc-input::placeholder {
+  color: var(--nuc-text-muted);
+}
+
+/* ── Login ── */
+.nuc-login-screen {
+  min-height: 100vh;
+  background: var(--nuc-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--nuc-font-body);
+}
+
+.nuc-login-card {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  padding: 2.5rem 2rem;
+}
+
+.nuc-login-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--nuc-accent), #4f46e5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.nuc-login-title {
+  font-family: var(--nuc-font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--nuc-text);
+  margin-bottom: 0.4rem;
+}
+
+.nuc-login-sub {
+  font-size: 0.82rem;
+  color: var(--nuc-text-dim);
+  margin-bottom: 2rem;
+}
+
+.nuc-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.nuc-login-error {
+  font-family: var(--nuc-font-mono);
+  font-size: 0.72rem;
+  color: var(--nuc-red);
+  background: var(--nuc-red-dim);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  animation: nucFadeSlideIn 0.3s ease;
+}
+
+/* ── API key display ── */
+.nuc-key-display {
+  font-family: var(--nuc-font-mono);
+  font-size: 0.72rem;
+  background: var(--nuc-bg);
+  border: 1px solid var(--nuc-border);
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  color: var(--nuc-green);
+  word-break: break-all;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.nuc-key-display:hover {
+  border-color: var(--nuc-green);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .nuc-stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .nuc-chart-row { grid-template-columns: 1fr; }
+  .nuc-modules-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .nuc-sidebar { display: none; }
+  .nuc-main { margin-left: 0; padding: 1.25rem; }
+  .nuc-stats-grid { grid-template-columns: 1fr; }
+  .nuc-modules-grid { grid-template-columns: 1fr; }
+}

@@ -2,7 +2,7 @@
 Verification schemas - request/response models for /v1/verify
 """
 from datetime import datetime
-from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -28,11 +28,11 @@ class VerifyRequest(BaseModel):
         description="Authorization code from /authorize response"
     )
     transaction: VerifyTransaction
-    merchant_id: Optional[str] = Field(
+    merchant_id: str | None = Field(
         None,
         description="Merchant's identifier for additional validation"
     )
-    
+
     model_config = {
         "json_schema_extra": {
             "examples": [
@@ -86,11 +86,11 @@ class VerifyResponse(BaseModel):
         ...,
         description="Whether the authorization is valid"
     )
-    authorization_id: Optional[str] = Field(
+    authorization_id: str | None = Field(
         None,
         description="Unique authorization identifier"
     )
-    consent_proof: Optional[ConsentProof] = Field(
+    consent_proof: ConsentProof | None = Field(
         None,
         description="Proof of consent for chargeback defense (if valid)"
     )
@@ -98,15 +98,15 @@ class VerifyResponse(BaseModel):
         ...,
         description="When verification was performed"
     )
-    proof_token: Optional[str] = Field(
+    proof_token: str | None = Field(
         None,
         description="Signed token containing the proof (store for disputes)"
     )
-    error: Optional[str] = Field(
+    error: str | None = Field(
         None,
         description="Error reason if not valid"
     )
-    
+
     model_config = {
         "json_schema_extra": {
             "examples": [

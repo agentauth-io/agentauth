@@ -3,17 +3,21 @@ Billing service for subscription and usage management.
 
 Handles plan limits, usage tracking, and Stripe synchronization.
 """
+import logging
 from datetime import datetime, timezone
-from typing import Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
-from sqlalchemy.dialects.postgresql import insert
 
-from app.models.subscription import Subscription, PlanType, SubscriptionStatus, PLAN_LIMITS
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config import get_settings
+from app.models.subscription import (
+    PLAN_LIMITS,
+    PlanType,
+    Subscription,
+    SubscriptionStatus,
+)
 from app.models.usage import UsageRecord, UsageSummary
 from app.services import stripe_service
-import logging
-from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +32,7 @@ async def get_or_create_subscription(db: AsyncSession, user_id: str) -> Subscrip
         select(Subscription).where(Subscription.user_id == user_id)
     )
     subscription = result.scalar_one_or_none()
-    
+
     if not subscription:
         # Create free subscription for new user
         subscription = Subscription(
@@ -41,22 +45,22 @@ async def get_or_create_subscription(db: AsyncSession, user_id: str) -> Subscrip
         db.add(subscription)
         await db.commit()
         await db.refresh(subscription)
-    
+
     return subscription
 
 
 async def check_usage_limit(db: AsyncSession, user_id: str) -> dict:
     """
     Check if user can make another API call.
-    
+
     Returns:
         dict with 'allowed', 'remaining', 'limit', 'used'
     """
     subscription = await get_or_create_subscription(db, user_id)
-    
+
     limit = subscription.api_calls_limit
     used = subscription.api_calls_used
-    
+
     # Unlimited plan
     if limit == -1:
         return {
@@ -66,10 +70,10 @@ async def check_usage_limit(db: AsyncSession, user_id: str) -> dict:
             "used": used,
             "plan": subscription.plan.value,
         }
-    
+
     remaining = max(0, limit - used)
     allowed = remaining > 0
-    
+
     return {
         "allowed": allowed,
         "remaining": remaining,
@@ -85,28 +89,28 @@ async def record_api_usage(
     endpoint: str,
     method: str = "POST",
     status_code: int = 200,
-    response_time_ms: Optional[int] = None,
-    ip_address: Optional[str] = None,
+    response_time_ms: int | None = None,
+    ip_address: str | None = None,
 ) -> bool:
     """
     Record an API call and increment usage counter.
-    
+
     Returns:
         True if recorded successfully, False if limit exceeded
     """
     subscription = await get_or_create_subscription(db, user_id)
-    
+
     # Check limit (unless unlimited)
     if subscription.api_calls_limit != -1:
         if subscription.api_calls_used >= subscription.api_calls_limit:
             return False
-    
+
     # Increment subscription usage
     subscription.api_calls_used += 1
-    
+
     # Get current billing period
     billing_period = datetime.now(timezone.utc).strftime("%Y-%m")
-    
+
     # Record individual usage
     usage_record = UsageRecord(
         user_id=user_id,
@@ -118,7 +122,7 @@ async def record_api_usage(
         ip_address=ip_address,
     )
     db.add(usage_record)
-    
+
     # Update or create usage summary
     result = await db.execute(
         select(UsageSummary).where(
@@ -127,7 +131,7 @@ async def record_api_usage(
         )
     )
     summary = result.scalar_one_or_none()
-    
+
     if summary:
         summary.increment(endpoint)
         if status_code >= 400:
@@ -149,7 +153,7 @@ async def record_api_usage(
         if status_code >= 400:
             summary.error_count = 1
         db.add(summary)
-    
+
     await db.commit()
     return True
 
@@ -160,7 +164,7 @@ async def get_usage_stats(db: AsyncSession, user_id: str) -> dict:
     """
     subscription = await get_or_create_subscription(db, user_id)
     billing_period = datetime.now(timezone.utc).strftime("%Y-%m")
-    
+
     result = await db.execute(
         select(UsageSummary).where(
             UsageSummary.user_id == user_id,
@@ -168,7 +172,7 @@ async def get_usage_stats(db: AsyncSession, user_id: str) -> dict:
         )
     )
     summary = result.scalar_one_or_none()
-    
+
     return {
         "plan": subscription.plan.value,
         "status": subscription.status.value,
@@ -176,7 +180,7 @@ async def get_usage_stats(db: AsyncSession, user_id: str) -> dict:
         "api_calls": {
             "used": subscription.api_calls_used,
             "limit": subscription.api_calls_limit,
-            "remaining": max(0, subscription.api_calls_limit - subscription.api_calls_used) 
+            "remaining": max(0, subscription.api_calls_limit - subscription.api_calls_used)
                         if subscription.api_calls_limit != -1 else -1,
         },
         "breakdown": {
@@ -197,13 +201,13 @@ async def upgrade_subscription(
     stripe_subscription_id: str,
     stripe_customer_id: str,
     stripe_price_id: str,
-    period_end: Optional[datetime] = None,
+    period_end: datetime | None = None,
 ) -> Subscription:
     """
     Upgrade a user's subscription after successful Stripe payment.
     """
     subscription = await get_or_create_subscription(db, user_id)
-    
+
     subscription.plan = plan
     subscription.status = SubscriptionStatus.ACTIVE
     subscription.stripe_subscription_id = stripe_subscription_id
@@ -212,7 +216,7 @@ async def upgrade_subscription(
     subscription.api_calls_limit = PLAN_LIMITS[plan]["api_calls_monthly"]
     subscription.current_period_start = datetime.now(timezone.utc)
     subscription.current_period_end = period_end
-    
+
     await db.commit()
     await db.refresh(subscription)
     return subscription
@@ -223,17 +227,17 @@ async def cancel_subscription(db: AsyncSession, user_id: str) -> Subscription:
     Cancel a user's subscription (downgrade to free).
     """
     subscription = await get_or_create_subscription(db, user_id)
-    
+
     # Cancel in Stripe if exists
     if subscription.stripe_subscription_id:
         try:
             await stripe_service.cancel_subscription(subscription.stripe_subscription_id)
         except Exception as e:
             logger.error(f"Stripe cancel error: {e}", exc_info=True)
-    
+
     subscription.status = SubscriptionStatus.CANCELED
     subscription.canceled_at = datetime.now(timezone.utc)
-    
+
     await db.commit()
     await db.refresh(subscription)
     return subscription
@@ -245,18 +249,18 @@ async def sync_stripe_webhook(db: AsyncSession, event: dict) -> None:
     """
     event_type = event.get("type", "")
     data = event.get("data", {}).get("object", {})
-    
+
     if event_type == "customer.subscription.updated":
         stripe_sub_id = data.get("id")
         status = data.get("status")
-        
+
         result = await db.execute(
             select(Subscription).where(
                 Subscription.stripe_subscription_id == stripe_sub_id
             )
         )
         subscription = result.scalar_one_or_none()
-        
+
         if subscription:
             # Map Stripe status to our status
             status_map = {
@@ -271,28 +275,28 @@ async def sync_stripe_webhook(db: AsyncSession, event: dict) -> None:
             subscription.current_period_end = datetime.fromtimestamp(
                 data.get("current_period_end", 0)
             ) if data.get("current_period_end") else None
-            
+
             await db.commit()
-    
+
     elif event_type == "customer.subscription.deleted":
         stripe_sub_id = data.get("id")
-        
+
         result = await db.execute(
             select(Subscription).where(
                 Subscription.stripe_subscription_id == stripe_sub_id
             )
         )
         subscription = result.scalar_one_or_none()
-        
+
         if subscription:
             subscription.status = SubscriptionStatus.CANCELED
             subscription.canceled_at = datetime.now(timezone.utc)
             await db.commit()
-    
+
     elif event_type == "invoice.payment_succeeded":
         # Reset usage on successful payment (new billing period)
         stripe_sub_id = data.get("subscription")
-        
+
         if stripe_sub_id:
             result = await db.execute(
                 select(Subscription).where(
@@ -300,7 +304,7 @@ async def sync_stripe_webhook(db: AsyncSession, event: dict) -> None:
                 )
             )
             subscription = result.scalar_one_or_none()
-            
+
             if subscription:
                 subscription.reset_usage()
                 await db.commit()

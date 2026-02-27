@@ -4,16 +4,17 @@ Consents API - POST /v1/consents
 Create user consents and get delegation tokens.
 """
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
 
-from app.models.database import get_db
-from app.models.consent import Consent
-from app.schemas.consent import ConsentCreate, ConsentResponse
-from app.services.consent_service import consent_service
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.middleware import require_api_key
 from app.middleware.api_keys import get_current_user_id
+from app.models.consent import Consent
+from app.models.database import get_db
+from app.schemas.consent import ConsentCreate, ConsentResponse
+from app.services.consent_service import consent_service
 
 logger = logging.getLogger(__name__)
 

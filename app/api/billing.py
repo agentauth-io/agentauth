@@ -3,18 +3,17 @@ Billing API routes for subscription and usage management.
 
 Handles subscription CRUD, usage stats, and Stripe checkout.
 """
-from fastapi import APIRouter, HTTPException, Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
 
-from app.models.database import get_db
-from app.models.subscription import PlanType, PLAN_LIMITS
-from app.services import billing_service, stripe_service
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.config import get_settings
 from app.middleware import require_api_key
 from app.middleware.api_keys import get_current_user_id
+from app.models.database import get_db
+from app.models.subscription import PLAN_LIMITS
+from app.services import billing_service, stripe_service
 
 settings = get_settings()
 
@@ -33,9 +32,9 @@ class SubscriptionResponse(BaseModel):
     status: str
     api_calls_used: int
     api_calls_limit: int
-    current_period_start: Optional[str]
-    current_period_end: Optional[str]
-    stripe_customer_id: Optional[str]
+    current_period_start: str | None
+    current_period_end: str | None
+    stripe_customer_id: str | None
 
 
 class UsageResponse(BaseModel):
@@ -45,8 +44,8 @@ class UsageResponse(BaseModel):
     billing_period: str
     api_calls: dict
     breakdown: dict
-    period_start: Optional[str]
-    period_end: Optional[str]
+    period_start: str | None
+    period_end: str | None
 
 
 class CheckoutRequest(BaseModel):
@@ -190,7 +189,7 @@ async def create_checkout_session(
             checkout_url=checkout_session.url,
             session_id=checkout_session.id,
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Operation failed")
 
 
@@ -223,7 +222,7 @@ async def create_billing_portal(
         )
 
         return {"portal_url": portal_session.url}
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Operation failed")
 
 

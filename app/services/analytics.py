@@ -3,14 +3,14 @@ Analytics Service
 
 Provides analytics and insights from authorization logs.
 """
-from datetime import datetime, timedelta, date
-from decimal import Decimal
-from typing import Optional, List
 from dataclasses import dataclass
-from sqlalchemy import select, func, and_
+from datetime import date, timedelta
+from decimal import Decimal
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.limits import AuthorizationLog, UsageTracking
+from app.models.limits import AuthorizationLog
 
 
 @dataclass
@@ -33,49 +33,49 @@ class AnalyticsSummary:
     total_denied: int
     total_amount: Decimal
     approval_rate: float
-    
+
     # Today
     today_authorizations: int
     today_approved: int
     today_denied: int
     today_amount: Decimal
-    
+
     # This month
     month_authorizations: int
     month_amount: Decimal
-    
+
     # Top merchants
-    top_merchants: List[dict]
-    
+    top_merchants: list[dict]
+
     # Top agents
-    top_agents: List[dict]
+    top_agents: list[dict]
 
 
 @dataclass
 class TrendData:
     """Time-series trend data."""
-    dates: List[str]
-    authorizations: List[int]
-    amounts: List[float]
-    approval_rates: List[float]
+    dates: list[str]
+    authorizations: list[int]
+    amounts: list[float]
+    approval_rates: list[float]
 
 
 class AnalyticsService:
     """
     Analytics service for authorization data.
-    
+
     Provides dashboard stats, trends, and insights.
     """
-    
+
     def __init__(self, db: AsyncSession):
         self.db = db
-    
+
     async def get_summary(self, user_id: str, days: int = 30) -> AnalyticsSummary:
         """Get analytics summary for dashboard."""
         today = date.today()
-        start_date = today - timedelta(days=days)
+        today - timedelta(days=days)
         month_start = today.replace(day=1)
-        
+
         # Total stats (all time)
         total_result = await self.db.execute(
             select(
@@ -86,13 +86,13 @@ class AnalyticsService:
             ).where(AuthorizationLog.user_id == user_id)
         )
         total_row = total_result.fetchone()
-        
+
         total_auth = total_row.total or 0
         total_approved = total_row.approved or 0
         total_denied = total_row.denied or 0
         total_amount = Decimal(str(total_row.amount or 0))
         approval_rate = (total_approved / total_auth * 100) if total_auth > 0 else 0
-        
+
         # Today's stats
         today_result = await self.db.execute(
             select(
@@ -106,7 +106,7 @@ class AnalyticsService:
             )
         )
         today_row = today_result.fetchone()
-        
+
         # This month's stats
         month_result = await self.db.execute(
             select(
@@ -118,13 +118,13 @@ class AnalyticsService:
             )
         )
         month_row = month_result.fetchone()
-        
+
         # Top merchants
         top_merchants = await self._get_top_merchants(user_id, limit=5)
-        
+
         # Top agents
         top_agents = await self._get_top_agents(user_id, limit=5)
-        
+
         return AnalyticsSummary(
             total_authorizations=total_auth,
             total_approved=total_approved,
@@ -140,12 +140,12 @@ class AnalyticsService:
             top_merchants=top_merchants,
             top_agents=top_agents
         )
-    
+
     async def get_trends(self, user_id: str, days: int = 30) -> TrendData:
         """Get daily trends for the specified period."""
         today = date.today()
         start_date = today - timedelta(days=days)
-        
+
         # Get daily aggregates
         result = await self.db.execute(
             select(
@@ -163,18 +163,18 @@ class AnalyticsService:
             )
         )
         rows = result.fetchall()
-        
+
         # Build trend data with all dates (fill gaps with zeros)
         date_map = {row.date: row for row in rows}
         dates = []
         authorizations = []
         amounts = []
         approval_rates = []
-        
+
         for i in range(days + 1):
             d = start_date + timedelta(days=i)
             dates.append(d.isoformat())
-            
+
             if d in date_map:
                 row = date_map[d]
                 authorizations.append(row.total)
@@ -185,35 +185,35 @@ class AnalyticsService:
                 authorizations.append(0)
                 amounts.append(0.0)
                 approval_rates.append(0.0)
-        
+
         return TrendData(
             dates=dates,
             authorizations=authorizations,
             amounts=amounts,
             approval_rates=approval_rates
         )
-    
+
     async def get_authorization_logs(
-        self, 
-        user_id: str, 
+        self,
+        user_id: str,
         limit: int = 50,
         offset: int = 0,
-        decision: Optional[str] = None
-    ) -> List[dict]:
+        decision: str | None = None
+    ) -> list[dict]:
         """Get recent authorization logs."""
         query = select(AuthorizationLog).where(
             AuthorizationLog.user_id == user_id
         )
-        
+
         if decision:
             query = query.where(AuthorizationLog.decision == decision)
-        
+
         query = query.order_by(AuthorizationLog.created_at.desc())
         query = query.limit(limit).offset(offset)
-        
+
         result = await self.db.execute(query)
         logs = result.scalars().all()
-        
+
         return [
             {
                 "id": str(log.id),
@@ -228,8 +228,8 @@ class AnalyticsService:
             }
             for log in logs
         ]
-    
-    async def _get_top_merchants(self, user_id: str, limit: int = 5) -> List[dict]:
+
+    async def _get_top_merchants(self, user_id: str, limit: int = 5) -> list[dict]:
         """Get top merchants by transaction count."""
         result = await self.db.execute(
             select(
@@ -246,13 +246,13 @@ class AnalyticsService:
             ).limit(limit)
         )
         rows = result.fetchall()
-        
+
         return [
             {"merchant": row.merchant, "count": row.count, "amount": str(row.amount)}
             for row in rows
         ]
-    
-    async def _get_top_agents(self, user_id: str, limit: int = 5) -> List[dict]:
+
+    async def _get_top_agents(self, user_id: str, limit: int = 5) -> list[dict]:
         """Get top agents by transaction count."""
         result = await self.db.execute(
             select(
@@ -269,7 +269,7 @@ class AnalyticsService:
             ).limit(limit)
         )
         rows = result.fetchall()
-        
+
         return [
             {"agent_id": row.agent_id, "count": row.count, "amount": str(row.amount)}
             for row in rows

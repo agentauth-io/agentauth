@@ -20,7 +20,6 @@ SECURITY NOTES:
 """
 
 from enum import IntEnum
-from typing import Set
 
 
 class AccessLevel(IntEnum):
@@ -38,23 +37,23 @@ OPERATION_ACCESS = {
     "authorize": AccessLevel.OPERATOR,
     "verify_token": AccessLevel.OPERATOR,
     "revoke_token": AccessLevel.ADMIN,
-    
+
     # Policy management
     "add_policy": AccessLevel.ADMIN,
     "remove_policy": AccessLevel.ADMIN,
     "get_policy": AccessLevel.OPERATOR,
     "list_policies": AccessLevel.OPERATOR,
-    
+
     # User/Agent management
     "set_user_limits": AccessLevel.ADMIN,
     "set_agent_trust": AccessLevel.ADMIN,
     "get_user_spending": AccessLevel.OPERATOR,
-    
+
     # Audit
     "get_audit_log": AccessLevel.AUDITOR,
     "verify_audit_chain": AccessLevel.AUDITOR,
     "export_audit": AccessLevel.ADMIN,
-    
+
     # System (sensitive)
     "export_master_secret": AccessLevel.OWNER,
     "export_public_keys": AccessLevel.ADMIN,
@@ -68,29 +67,29 @@ SECURITY_CONFIG = {
     "default_token_ttl_seconds": 3600,      # 1 hour
     "max_token_ttl_seconds": 86400,         # 24 hours
     "token_one_time_above_amount": 100.0,   # One-time tokens for high value
-    
+
     # Rate limiting
     "rate_limit_per_minute": 60,
     "rate_limit_per_hour": 1000,
     "rate_limit_per_day": 10000,
     "burst_limit": 10,
-    
+
     # Spending defaults
     "default_daily_limit": 500.0,
     "default_monthly_limit": 5000.0,
     "default_per_transaction_limit": 200.0,
-    
+
     # Risk thresholds
     "risk_block_threshold": 0.8,    # Block if risk >= 80%
     "risk_review_threshold": 0.6,   # Require review if risk >= 60%
-    
+
     # Audit settings
     "audit_retention_days": 2555,   # 7 years
     "audit_export_format": "jsonl",
-    
+
     # Key rotation
     "key_rotation_days": 90,
-    
+
     # Categories
     "blocked_categories": [
         "gambling",
@@ -99,7 +98,7 @@ SECURITY_CONFIG = {
         "weapons",
         "drugs"
     ],
-    
+
     "high_risk_categories": [
         "luxury",
         "jewelry",
@@ -132,11 +131,11 @@ TRUSTED_MERCHANTS = {
 def check_access(operation: str, access_level: AccessLevel) -> bool:
     """
     Check if an access level is sufficient for an operation.
-    
+
     Args:
         operation: The operation being performed
         access_level: The access level of the caller
-        
+
     Returns:
         True if access is allowed
     """

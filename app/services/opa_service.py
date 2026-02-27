@@ -18,10 +18,10 @@ Production features (with real OPA):
 See: https://www.openpolicyagent.org/
 """
 import logging
-from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-import json
+from typing import Any
+
 import httpx
 
 from app.config import get_settings
@@ -36,19 +36,19 @@ DEMO_MODE = True
 @dataclass
 class PolicyDecision:
     """Result of a policy evaluation."""
-    
+
     allowed: bool
     policy_id: str
     decision_id: str
-    
+
     # Detailed results
-    reasons: List[str] = field(default_factory=list)
-    bindings: Dict[str, Any] = field(default_factory=dict)
-    
+    reasons: list[str] = field(default_factory=list)
+    bindings: dict[str, Any] = field(default_factory=dict)
+
     # Metadata
     evaluation_time_ms: float = 0.0
     policy_version: str = ""
-    
+
     def to_dict(self) -> dict:
         return {
             "allowed": self.allowed,
@@ -64,17 +64,17 @@ class PolicyDecision:
 class RegoPolicy:
     """
     A Rego policy definition.
-    
+
     Rego is OPA's declarative policy language.
     """
-    
+
     def __init__(self, policy_id: str, rego_code: str, description: str = ""):
         self.policy_id = policy_id
         self.rego_code = rego_code
         self.description = description
         self.version = "1.0"
         self.created_at = datetime.now(timezone.utc).isoformat()
-    
+
     def to_dict(self) -> dict:
         return {
             "policy_id": self.policy_id,
@@ -119,7 +119,7 @@ reasons[msg] {
 }
 """
     ),
-    
+
     "merchant_rules": RegoPolicy(
         policy_id="agentauth.merchant_rules",
         description="Enforce merchant whitelist/blacklist rules",
@@ -156,7 +156,7 @@ reasons[msg] {
 }
 """
     ),
-    
+
     "category_controls": RegoPolicy(
         policy_id="agentauth.category_controls",
         description="Control allowed merchant categories",
@@ -187,7 +187,7 @@ reasons[msg] {
 }
 """
     ),
-    
+
     "time_based": RegoPolicy(
         policy_id="agentauth.time_based",
         description="Time-based transaction controls",
@@ -213,7 +213,7 @@ reasons[msg] {
 }
 """
     ),
-    
+
     "fraud_risk": RegoPolicy(
         policy_id="agentauth.fraud_risk",
         description="Fraud risk-based authorization",
@@ -246,48 +246,48 @@ reasons[msg] {
 class LocalPolicyEngine:
     """
     Local policy engine with Rego-like evaluation.
-    
+
     For when OPA server is not available.
     Implements core policy logic in Python.
     """
-    
+
     def __init__(self):
-        self.policies: Dict[str, RegoPolicy] = {}
-    
+        self.policies: dict[str, RegoPolicy] = {}
+
     def register_policy(self, policy: RegoPolicy) -> None:
         """Register a policy."""
         self.policies[policy.policy_id] = policy
-    
+
     def evaluate_spending_limits(
         self,
         amount: float,
         daily_spent: float,
         monthly_spent: float,
-        limits: Dict[str, float]
+        limits: dict[str, float]
     ) -> PolicyDecision:
         """Evaluate spending limits policy."""
         import time
         import uuid
         start = time.perf_counter()
-        
+
         reasons = []
         allowed = True
-        
+
         # Per-transaction limit
         if amount > limits.get("per_transaction", float("inf")):
             allowed = False
             reasons.append(f"Amount {amount:.2f} exceeds per-transaction limit {limits.get('per_transaction'):.2f}")
-        
+
         # Daily limit
         if daily_spent + amount > limits.get("daily", float("inf")):
             allowed = False
             reasons.append(f"Would exceed daily limit of {limits.get('daily'):.2f}")
-        
+
         # Monthly limit
         if monthly_spent + amount > limits.get("monthly", float("inf")):
             allowed = False
             reasons.append(f"Would exceed monthly limit of {limits.get('monthly'):.2f}")
-        
+
         return PolicyDecision(
             allowed=allowed,
             policy_id="agentauth.spending_limits",
@@ -296,31 +296,31 @@ class LocalPolicyEngine:
             evaluation_time_ms=(time.perf_counter() - start) * 1000,
             policy_version="1.0"
         )
-    
+
     def evaluate_merchant_rules(
         self,
         merchant_id: str,
-        whitelist: List[str],
-        blacklist: List[str]
+        whitelist: list[str],
+        blacklist: list[str]
     ) -> PolicyDecision:
         """Evaluate merchant rules policy."""
         import time
         import uuid
         start = time.perf_counter()
-        
+
         reasons = []
         allowed = True
-        
+
         # Blacklist check
         if merchant_id in blacklist:
             allowed = False
             reasons.append(f"Merchant {merchant_id} is blacklisted")
-        
+
         # Whitelist check
         if whitelist and merchant_id not in whitelist:
             allowed = False
             reasons.append(f"Merchant {merchant_id} is not in whitelist")
-        
+
         return PolicyDecision(
             allowed=allowed,
             policy_id="agentauth.merchant_rules",
@@ -334,23 +334,23 @@ class LocalPolicyEngine:
 class OPAService:
     """
     Open Policy Agent integration service.
-    
+
     Supports both remote OPA server and local fallback.
     """
-    
-    def __init__(self, opa_url: Optional[str] = None):
+
+    def __init__(self, opa_url: str | None = None):
         self.opa_url = opa_url or settings.opa_url if hasattr(settings, 'opa_url') else None
         self.local_engine = LocalPolicyEngine()
         self._policies_loaded = False
-    
+
     async def _load_policies(self) -> None:
         """Load policies into OPA server."""
         if self._policies_loaded:
             return
-        
+
         for policy in AGENTAUTH_POLICIES.values():
             self.local_engine.register_policy(policy)
-        
+
         # If OPA server available, push policies
         if self.opa_url:
             try:
@@ -363,18 +363,18 @@ class OPAService:
                         )
             except Exception:
                 pass
-        
+
         self._policies_loaded = True
-    
+
     async def evaluate(
         self,
         policy_id: str,
-        input_data: Dict[str, Any],
-        data: Optional[Dict[str, Any]] = None
+        input_data: dict[str, Any],
+        data: dict[str, Any] | None = None
     ) -> PolicyDecision:
         """
         Evaluate a policy with given input.
-        
+
         Usage:
             decision = await opa.evaluate(
                 policy_id="agentauth.spending_limits",
@@ -383,39 +383,39 @@ class OPAService:
             )
         """
         await self._load_policies()
-        
+
         # Try remote OPA first
         if self.opa_url:
             try:
                 return await self._evaluate_remote(policy_id, input_data, data)
             except Exception:
                 pass
-        
+
         # Fallback to local evaluation
         return await self._evaluate_local(policy_id, input_data, data)
-    
+
     async def _evaluate_remote(
         self,
         policy_id: str,
-        input_data: Dict[str, Any],
-        data: Optional[Dict[str, Any]] = None
+        input_data: dict[str, Any],
+        data: dict[str, Any] | None = None
     ) -> PolicyDecision:
         """Evaluate policy on remote OPA server."""
         import time
         import uuid
         start = time.perf_counter()
-        
+
         policy_path = policy_id.replace(".", "/")
         url = f"{self.opa_url}/v1/data/{policy_path}"
-        
+
         payload = {"input": input_data}
         if data:
             payload["data"] = data
-        
+
         async with httpx.AsyncClient(timeout=5) as client:
             response = await client.post(url, json=payload)
             result = response.json()
-        
+
         return PolicyDecision(
             allowed=result.get("result", {}).get("allow", False),
             policy_id=policy_id,
@@ -424,16 +424,16 @@ class OPAService:
             evaluation_time_ms=(time.perf_counter() - start) * 1000,
             policy_version="1.0"
         )
-    
+
     async def _evaluate_local(
         self,
         policy_id: str,
-        input_data: Dict[str, Any],
-        data: Optional[Dict[str, Any]] = None
+        input_data: dict[str, Any],
+        data: dict[str, Any] | None = None
     ) -> PolicyDecision:
         """Evaluate policy using local engine."""
         data = data or {}
-        
+
         if policy_id == "agentauth.spending_limits":
             return self.local_engine.evaluate_spending_limits(
                 amount=input_data.get("amount", 0),
@@ -441,14 +441,14 @@ class OPAService:
                 monthly_spent=input_data.get("monthly_spent", 0),
                 limits=data.get("limits", {})
             )
-        
+
         if policy_id == "agentauth.merchant_rules":
             return self.local_engine.evaluate_merchant_rules(
                 merchant_id=input_data.get("merchant_id", ""),
                 whitelist=data.get("whitelist", []),
                 blacklist=data.get("blacklist", [])
             )
-        
+
         # Default: allow
         import uuid
         return PolicyDecision(
@@ -457,7 +457,7 @@ class OPAService:
             decision_id=f"dec_{uuid.uuid4().hex[:12]}",
             policy_version="1.0"
         )
-    
+
     async def check_authorization(
         self,
         consent_id: str,
@@ -467,19 +467,19 @@ class OPAService:
         daily_spent: float = 0,
         monthly_spent: float = 0,
         fraud_score: float = 0,
-        limits: Optional[Dict[str, float]] = None,
-        rules: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, PolicyDecision]:
+        limits: dict[str, float] | None = None,
+        rules: dict[str, Any] | None = None
+    ) -> dict[str, PolicyDecision]:
         """
         Run all authorization policies.
-        
+
         Returns decision from each policy.
         """
         limits = limits or {}
         rules = rules or {}
-        
+
         decisions = {}
-        
+
         # Spending limits
         decisions["spending_limits"] = await self.evaluate(
             "agentauth.spending_limits",
@@ -490,7 +490,7 @@ class OPAService:
             },
             data={"limits": limits}
         )
-        
+
         # Merchant rules
         decisions["merchant_rules"] = await self.evaluate(
             "agentauth.merchant_rules",
@@ -500,21 +500,21 @@ class OPAService:
                 "blacklist": rules.get("merchant_blacklist", [])
             }
         )
-        
+
         return decisions
-    
-    def get_combined_decision(self, decisions: Dict[str, PolicyDecision]) -> PolicyDecision:
+
+    def get_combined_decision(self, decisions: dict[str, PolicyDecision]) -> PolicyDecision:
         """Get combined decision from all policies."""
         import uuid
-        
+
         all_reasons = []
         allowed = True
-        
+
         for policy_id, decision in decisions.items():
             if not decision.allowed:
                 allowed = False
                 all_reasons.extend(decision.reasons)
-        
+
         return PolicyDecision(
             allowed=allowed,
             policy_id="agentauth.combined",
@@ -525,7 +525,7 @@ class OPAService:
 
 
 # Singleton instance
-_opa_service: Optional[OPAService] = None
+_opa_service: OPAService | None = None
 
 
 def get_opa_service() -> OPAService:
@@ -542,12 +542,12 @@ async def check_policy(
     merchant_id: str,
     daily_spent: float = 0,
     monthly_spent: float = 0,
-    limits: Optional[Dict[str, float]] = None,
-    rules: Optional[Dict[str, Any]] = None
+    limits: dict[str, float] | None = None,
+    rules: dict[str, Any] | None = None
 ) -> PolicyDecision:
     """
     Quick policy check.
-    
+
     Usage:
         decision = await check_policy(
             amount=99.99,

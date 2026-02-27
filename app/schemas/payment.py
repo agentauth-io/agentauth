@@ -1,7 +1,7 @@
 """
 Pydantic schemas for payment-related requests and responses.
 """
-from typing import Optional
+
 from pydantic import BaseModel, EmailStr
 
 
@@ -9,8 +9,8 @@ class CreatePaymentIntentRequest(BaseModel):
     """Request to create a payment intent."""
     amount: int  # Amount in cents
     currency: str = "usd"
-    customer_email: Optional[EmailStr] = None
-    metadata: Optional[dict] = None
+    customer_email: EmailStr | None = None
+    metadata: dict | None = None
 
 
 class CreatePaymentIntentResponse(BaseModel):
@@ -24,16 +24,16 @@ class CreatePaymentIntentResponse(BaseModel):
 class CreateSubscriptionRequest(BaseModel):
     """Request to create a subscription."""
     email: EmailStr
-    name: Optional[str] = None
+    name: str | None = None
     price_id: str
-    payment_method_id: Optional[str] = None
+    payment_method_id: str | None = None
 
 
 class CreateSubscriptionResponse(BaseModel):
     """Response with subscription details."""
     subscription_id: str
     customer_id: str
-    client_secret: Optional[str]
+    client_secret: str | None
     status: str
     current_period_end: int
 
@@ -51,7 +51,7 @@ class CancelSubscriptionResponse(BaseModel):
     """Response when canceling a subscription."""
     subscription_id: str
     status: str
-    canceled_at: Optional[int]
+    canceled_at: int | None
 
 
 class PricingTier(BaseModel):

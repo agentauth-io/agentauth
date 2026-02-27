@@ -25,7 +25,7 @@ async def validate_api_key(
 ):
     """
     Validate the current API key.
-    
+
     Returns key metadata if the key is valid.
     Used by CLI `agentauth test` for the Authentication check.
     """

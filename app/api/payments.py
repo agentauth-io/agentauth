@@ -4,8 +4,8 @@ Payment API routes for Stripe integration.
 Handles payment intents, subscriptions, and webhooks.
 """
 import logging
-from fastapi import APIRouter, HTTPException, Request, Header, Depends
-from typing import Optional
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 
 from app.config import get_settings
 from app.middleware import require_api_key
@@ -13,14 +13,14 @@ from app.middleware.api_keys import get_current_user_id
 
 logger = logging.getLogger(__name__)
 from app.schemas.payment import (
+    CancelSubscriptionResponse,
     CreatePaymentIntentRequest,
     CreatePaymentIntentResponse,
     CreateSubscriptionRequest,
     CreateSubscriptionResponse,
-    SubscriptionStatusResponse,
-    CancelSubscriptionResponse,
-    PricingTier,
     PricingResponse,
+    PricingTier,
+    SubscriptionStatusResponse,
 )
 from app.services import stripe_service
 
@@ -132,7 +132,7 @@ async def create_agent_purchase(
     amount: int,
     currency: str = "USD",
     description: str = "",
-    customer_email: Optional[str] = None,
+    customer_email: str | None = None,
     user_id: str = Depends(get_current_user_id),
     api_key: dict = Depends(require_api_key),
 ):
@@ -308,7 +308,7 @@ async def cancel_subscription(
 @router.post("/webhook")
 async def stripe_webhook(
     request: Request,
-    stripe_signature: Optional[str] = Header(None, alias="Stripe-Signature"),
+    stripe_signature: str | None = Header(None, alias="Stripe-Signature"),
 ):
     """
     Handle Stripe webhook events.

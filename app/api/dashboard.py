@@ -4,20 +4,21 @@ Dashboard API routes for monitoring and analytics.
 Provides aggregate stats, transaction logs, and real-time metrics.
 """
 import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 logger = logging.getLogger(__name__)
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc, cast, Date
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+
+from sqlalchemy import Date, cast, desc, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.models.database import get_db
-from app.models.consent import Consent
-from app.models.authorization import Authorization
 from app.middleware import require_api_key
 from app.middleware.api_keys import get_current_user_id
+from app.models.authorization import Authorization
+from app.models.consent import Consent
+from app.models.database import get_db
 
 settings = get_settings()
 
@@ -51,7 +52,7 @@ async def get_dashboard(
 
         # Get active consents
         active_result = await db.execute(
-            select(func.count(Consent.id)).where(owner_filter, Consent.is_active == True)
+            select(func.count(Consent.id)).where(owner_filter, Consent.is_active)
         )
         active_consents = active_result.scalar() or 0
 
@@ -159,7 +160,7 @@ async def get_dashboard_stats(
 
         # Get active consents
         active_result = await db.execute(
-            select(func.count(Consent.id)).where(owner_filter, Consent.is_active == True)
+            select(func.count(Consent.id)).where(owner_filter, Consent.is_active)
         )
         active_consents = active_result.scalar() or 0
 
@@ -195,7 +196,7 @@ async def get_dashboard_stats(
             "api_status": "healthy",
             "last_updated": datetime.now(timezone.utc).isoformat(),
         }
-    except Exception as e:
+    except Exception:
         return {
             "total_consents": 0,
             "active_consents": 0,
@@ -240,7 +241,7 @@ async def get_transactions(
         for c in consents:
             constraints = c.constraints or {}
             scope = c.scope or {}
-            agent_name = scope.get("agent_name", "Agent")
+            scope.get("agent_name", "Agent")
             transactions.append({
                 "id": c.consent_id,
                 "user_id": c.user_id,

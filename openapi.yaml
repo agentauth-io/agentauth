@@ -1,0 +1,742 @@
+openapi: 3.1.0
+info:
+  title: AgentAuth API
+  version: 1.0.0
+  description: |
+    Authorization layer for AI agent commerce.
+    AgentAuth enables developers to set policies, budgets, and approval flows
+    for AI agents making purchases on behalf of users.
+  contact:
+    name: AgentAuth
+    url: https://agentauth.in
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://agentauth-api.koyeb.app
+    description: Production
+  - url: http://localhost:8000
+    description: Local development
+
+security:
+  - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    # ── Authorization ──
+    AuthorizeRequest:
+      type: object
+      required: [agent_id, user_id, action, amount]
+      properties:
+        agent_id:
+          type: string
+          example: "agent_shopping_bot"
+        user_id:
+          type: string
+          example: "user_abc123"
+        action:
+          type: string
+          example: "purchase"
+        amount:
+          type: number
+          example: 49.99
+        currency:
+          type: string
+          default: "USD"
+        merchant_id:
+          type: string
+          example: "merch_walmart"
+        merchant_name:
+          type: string
+          example: "Walmart"
+        category:
+          type: string
+          example: "groceries"
+        metadata:
+          type: object
+          additionalProperties: true
+
+    AuthorizeResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [approved, denied, requires_approval, rate_limited, error]
+        authorized:
+          type: boolean
+        request_id:
+          type: string
+        token:
+          type: string
+          nullable: true
+        reason:
+          type: string
+        risk_score:
+          type: number
+        policy_id:
+          type: string
+          nullable: true
+        constraints:
+          type: object
+        evaluation_time_ms:
+          type: number
+
+    # ── Consent ──
+    ConsentRequest:
+      type: object
+      required: [user_id, intent, max_amount]
+      properties:
+        user_id:
+          type: string
+        intent:
+          type: string
+        max_amount:
+          type: number
+        currency:
+          type: string
+          default: "USD"
+        allowed_merchants:
+          type: array
+          items:
+            type: string
+        allowed_categories:
+          type: array
+          items:
+            type: string
+        expires_in_seconds:
+          type: integer
+          default: 3600
+        single_use:
+          type: boolean
+          default: true
+
+    ConsentResponse:
+      type: object
+      properties:
+        consent_id:
+          type: string
+        delegation_token:
+          type: string
+        status:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+
+    # ── Policy ──
+    PolicyCondition:
+      type: object
+      required: [attribute, operator, value]
+      properties:
+        attribute:
+          type: string
+          example: "amount"
+        operator:
+          type: string
+          enum: [eq, ne, lt, lte, gt, gte, in, not_in, contains, matches, between, exists, is_null]
+        value: {}
+
+    PolicyRule:
+      type: object
+      properties:
+        conditions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PolicyCondition"
+        logic:
+          type: string
+          enum: [and, or]
+          default: "and"
+
+    PolicyRequest:
+      type: object
+      required: [name, effect]
+      properties:
+        name:
+          type: string
+        effect:
+          type: string
+          enum: [allow, deny, require_approval]
+        description:
+          type: string
+        priority:
+          type: integer
+          default: 0
+        rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/PolicyRule"
+        constraints:
+          type: object
+
+    PolicyResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        effect:
+          type: string
+        priority:
+          type: integer
+        enabled:
+          type: boolean
+        rules:
+          type: object
+        constraints:
+          type: object
+
+    # ── Playground ──
+    PlaygroundPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+          default: "pol_1"
+        name:
+          type: string
+          default: "Policy"
+        effect:
+          type: string
+          enum: [allow, deny, require_approval, warn]
+        priority:
+          type: integer
+          default: 0
+        description:
+          type: string
+        constraints:
+          type: object
+        rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/PolicyRule"
+
+    PlaygroundRequest:
+      type: object
+      required: [policies, context]
+      properties:
+        policies:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlaygroundPolicy"
+        context:
+          type: object
+          additionalProperties: true
+        combine_algorithm:
+          type: string
+          enum: [deny_overrides, allow_overrides, first_applicable, unanimous]
+          default: "deny_overrides"
+
+    PlaygroundTraceEntry:
+      type: object
+      properties:
+        policy_id:
+          type: string
+        policy_name:
+          type: string
+        effect:
+          type: string
+        applies:
+          type: boolean
+        explanation:
+          type: string
+
+    PlaygroundResponse:
+      type: object
+      properties:
+        decision:
+          type: string
+          enum: [allow, deny, require_approval]
+        allowed:
+          type: boolean
+        explanation:
+          type: string
+        risk_score:
+          type: number
+        evaluation_time_ms:
+          type: number
+        policies_evaluated:
+          type: integer
+        deciding_policy_id:
+          type: string
+          nullable: true
+        deciding_policy_name:
+          type: string
+          nullable: true
+        constraints:
+          type: object
+        trace:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlaygroundTraceEntry"
+
+    # ── Verification ──
+    VerifyRequest:
+      type: object
+      required: [authorization_code, amount]
+      properties:
+        authorization_code:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+          default: "USD"
+        merchant_id:
+          type: string
+
+    VerifyResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        status:
+          type: string
+        token_id:
+          type: string
+
+    # ── Spending ──
+    SpendingResponse:
+      type: object
+      properties:
+        user_id:
+          type: string
+        daily_spent:
+          type: number
+        monthly_spent:
+          type: number
+        daily_limit:
+          type: number
+        monthly_limit:
+          type: number
+        daily_remaining:
+          type: number
+
+    # ── Health ──
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        version:
+          type: string
+        uptime:
+          type: number
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+
+paths:
+  # ── Authorization ──
+  /v1/authorize:
+    post:
+      tags: [Authorization]
+      summary: Authorize an agent action
+      description: Evaluate policies and authorize (or deny) an agent's requested action.
+      operationId: authorize
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthorizeRequest"
+      responses:
+        "200":
+          description: Authorization decision
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthorizeResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/token/verify:
+    post:
+      tags: [Authorization]
+      summary: Verify an authorization token
+      operationId: verifyToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyRequest"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyResponse"
+
+  /v1/token/revoke:
+    post:
+      tags: [Authorization]
+      summary: Revoke an authorization token
+      operationId: revokeToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token_id]
+              properties:
+                token_id:
+                  type: string
+      responses:
+        "200":
+          description: Token revoked
+
+  # ── Policies ──
+  /v1/policies:
+    get:
+      tags: [Policies]
+      summary: List all policies
+      operationId: listPolicies
+      responses:
+        "200":
+          description: List of policies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  policies:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PolicyResponse"
+    post:
+      tags: [Policies]
+      summary: Create a policy
+      operationId: createPolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRequest"
+      responses:
+        "200":
+          description: Policy created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyResponse"
+        "403":
+          description: Admin permission required
+
+  /v1/policies/{policy_id}:
+    get:
+      tags: [Policies]
+      summary: Get a policy by ID
+      operationId: getPolicy
+      parameters:
+        - name: policy_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyResponse"
+    put:
+      tags: [Policies]
+      summary: Update a policy
+      operationId: updatePolicy
+      parameters:
+        - name: policy_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PolicyRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyResponse"
+    delete:
+      tags: [Policies]
+      summary: Delete a policy
+      operationId: deletePolicy
+      parameters:
+        - name: policy_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Policy deleted
+
+  /v1/policies/{policy_id}/toggle:
+    post:
+      tags: [Policies]
+      summary: Toggle policy enabled/disabled
+      operationId: togglePolicy
+      parameters:
+        - name: policy_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyResponse"
+
+  # ── Playground ──
+  /v1/playground/evaluate:
+    post:
+      tags: [Playground]
+      summary: Evaluate policies against a context
+      description: |
+        Interactive policy evaluation sandbox. No authentication required.
+        Rate-limited to 100 req/min per IP.
+      operationId: evaluatePlayground
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlaygroundRequest"
+      responses:
+        "200":
+          description: Evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlaygroundResponse"
+        "429":
+          description: Rate limit exceeded
+
+  /v1/playground/templates:
+    get:
+      tags: [Playground]
+      summary: Get preset policy templates
+      operationId: getPlaygroundTemplates
+      security: []
+      responses:
+        "200":
+          description: Available templates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: object
+                    additionalProperties: true
+
+  # ── Spending ──
+  /v1/user/{user_id}/spending:
+    get:
+      tags: [Spending]
+      summary: Get spending summary for a user
+      operationId: getUserSpending
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpendingResponse"
+
+  /v1/user/{user_id}/limits:
+    put:
+      tags: [Spending]
+      summary: Update spending limits for a user
+      operationId: updateUserLimits
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                daily_limit:
+                  type: number
+                monthly_limit:
+                  type: number
+      responses:
+        "200":
+          description: Limits updated
+
+  # ── Audit ──
+  /v1/audit:
+    get:
+      tags: [Audit]
+      summary: Get audit trail
+      operationId: getAuditTrail
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: agent_id
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Audit log entries
+
+  # ── Health ──
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      operationId: healthCheck
+      security: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /v1/metrics:
+    get:
+      tags: [System]
+      summary: System metrics
+      operationId: getMetrics
+      responses:
+        "200":
+          description: System metrics and cache stats
+
+  # ── Billing ──
+  /v1/billing/plans:
+    get:
+      tags: [Billing]
+      summary: Get available billing plans
+      operationId: getBillingPlans
+      security: []
+      responses:
+        "200":
+          description: Available plans
+
+  /v1/billing/usage:
+    get:
+      tags: [Billing]
+      summary: Get billing usage
+      operationId: getBillingUsage
+      responses:
+        "200":
+          description: Current usage stats
+
+  /v1/billing/checkout:
+    post:
+      tags: [Billing]
+      summary: Create checkout session
+      operationId: createCheckoutSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [plan, success_url, cancel_url]
+              properties:
+                plan:
+                  type: string
+                  enum: [startup, growth, enterprise]
+                success_url:
+                  type: string
+                cancel_url:
+                  type: string
+      responses:
+        "200":
+          description: Checkout URL
+
+  /v1/billing/portal:
+    get:
+      tags: [Billing]
+      summary: Get billing portal URL
+      operationId: getBillingPortal
+      parameters:
+        - name: return_url
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Portal URL
+
+  # ── API Keys ──
+  /v1/api-key/create:
+    post:
+      tags: [API Keys]
+      summary: Create an API key
+      operationId: createApiKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                owner:
+                  type: string
+                  default: "default"
+      responses:
+        "200":
+          description: API key created
+
+  # ── Rate Limits ──
+  /v1/rate-limits/tiers:
+    get:
+      tags: [Rate Limits]
+      summary: Get rate limit tiers
+      operationId: getRateLimitTiers
+      responses:
+        "200":
+          description: Available tiers
+
+  /v1/rate-limits/status:
+    get:
+      tags: [Rate Limits]
+      summary: Get current rate limit status
+      operationId: getRateLimitStatus
+      responses:
+        "200":
+          description: Rate limit status

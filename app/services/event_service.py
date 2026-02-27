@@ -10,14 +10,14 @@ Features:
 - Event filtering by type
 - Delivery confirmation tracking
 """
+import asyncio
+import json
 import logging
 import uuid
-import json
-import asyncio
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Optional, List, Dict, Any
 from enum import Enum
-from dataclasses import dataclass, asdict
+from typing import Any
 
 import httpx
 
@@ -29,25 +29,25 @@ settings = get_settings()
 
 class EventType(str, Enum):
     """CloudEvents event types for AgentAuth."""
-    
+
     # Consent events
     CONSENT_CREATED = "agentauth.consent.created"
     CONSENT_REVOKED = "agentauth.consent.revoked"
     CONSENT_EXPIRED = "agentauth.consent.expired"
-    
+
     # Authorization events
     AUTHORIZATION_APPROVED = "agentauth.authorization.approved"
     AUTHORIZATION_DENIED = "agentauth.authorization.denied"
     AUTHORIZATION_USED = "agentauth.authorization.used"
-    
+
     # Transaction events
     TRANSACTION_COMPLETED = "agentauth.transaction.completed"
     TRANSACTION_FAILED = "agentauth.transaction.failed"
-    
+
     # Security events
     VELOCITY_CHECK_FAILED = "agentauth.security.velocity_check_failed"
     RATE_LIMIT_EXCEEDED = "agentauth.security.rate_limit_exceeded"
-    
+
     # Limit events
     SPENDING_LIMIT_REACHED = "agentauth.limits.spending_limit_reached"
     SPENDING_LIMIT_WARNING = "agentauth.limits.spending_limit_warning"
@@ -57,28 +57,28 @@ class EventType(str, Enum):
 class CloudEvent:
     """
     CloudEvents 1.0 specification compliant event.
-    
+
     See: https://cloudevents.io/
     """
-    
+
     # Required attributes
     specversion: str = "1.0"
     type: str = ""
     source: str = "https://api.agentauth.in"
     id: str = ""
-    
+
     # Optional attributes
     time: str = ""
     datacontenttype: str = "application/json"
-    subject: Optional[str] = None
-    
+    subject: str | None = None
+
     # Extension attributes
-    developer_id: Optional[str] = None
-    trace_id: Optional[str] = None
-    
+    developer_id: str | None = None
+    trace_id: str | None = None
+
     # Event data
-    data: Dict[str, Any] = None
-    
+    data: dict[str, Any] = None
+
     def __post_init__(self):
         if not self.id:
             self.id = f"evt_{uuid.uuid4().hex[:16]}"
@@ -86,7 +86,7 @@ class CloudEvent:
             self.time = datetime.now(timezone.utc).isoformat()
         if self.data is None:
             self.data = {}
-    
+
     def to_dict(self) -> dict:
         """Convert to CloudEvents JSON format."""
         result = {
@@ -98,16 +98,16 @@ class CloudEvent:
             "datacontenttype": self.datacontenttype,
             "data": self.data,
         }
-        
+
         if self.subject:
             result["subject"] = self.subject
         if self.developer_id:
             result["developerid"] = self.developer_id
         if self.trace_id:
             result["traceid"] = self.trace_id
-        
+
         return result
-    
+
     def to_json(self) -> str:
         """Serialize to JSON string."""
         return json.dumps(self.to_dict())
@@ -116,32 +116,32 @@ class CloudEvent:
 class EventService:
     """
     Event streaming service with webhook delivery.
-    
+
     Features:
     - CloudEvents 1.0 specification
     - Async webhook delivery with retries
     - Event persistence for replay
     - Dead letter queue for failed deliveries
     """
-    
+
     MAX_RETRIES = 3
     RETRY_DELAYS = [1, 5, 30]  # seconds
     TIMEOUT = 10  # seconds
-    
+
     def __init__(self):
-        self._subscribers: Dict[str, List[str]] = {}  # developer_id -> [webhook_urls]
-        self._pending_events: List[CloudEvent] = []
-    
+        self._subscribers: dict[str, list[str]] = {}  # developer_id -> [webhook_urls]
+        self._pending_events: list[CloudEvent] = []
+
     async def emit(
         self,
         event_type: EventType,
-        data: Dict[str, Any],
-        developer_id: Optional[str] = None,
-        subject: Optional[str] = None,
+        data: dict[str, Any],
+        developer_id: str | None = None,
+        subject: str | None = None,
     ) -> CloudEvent:
         """
         Emit an event.
-        
+
         Usage:
             await event_service.emit(
                 EventType.AUTHORIZATION_APPROVED,
@@ -156,7 +156,7 @@ class EventService:
             trace_id = get_trace_id()
         except ImportError:
             pass
-        
+
         event = CloudEvent(
             type=event_type.value,
             data=data,
@@ -164,35 +164,35 @@ class EventService:
             subject=subject,
             trace_id=trace_id,
         )
-        
+
         # Store event
         self._pending_events.append(event)
-        
+
         # Cache event for replay
         await self._cache_event(event)
-        
+
         # Deliver to subscribers (async, don't block)
         asyncio.create_task(self._deliver_event(event, developer_id))
-        
+
         return event
-    
+
     async def _deliver_event(
-        self, 
-        event: CloudEvent, 
-        developer_id: Optional[str]
+        self,
+        event: CloudEvent,
+        developer_id: str | None
     ) -> None:
         """Deliver event to all subscribers."""
         if not developer_id:
             return
-        
+
         # Get subscriber webhooks from DB/cache
         webhooks = await self._get_subscriber_webhooks(developer_id)
-        
+
         for webhook_url in webhooks:
             asyncio.create_task(
                 self._deliver_to_webhook(event, webhook_url)
             )
-    
+
     async def _deliver_to_webhook(
         self,
         event: CloudEvent,
@@ -208,10 +208,10 @@ class EventService:
             "Ce-Id": event.id,
             "Ce-Time": event.time,
         }
-        
+
         if event.trace_id:
             headers["Ce-Traceid"] = event.trace_id
-        
+
         try:
             async with httpx.AsyncClient(timeout=self.TIMEOUT) as client:
                 response = await client.post(
@@ -219,28 +219,28 @@ class EventService:
                     json=event.to_dict(),
                     headers=headers
                 )
-                
+
                 if response.status_code in (200, 201, 202, 204):
                     return True
-                
+
                 # Retry on server errors
                 if response.status_code >= 500 and attempt < self.MAX_RETRIES:
                     await asyncio.sleep(self.RETRY_DELAYS[attempt])
                     return await self._deliver_to_webhook(event, webhook_url, attempt + 1)
-                
+
                 # Log failed delivery
                 await self._log_delivery_failure(event, webhook_url, response.status_code)
                 return False
-                
+
         except Exception as e:
             if attempt < self.MAX_RETRIES:
                 await asyncio.sleep(self.RETRY_DELAYS[attempt])
                 return await self._deliver_to_webhook(event, webhook_url, attempt + 1)
-            
+
             await self._log_delivery_failure(event, webhook_url, str(e))
             return False
-    
-    async def _get_subscriber_webhooks(self, developer_id: str) -> List[str]:
+
+    async def _get_subscriber_webhooks(self, developer_id: str) -> list[str]:
         """Get webhook URLs for a developer."""
         # Try cache first
         try:
@@ -251,31 +251,31 @@ class EventService:
                 return cached
         except Exception:
             pass
-        
+
         # Would query database here
         # For now return empty (webhooks registered via API)
         return self._subscribers.get(developer_id, [])
-    
+
     async def _cache_event(self, event: CloudEvent) -> None:
         """Cache event for replay capability."""
         try:
             from app.services.cache_service import get_redis
             client = await get_redis()
-            
+
             # Store in sorted set by timestamp
             key = f"events:{event.developer_id or 'global'}"
             score = datetime.fromisoformat(event.time.replace("Z", "+00:00")).timestamp()
-            
+
             await client.zadd(key, {event.to_json(): score})
-            
+
             # Keep only last 1000 events per developer
             await client.zremrangebyrank(key, 0, -1001)
-            
+
             # Expire after 7 days
             await client.expire(key, 86400 * 7)
         except Exception:
             pass
-    
+
     async def _log_delivery_failure(
         self,
         event: CloudEvent,
@@ -286,7 +286,7 @@ class EventService:
         try:
             from app.services.cache_service import get_redis
             client = await get_redis()
-            
+
             failure = {
                 "event_id": event.id,
                 "event_type": event.type,
@@ -294,29 +294,29 @@ class EventService:
                 "error": str(error),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
-            
+
             await client.lpush("dlq:webhooks", json.dumps(failure))
             await client.ltrim("dlq:webhooks", 0, 9999)  # Keep last 10k failures
         except Exception:
             pass
-    
+
     async def get_recent_events(
         self,
         developer_id: str,
         limit: int = 50
-    ) -> List[dict]:
+    ) -> list[dict]:
         """Get recent events for a developer."""
         try:
             from app.services.cache_service import get_redis
             client = await get_redis()
-            
+
             key = f"events:{developer_id}"
             events = await client.zrevrange(key, 0, limit - 1)
-            
+
             return [json.loads(e) for e in events]
         except Exception:
             return []
-    
+
     def register_webhook(self, developer_id: str, webhook_url: str) -> None:
         """Register a webhook URL for a developer (in-memory, for testing)."""
         if developer_id not in self._subscribers:
@@ -326,7 +326,7 @@ class EventService:
 
 
 # Singleton instance
-_event_service: Optional[EventService] = None
+_event_service: EventService | None = None
 
 
 def get_event_service() -> EventService:
@@ -340,9 +340,9 @@ def get_event_service() -> EventService:
 # Convenience functions
 async def emit_event(
     event_type: EventType,
-    data: Dict[str, Any],
-    developer_id: Optional[str] = None,
-    subject: Optional[str] = None
+    data: dict[str, Any],
+    developer_id: str | None = None,
+    subject: str | None = None
 ) -> CloudEvent:
     """Quick helper to emit an event."""
     return await get_event_service().emit(event_type, data, developer_id, subject)
@@ -354,7 +354,7 @@ async def emit_authorization_approved(
     authorization_code: str,
     amount: float,
     merchant_id: str,
-    developer_id: Optional[str] = None
+    developer_id: str | None = None
 ) -> CloudEvent:
     """Emit authorization approved event."""
     return await emit_event(
@@ -375,7 +375,7 @@ async def emit_authorization_denied(
     reason: str,
     amount: float,
     merchant_id: str,
-    developer_id: Optional[str] = None
+    developer_id: str | None = None
 ) -> CloudEvent:
     """Emit authorization denied event."""
     return await emit_event(
@@ -396,7 +396,7 @@ async def emit_consent_created(
     user_id: str,
     max_amount: float,
     expires_at: str,
-    developer_id: Optional[str] = None
+    developer_id: str | None = None
 ) -> CloudEvent:
     """Emit consent created event."""
     return await emit_event(

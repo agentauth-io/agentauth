@@ -1,15 +1,14 @@
 """
 AgentAuth Middleware Package
 """
-from app.middleware.rate_limiter import RateLimitMiddleware, rate_limit_store, rate_limit_check
 from app.middleware.api_keys import (
+    DEMO_KEY,
     generate_api_key,
     generate_api_key_sync,
-    verify_api_key,
     get_api_key_optional,
-    require_api_key,
     get_current_user_id,
-    DEMO_KEY,
+    require_api_key,
+    verify_api_key,
 )
 from app.middleware.idempotency import (
     IdempotencyMiddleware,
@@ -17,13 +16,18 @@ from app.middleware.idempotency import (
     get_idempotency_key,
     require_idempotency_key,
 )
+from app.middleware.rate_limiter import (
+    RateLimitMiddleware,
+    rate_limit_check,
+    rate_limit_store,
+)
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.middleware.tenant_context import (
+    TenantAwareSession,
     TenantContextMiddleware,
-    set_tenant_context,
     get_tenant_id,
     require_tenant_id,
-    TenantAwareSession,
+    set_tenant_context,
 )
 
 __all__ = [

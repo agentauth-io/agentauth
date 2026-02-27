@@ -4,17 +4,14 @@ Stripe Connect API routes for connected accounts management.
 Handles account linking, onboarding, and transaction tracking.
 """
 import logging
-from fastapi import APIRouter, HTTPException, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
-from typing import Optional, List
-from datetime import datetime
 
-from app.models.database import get_db
-from app.services import stripe_service
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+
 from app.config import get_settings
 from app.middleware import require_api_key
 from app.middleware.api_keys import get_current_user_id
+from app.services import stripe_service
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -58,8 +55,8 @@ class ConnectedAccountTransaction(BaseModel):
 
 class ConnectBalanceResponse(BaseModel):
     """Balance for a connected account."""
-    available: List[dict]
-    pending: List[dict]
+    available: list[dict]
+    pending: list[dict]
 
 
 # --- Endpoints ---
@@ -72,12 +69,12 @@ async def create_connect_account(
 ):
     """
     Create a new Stripe Connect account for a user.
-    
+
     Returns an onboarding URL to complete account setup.
     """
     if not settings.stripe_secret_key:
         raise HTTPException(status_code=503, detail="Stripe not configured")
-    
+
     try:
         # Create the Connect account
         account = await stripe_service.create_connect_account(
@@ -85,7 +82,7 @@ async def create_connect_account(
             email=request.email,
             country=request.country,
         )
-        
+
         # Generate onboarding link
         base_url = "https://agentauth.in"
         onboarding_url = await stripe_service.create_connect_onboarding_link(
@@ -93,12 +90,12 @@ async def create_connect_account(
             return_url=f"{base_url}/nucleus?connect=success&account_id={account.account_id}",
             refresh_url=f"{base_url}/nucleus?connect=refresh",
         )
-        
+
         return CreateConnectAccountResponse(
             account_id=account.account_id,
             onboarding_url=onboarding_url,
         )
-    
+
     except Exception as e:
         logger.error(f"Create connect account failed: {e}", exc_info=True)
         raise HTTPException(status_code=502, detail="Failed to create Stripe account")
@@ -114,10 +111,10 @@ async def get_connect_account_status(
     """
     if not settings.stripe_secret_key:
         raise HTTPException(status_code=503, detail="Stripe not configured")
-    
+
     try:
         account = await stripe_service.get_connect_account(account_id)
-        
+
         # Determine overall status
         if account.charges_enabled and account.payouts_enabled:
             status = "active"
@@ -125,7 +122,7 @@ async def get_connect_account_status(
             status = "pending"
         else:
             status = "incomplete"
-        
+
         return ConnectAccountStatus(
             account_id=account.account_id,
             details_submitted=account.details_submitted,
@@ -133,7 +130,7 @@ async def get_connect_account_status(
             payouts_enabled=account.payouts_enabled,
             status=status,
         )
-    
+
     except Exception as e:
         logger.error(f"Get connect account failed: {e}", exc_info=True)
         raise HTTPException(status_code=502, detail="Failed to retrieve account status")
@@ -149,7 +146,7 @@ async def refresh_onboarding_link(
     """
     if not settings.stripe_secret_key:
         raise HTTPException(status_code=503, detail="Stripe not configured")
-    
+
     try:
         base_url = "https://agentauth.in"
         onboarding_url = await stripe_service.create_connect_onboarding_link(
@@ -157,9 +154,9 @@ async def refresh_onboarding_link(
             return_url=f"{base_url}/nucleus?connect=success&account_id={account_id}",
             refresh_url=f"{base_url}/nucleus?connect=refresh",
         )
-        
+
         return {"onboarding_url": onboarding_url}
-    
+
     except Exception as e:
         logger.error(f"Onboarding link creation failed: {e}", exc_info=True)
         raise HTTPException(status_code=502, detail="Failed to generate onboarding link")
@@ -175,17 +172,17 @@ async def get_dashboard_link(
     """
     if not settings.stripe_secret_key:
         raise HTTPException(status_code=503, detail="Stripe not configured")
-    
+
     try:
         login_url = await stripe_service.create_connect_login_link(account_id)
         return {"dashboard_url": login_url}
-    
+
     except Exception as e:
         logger.error(f"Dashboard link creation failed: {e}", exc_info=True)
         raise HTTPException(status_code=502, detail="Failed to generate dashboard link")
 
 
-@router.get("/accounts/{account_id}/transactions", response_model=List[ConnectedAccountTransaction])
+@router.get("/accounts/{account_id}/transactions", response_model=list[ConnectedAccountTransaction])
 async def list_connect_transactions(
     account_id: str,
     limit: int = Query(20, ge=1, le=100),
@@ -196,14 +193,14 @@ async def list_connect_transactions(
     """
     if not settings.stripe_secret_key:
         raise HTTPException(status_code=503, detail="Stripe not configured")
-    
+
     try:
         transactions = await stripe_service.list_connect_transactions(
             account_id=account_id,
             limit=limit,
         )
         return [ConnectedAccountTransaction(**tx) for tx in transactions]
-    
+
     except Exception as e:
         logger.error(f"List transactions failed: {e}", exc_info=True)
         raise HTTPException(status_code=502, detail="Failed to list transactions")
@@ -219,11 +216,11 @@ async def get_connect_balance(
     """
     if not settings.stripe_secret_key:
         raise HTTPException(status_code=503, detail="Stripe not configured")
-    
+
     try:
         balance = await stripe_service.get_connect_balance(account_id)
         return ConnectBalanceResponse(**balance)
-    
+
     except Exception as e:
         logger.error(f"Get balance failed: {e}", exc_info=True)
         raise HTTPException(status_code=502, detail="Failed to retrieve balance")

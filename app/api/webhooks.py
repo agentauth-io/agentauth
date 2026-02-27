@@ -3,18 +3,17 @@ Webhooks API
 
 API endpoints for managing webhook endpoints.
 """
-from typing import List, Optional
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.middleware import require_api_key
+from app.middleware.api_keys import get_current_user_id
 from app.models.database import get_db
 from app.models.webhooks import WEBHOOK_EVENTS
 from app.services.webhooks import WebhooksService
-from app.middleware import require_api_key
-from app.middleware.api_keys import get_current_user_id
-
 
 router = APIRouter(prefix="/v1/webhooks", tags=["Webhooks"])
 
@@ -24,37 +23,37 @@ router = APIRouter(prefix="/v1/webhooks", tags=["Webhooks"])
 class WebhookCreate(BaseModel):
     """Request to create a webhook."""
     url: HttpUrl = Field(..., description="Webhook endpoint URL (must be HTTPS in production)")
-    events: List[str] = Field(
+    events: list[str] = Field(
         default=["authorization.approved", "authorization.denied"],
         description="Events to subscribe to"
     )
-    description: Optional[str] = Field(None, description="Description of the webhook")
+    description: str | None = Field(None, description="Description of the webhook")
 
 
 class WebhookUpdate(BaseModel):
     """Request to update a webhook."""
-    url: Optional[str] = None
-    events: Optional[List[str]] = None
-    description: Optional[str] = None
-    is_active: Optional[bool] = None
+    url: str | None = None
+    events: list[str] | None = None
+    description: str | None = None
+    is_active: bool | None = None
 
 
 class WebhookResponse(BaseModel):
     """Webhook response."""
     id: str
     url: str
-    events: List[str]
-    description: Optional[str]
-    secret: Optional[str] = None  # Only shown on creation
+    events: list[str]
+    description: str | None
+    secret: str | None = None  # Only shown on creation
     is_active: bool
-    last_triggered_at: Optional[str]
+    last_triggered_at: str | None
     failure_count: int
     created_at: str
 
 
 # Endpoints
 
-@router.get("", response_model=List[WebhookResponse])
+@router.get("", response_model=list[WebhookResponse])
 async def list_webhooks(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
@@ -62,12 +61,12 @@ async def list_webhooks(
 ):
     """
     List all webhooks.
-    
+
     Returns all active webhook endpoints for the user.
     """
     service = WebhooksService(db)
     webhooks = await service.list_webhooks(user_id)
-    
+
     return [
         WebhookResponse(
             id=str(w.id),
@@ -93,7 +92,7 @@ async def create_webhook(
 ):
     """
     Create a new webhook.
-    
+
     The secret returned should be saved securely - it's used to verify webhook signatures.
     """
     service = WebhooksService(db)
@@ -103,7 +102,7 @@ async def create_webhook(
         events=webhook.events,
         description=webhook.description
     )
-    
+
     return WebhookResponse(
         id=str(w.id),
         url=w.url,
@@ -129,10 +128,10 @@ async def get_webhook(
     """
     service = WebhooksService(db)
     w = await service.get_webhook(webhook_id, user_id)
-    
+
     if not w:
         raise HTTPException(status_code=404, detail="Webhook not found")
-    
+
     return WebhookResponse(
         id=str(w.id),
         url=w.url,
@@ -166,10 +165,10 @@ async def update_webhook(
         description=update.description,
         is_active=update.is_active
     )
-    
+
     if not w:
         raise HTTPException(status_code=404, detail="Webhook not found")
-    
+
     return WebhookResponse(
         id=str(w.id),
         url=w.url,
@@ -195,10 +194,10 @@ async def delete_webhook(
     """
     service = WebhooksService(db)
     deleted = await service.delete_webhook(webhook_id, user_id)
-    
+
     if not deleted:
         raise HTTPException(status_code=404, detail="Webhook not found")
-    
+
     return {"status": "success", "message": "Webhook deleted"}
 
 

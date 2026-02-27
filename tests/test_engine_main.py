@@ -3,24 +3,24 @@ Comprehensive tests for core/engine.py and core/main.py modules.
 Covers the AuthorizationEngine, RateLimiter, SpendingTracker, AgentAuthCore,
 and create_spending_policy to push coverage toward 80% target.
 """
-import time
 import json
 import os
+import time
+
 import pytest
 
+from core.crypto import KeyManager, MasterSecret
 from core.engine import (
-    AuthorizationStatus,
+    AuthorizationEngine,
     AuthorizationRequest,
     AuthorizationResponse,
+    AuthorizationStatus,
     RateLimitConfig,
     RateLimiter,
     SpendingTracker,
-    AuthorizationEngine,
 )
 from core.main import AgentAuthCore, create_spending_policy
-from core.crypto import MasterSecret, KeyManager
-from core.policy import PolicyBuilder, PolicyEffect, Policy
-
+from core.policy import PolicyBuilder, PolicyEffect
 
 # ─── AuthorizationStatus Tests ───────────────────────────────────────────────
 

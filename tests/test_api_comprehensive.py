@@ -11,10 +11,10 @@ Production-grade tests covering:
 - API key authentication
 - Agent management
 """
-import pytest
 import uuid
-from httpx import AsyncClient
 
+import pytest
+from httpx import AsyncClient
 
 # =============================================================================
 # Health & Root

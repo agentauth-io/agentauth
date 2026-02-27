@@ -11,38 +11,31 @@ Unified API for all advanced security components:
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+
 from app.middleware import require_api_key
+from app.ml.threat_intelligence import (
+    get_threat_intelligence,
+)
 
 # Import security modules
 from core.blockchain_audit import (
     AuditEventType,
-    BlockchainAuditTrail,
     get_audit_trail,
+)
+from core.consensus import (
+    get_consensus_cluster,
 )
 from core.vault_integration import (
     SecretType,
-    VaultClient,
     get_vault_client,
 )
 from core.zero_trust_mesh import (
-    ServiceIdentity,
-    ZeroTrustMesh,
     get_zero_trust_mesh,
 )
-from core.consensus import (
-    ConsensusCluster,
-    ConsensusRequest,
-    get_consensus_cluster,
-)
-from app.ml.threat_intelligence import (
-    ThreatIntelligence,
-    get_threat_intelligence,
-)
-
 
 router = APIRouter(
     prefix="/v1/security",
@@ -54,12 +47,12 @@ router = APIRouter(
 # ==================== Request/Response Models ====================
 
 class ThreatAssessmentRequest(BaseModel):
-    request_id: Optional[str] = None
+    request_id: str | None = None
     agent_id: str
     action: str
-    amount: Optional[float] = None
-    merchant: Optional[str] = None
-    ip_address: Optional[str] = None
+    amount: float | None = None
+    merchant: str | None = None
+    ip_address: str | None = None
     trust_score: float = 0.8
     new_device: bool = False
     distance_km: float = 0.0
@@ -71,37 +64,37 @@ class AuditLogRequest(BaseModel):
     actor_type: str = "agent"
     action: str
     outcome: str = "success"
-    resource_id: Optional[str] = None
-    resource_type: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    resource_id: str | None = None
+    resource_type: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class SecretRequest(BaseModel):
     path: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     secret_type: str = "api_key"
     description: str = ""
-    ttl_hours: Optional[int] = None
+    ttl_hours: int | None = None
 
 
 class ServiceRegistrationRequest(BaseModel):
     name: str
     namespace: str = "default"
-    labels: Dict[str, str] = Field(default_factory=dict)
+    labels: dict[str, str] = Field(default_factory=dict)
 
 
 class AuthorizationRuleRequest(BaseModel):
     name: str
     source_pattern: str
     destination_pattern: str
-    methods: List[str]
-    paths: List[str]
+    methods: list[str]
+    paths: list[str]
     priority: int = 0
 
 
 class ConsensusOperationRequest(BaseModel):
     operation: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     client_id: str = "api-client"
 
 
@@ -111,11 +104,11 @@ class ConsensusOperationRequest(BaseModel):
 async def assess_threat(request: ThreatAssessmentRequest):
     """
     Perform ML-based threat assessment on a request.
-    
+
     Returns risk score, threat signals, and recommendations.
     """
     ti = get_threat_intelligence()
-    
+
     assessment = ti.assess_threat({
         "request_id": request.request_id,
         "agent_id": request.agent_id,
@@ -127,7 +120,7 @@ async def assess_threat(request: ThreatAssessmentRequest):
         "new_device": request.new_device,
         "distance_km": request.distance_km,
     })
-    
+
     return assessment.to_dict()
 
 
@@ -135,7 +128,7 @@ async def assess_threat(request: ThreatAssessmentRequest):
 async def get_threat_stats():
     """Get threat intelligence statistics."""
     ti = get_threat_intelligence()
-    
+
     return {
         "is_trained": ti.is_trained,
         "training_samples": len(ti.training_data),
@@ -158,16 +151,16 @@ async def block_ip(ip: str):
 async def create_audit_log(request: AuditLogRequest):
     """
     Create an immutable audit log entry.
-    
+
     Entries are cryptographically chained and can be verified.
     """
     audit = get_audit_trail()
-    
+
     try:
         event_type = AuditEventType(request.event_type)
     except ValueError:
         event_type = AuditEventType.AUTHORIZATION_REQUEST
-    
+
     entry_id = audit.log(
         event_type=event_type,
         actor_id=request.actor_id,
@@ -178,7 +171,7 @@ async def create_audit_log(request: AuditLogRequest):
         resource_type=request.resource_type,
         metadata=request.metadata,
     )
-    
+
     return {"entry_id": entry_id, "status": "logged"}
 
 
@@ -187,10 +180,10 @@ async def get_audit_entry(entry_id: str):
     """Get an audit entry by ID."""
     audit = get_audit_trail()
     entry = audit.get_entry(entry_id)
-    
+
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
-    
+
     return entry.to_dict()
 
 
@@ -203,28 +196,28 @@ async def verify_audit_entry(entry_id: str):
 
 @router.get("/audit/query")
 async def query_audit_logs(
-    event_type: Optional[str] = None,
-    actor_id: Optional[str] = None,
-    resource_id: Optional[str] = None,
+    event_type: str | None = None,
+    actor_id: str | None = None,
+    resource_id: str | None = None,
     limit: int = 50,
 ):
     """Query audit logs with filters."""
     audit = get_audit_trail()
-    
+
     event_type_enum = None
     if event_type:
         try:
             event_type_enum = AuditEventType(event_type)
         except ValueError:
             pass
-    
+
     entries = audit.query(
         event_type=event_type_enum,
         actor_id=actor_id,
         resource_id=resource_id,
         limit=limit,
     )
-    
+
     return {
         "entries": [e.to_dict() for e in entries],
         "count": len(entries),
@@ -250,7 +243,7 @@ async def flush_audit():
     """Force creation of a new block from pending entries."""
     audit = get_audit_trail()
     block = audit.flush()
-    
+
     if block:
         return {
             "block_created": True,
@@ -266,12 +259,12 @@ async def flush_audit():
 async def store_secret(request: SecretRequest):
     """Store a secret in the vault."""
     vault = get_vault_client()
-    
+
     try:
         secret_type = SecretType(request.secret_type)
     except ValueError:
         secret_type = SecretType.API_KEY
-    
+
     result = vault.kv_put(
         path=request.path,
         data=request.data,
@@ -279,10 +272,10 @@ async def store_secret(request: SecretRequest):
         description=request.description,
         ttl_hours=request.ttl_hours,
     )
-    
+
     if not result.success:
         raise HTTPException(status_code=400, detail=result.error)
-    
+
     return {
         "path": request.path,
         "version": result.data.get("version"),
@@ -291,14 +284,14 @@ async def store_secret(request: SecretRequest):
 
 
 @router.get("/vault/secrets/{path:path}")
-async def get_secret(path: str, version: Optional[int] = None):
+async def get_secret(path: str, version: int | None = None):
     """Retrieve a secret from the vault."""
     vault = get_vault_client()
     result = vault.kv_get(path, version)
-    
+
     if not result.success:
         raise HTTPException(status_code=404, detail=result.error)
-    
+
     return {
         "path": path,
         "data": result.data,
@@ -311,10 +304,10 @@ async def delete_secret(path: str):
     """Delete a secret from the vault."""
     vault = get_vault_client()
     result = vault.kv_delete(path)
-    
+
     if not result.success:
         raise HTTPException(status_code=404, detail=result.error)
-    
+
     return {"status": "deleted", "path": path}
 
 
@@ -327,10 +320,10 @@ async def generate_api_key(
     """Generate a new dynamic API key."""
     vault = get_vault_client()
     result = vault.generate_api_key(name, tier, ttl_hours)
-    
+
     if not result.success:
         raise HTTPException(status_code=400, detail=result.error)
-    
+
     return result.data
 
 
@@ -339,7 +332,7 @@ async def verify_api_key(api_key: str):
     """Verify an API key."""
     vault = get_vault_client()
     result = vault.verify_api_key(api_key)
-    
+
     return result.data if result.success else {"valid": False}
 
 
@@ -348,10 +341,10 @@ async def transit_encrypt(key_name: str, plaintext: str):
     """Encrypt data using transit engine."""
     vault = get_vault_client()
     result = vault.transit_encrypt(key_name, plaintext.encode())
-    
+
     if not result.success:
         raise HTTPException(status_code=400, detail=result.error)
-    
+
     return result.data
 
 
@@ -360,10 +353,10 @@ async def transit_decrypt(key_name: str, ciphertext: str):
     """Decrypt data using transit engine."""
     vault = get_vault_client()
     result = vault.transit_decrypt(key_name, ciphertext)
-    
+
     if not result.success:
         raise HTTPException(status_code=400, detail=result.error)
-    
+
     return result.data
 
 
@@ -380,13 +373,13 @@ async def get_vault_health():
 async def register_service(request: ServiceRegistrationRequest):
     """Register a service in the zero-trust mesh."""
     mesh = get_zero_trust_mesh()
-    
+
     identity, cert, private_key = mesh.register_service(
         name=request.name,
         namespace=request.namespace,
         labels=request.labels,
     )
-    
+
     return {
         "identity": identity.to_dict(),
         "certificate": cert.to_dict(),
@@ -398,10 +391,10 @@ async def register_service(request: ServiceRegistrationRequest):
 async def deregister_service(spiffe_id: str):
     """Deregister a service from the mesh."""
     mesh = get_zero_trust_mesh()
-    
+
     if mesh.deregister_service(spiffe_id):
         return {"status": "deregistered", "spiffe_id": spiffe_id}
-    
+
     raise HTTPException(status_code=404, detail="Service not found")
 
 
@@ -416,7 +409,7 @@ async def list_services():
 async def add_authorization_rule(request: AuthorizationRuleRequest):
     """Add a service-to-service authorization rule."""
     mesh = get_zero_trust_mesh()
-    
+
     policy = mesh.add_authorization_rule(
         name=request.name,
         source_pattern=request.source_pattern,
@@ -425,7 +418,7 @@ async def add_authorization_rule(request: AuthorizationRuleRequest):
         paths=request.paths,
         priority=request.priority,
     )
-    
+
     return {"policy": policy.to_dict(), "status": "created"}
 
 
@@ -440,10 +433,10 @@ async def list_authorization_policies():
 async def delete_authorization_policy(name: str):
     """Delete an authorization policy."""
     mesh = get_zero_trust_mesh()
-    
+
     if mesh.policy_engine.remove_policy(name):
         return {"status": "deleted", "name": name}
-    
+
     raise HTTPException(status_code=404, detail="Policy not found")
 
 
@@ -474,19 +467,19 @@ async def get_certificate_revocation_list():
 async def submit_consensus_operation(request: ConsensusOperationRequest):
     """Submit an operation for distributed consensus."""
     cluster = get_consensus_cluster()
-    
+
     request_id = cluster.submit_request(
         operation=request.operation,
         data=request.data,
         client_id=request.client_id,
     )
-    
+
     # Get result (already processed in simulation mode)
     result = cluster.get_result(request_id)
-    
+
     if result:
         return result.to_dict()
-    
+
     return {
         "request_id": request_id,
         "status": "submitted",
@@ -498,10 +491,10 @@ async def get_consensus_result(request_id: str):
     """Get the result of a consensus operation."""
     cluster = get_consensus_cluster()
     result = cluster.get_result(request_id)
-    
+
     if not result:
         raise HTTPException(status_code=404, detail="Result not found")
-    
+
     return result.to_dict()
 
 
@@ -522,7 +515,7 @@ async def get_security_dashboard():
     vault = get_vault_client()
     mesh = get_zero_trust_mesh()
     cluster = get_consensus_cluster()
-    
+
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "threat_intelligence": {

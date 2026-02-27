@@ -7,9 +7,10 @@ OPTIMIZED for low-latency authorization:
 - Fast timeout settings
 """
 import ssl
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
-from typing import AsyncGenerator
 
 from app.config import get_settings
 
@@ -40,6 +41,7 @@ elif not db_url.startswith("postgresql+asyncpg://"):
 
 # Log at debug level - never print DB URLs
 import logging as _db_logging
+
 _db_logging.getLogger(__name__).debug(f"Database URL configured (length={len(db_url)})")
 
 # Create async engine with OPTIMIZED connection pooling

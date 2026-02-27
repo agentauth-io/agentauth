@@ -9,11 +9,11 @@ Covers:
 - API key expiry
 - API key rotation/revocation endpoints
 """
-import pytest
 import uuid
 from datetime import datetime, timedelta, timezone
-from httpx import AsyncClient
 
+import pytest
+from httpx import AsyncClient
 
 # ==================== Security Headers ====================
 
@@ -30,7 +30,8 @@ class TestSecurityHeaders:
         assert response.headers.get("x-frame-options") == "DENY"
         assert response.headers.get("x-xss-protection") == "0"
         assert response.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
-        assert response.headers.get("content-security-policy") == "default-src 'self'"
+        csp = response.headers.get("content-security-policy", "")
+        assert "default-src 'self'" in csp
         assert response.headers.get("permissions-policy") == "camera=(), microphone=(), geolocation=()"
 
     @pytest.mark.anyio
@@ -53,7 +54,11 @@ class TestTokenRevocation:
 
     def test_revoke_and_check(self):
         """Revoking a JTI should make is_revoked return True."""
-        from app.services.token_revocation import revoke_token, is_revoked, _REVOKED_TOKENS
+        from app.services.token_revocation import (
+            _REVOKED_TOKENS,
+            is_revoked,
+            revoke_token,
+        )
 
         jti = str(uuid.uuid4())
         expires = datetime.now(timezone.utc) + timedelta(hours=1)
@@ -73,7 +78,11 @@ class TestTokenRevocation:
 
     def test_cleanup_expired(self):
         """Expired revocations should be cleaned up."""
-        from app.services.token_revocation import revoke_token, is_revoked, _cleanup, _REVOKED_TOKENS
+        from app.services.token_revocation import (
+            _REVOKED_TOKENS,
+            _cleanup,
+            is_revoked,
+        )
 
         jti = "cleanup-test-" + str(uuid.uuid4())
         # Set expiry in the past
@@ -204,7 +213,9 @@ class TestIDORProtection:
     @pytest.mark.anyio
     async def test_unauthenticated_request_rejected(self, client: AsyncClient):
         """Requests without API key should be rejected."""
-        from httpx import AsyncClient as HC, ASGITransport
+        from httpx import ASGITransport
+        from httpx import AsyncClient as HC
+
         from app.main import app
 
         transport = ASGITransport(app=app)
@@ -221,9 +232,7 @@ class TestAPIKeyExpiry:
     @pytest.mark.anyio
     async def test_expired_key_rejected(self, client: AsyncClient):
         """An expired API key should not authenticate."""
-        from app.middleware.api_keys import _KEY_CACHE
         import hashlib
-        import time
 
         # Create a key that's already expired in the cache
         fake_key = "aa_live_expired_test_key_12345"

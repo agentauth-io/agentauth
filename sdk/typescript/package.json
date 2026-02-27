@@ -1,0 +1,28 @@
+{
+    "name": "@agentauth/sdk",
+    "version": "0.1.0",
+    "description": "TypeScript SDK for the AgentAuth authorization API",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch"
+    },
+    "keywords": [
+        "agentauth",
+        "authorization",
+        "ai-agents",
+        "policy-engine"
+    ],
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/agentauth-io/agentauth"
+    },
+    "devDependencies": {
+        "typescript": "^5.5.0"
+    }
+}

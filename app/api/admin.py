@@ -3,19 +3,19 @@ Admin authentication API.
 
 Provides secure access to the admin dashboard.
 """
-from fastapi import APIRouter, HTTPException, Depends, Header
-from pydantic import BaseModel
-from datetime import datetime, timedelta, timezone
-import uuid
-import jwt
-import bcrypt
 import logging
-from typing import Optional
+import uuid
+from datetime import datetime, timedelta, timezone
 
+import bcrypt
+import jwt
+from fastapi import APIRouter, Depends, Header, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.config import get_settings
 from app.models.database import get_db
-from app.services.token_revocation import revoke_token, is_revoked
+from app.services.token_revocation import is_revoked, revoke_token
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -38,7 +38,7 @@ class AdminLoginResponse(BaseModel):
 class AdminVerifyResponse(BaseModel):
     """Token verification response."""
     valid: bool
-    expires_at: Optional[str] = None
+    expires_at: str | None = None
 
 
 def create_admin_token() -> tuple[str, datetime]:
@@ -75,7 +75,7 @@ def verify_admin_token(token: str) -> bool:
         return False
 
 
-def _extract_token(authorization: Optional[str]) -> Optional[str]:
+def _extract_token(authorization: str | None) -> str | None:
     """Extract JWT from Authorization header."""
     if not authorization:
         return None
@@ -86,7 +86,7 @@ def _extract_token(authorization: Optional[str]) -> Optional[str]:
 
 
 async def get_admin_user(
-    authorization: Optional[str] = Header(None, alias="Authorization")
+    authorization: str | None = Header(None, alias="Authorization")
 ) -> bool:
     """Dependency to verify admin access."""
     if not authorization:
@@ -129,7 +129,7 @@ async def admin_login(request: AdminLoginRequest):
 
 @router.get("/verify", response_model=AdminVerifyResponse)
 async def verify_token_endpoint(
-    authorization: Optional[str] = Header(None, alias="Authorization")
+    authorization: str | None = Header(None, alias="Authorization")
 ):
     """
     Verify if the admin token is valid.
@@ -158,7 +158,7 @@ async def verify_token_endpoint(
 
 @router.post("/logout")
 async def admin_logout(
-    authorization: Optional[str] = Header(None, alias="Authorization")
+    authorization: str | None = Header(None, alias="Authorization")
 ):
     """
     Logout admin session.
@@ -212,8 +212,9 @@ async def admin_list_api_keys(
     db: AsyncSession = Depends(get_db),
 ):
     """List all API keys (admin-only). Does not expose key hashes."""
+    from sqlalchemy import desc, select
+
     from app.models.api_key import ApiKey
-    from sqlalchemy import select, desc
 
     result = await db.execute(
         select(ApiKey).order_by(desc(ApiKey.created_at)).limit(100)
@@ -247,12 +248,13 @@ async def admin_rotate_api_key(
 
     Deactivates the old key and generates a new one for the same owner.
     """
-    from app.models.api_key import ApiKey
-    from app.middleware.api_keys import generate_api_key
     from sqlalchemy import select
 
+    from app.middleware.api_keys import generate_api_key
+    from app.models.api_key import ApiKey
+
     result = await db.execute(
-        select(ApiKey).where(ApiKey.key_id == key_id, ApiKey.is_active == True)
+        select(ApiKey).where(ApiKey.key_id == key_id, ApiKey.is_active)
     )
     old_key = result.scalar_one_or_none()
     if not old_key:
@@ -287,11 +289,12 @@ async def admin_revoke_api_key(
     db: AsyncSession = Depends(get_db),
 ):
     """Revoke (deactivate) an API key (admin-only)."""
-    from app.models.api_key import ApiKey
     from sqlalchemy import select
 
+    from app.models.api_key import ApiKey
+
     result = await db.execute(
-        select(ApiKey).where(ApiKey.key_id == key_id, ApiKey.is_active == True)
+        select(ApiKey).where(ApiKey.key_id == key_id, ApiKey.is_active)
     )
     key = result.scalar_one_or_none()
     if not key:

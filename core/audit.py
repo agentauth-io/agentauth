@@ -26,16 +26,17 @@ Log Entry Structure:
 }
 """
 
-import time
-import json
 import hashlib
-import threading
-from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List, Callable, Tuple
-from enum import Enum
+import json
 import os
+import threading
+import time
+from collections.abc import Callable
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any
 
-from .crypto import KeyManager, SigningKeyPair, hash_sha256, generate_id
+from .crypto import KeyManager, SigningKeyPair, generate_id
 
 
 class AuditEventType(Enum):
@@ -64,12 +65,12 @@ class AuditEntry:
     timestamp: float
     prev_hash: str
     event_type: AuditEventType
-    agent_id: Optional[str]
-    user_id: Optional[str]
-    data: Dict[str, Any]
+    agent_id: str | None
+    user_id: str | None
+    data: dict[str, Any]
     signature: str = ""
     hash: str = ""
-    
+
     def compute_hash(self) -> str:
         """Compute hash of this entry (excluding signature and hash fields)."""
         content = {
@@ -85,8 +86,8 @@ class AuditEntry:
         return hashlib.sha256(
             json.dumps(content, sort_keys=True).encode()
         ).hexdigest()
-    
-    def to_dict(self) -> Dict:
+
+    def to_dict(self) -> dict:
         return {
             "id": self.id,
             "sequence": self.sequence,
@@ -99,9 +100,9 @@ class AuditEntry:
             "signature": self.signature,
             "hash": self.hash
         }
-    
+
     @classmethod
-    def from_dict(cls, data: Dict) -> "AuditEntry":
+    def from_dict(cls, data: dict) -> "AuditEntry":
         return cls(
             id=data["id"],
             sequence=data["sequence"],
@@ -119,55 +120,55 @@ class AuditEntry:
 class AuditLog:
     """
     Cryptographically-secured audit log.
-    
+
     Features:
     - Hash chaining for tamper detection
     - Cryptographic signatures for authenticity
     - Thread-safe append operations
     - Persistence support
     """
-    
+
     GENESIS_HASH = "0" * 64  # Genesis block hash
-    
+
     def __init__(
         self,
         signing_key: SigningKeyPair,
-        persistence_path: Optional[str] = None
+        persistence_path: str | None = None
     ):
         """
         Initialize audit log.
-        
+
         Args:
             signing_key: Key for signing entries
             persistence_path: Path to persist log (optional)
         """
         self._signing_key = signing_key
         self._persistence_path = persistence_path
-        self._entries: List[AuditEntry] = []
+        self._entries: list[AuditEntry] = []
         self._sequence = 0
         self._lock = threading.Lock()
-        self._subscribers: List[Callable[[AuditEntry], None]] = []
-        
+        self._subscribers: list[Callable[[AuditEntry], None]] = []
+
         # Load existing entries if persistence enabled
         if persistence_path and os.path.exists(persistence_path):
             self._load()
-    
+
     def append(
         self,
         event_type: AuditEventType,
-        data: Dict[str, Any],
-        agent_id: Optional[str] = None,
-        user_id: Optional[str] = None
+        data: dict[str, Any],
+        agent_id: str | None = None,
+        user_id: str | None = None
     ) -> AuditEntry:
         """
         Append a new entry to the audit log.
-        
+
         Args:
             event_type: Type of audit event
             data: Event-specific data
             agent_id: Related agent (if applicable)
             user_id: Related user (if applicable)
-            
+
         Returns:
             The created audit entry
         """
@@ -177,7 +178,7 @@ class AuditLog:
                 prev_hash = self._entries[-1].hash
             else:
                 prev_hash = self.GENESIS_HASH
-            
+
             # Create entry
             self._sequence += 1
             entry = AuditEntry(
@@ -190,42 +191,42 @@ class AuditLog:
                 user_id=user_id,
                 data=data
             )
-            
+
             # Compute hash
             entry.hash = entry.compute_hash()
-            
+
             # Sign the hash
             signature = self._signing_key.sign(entry.hash.encode())
             entry.signature = signature.hex()
-            
+
             # Store
             self._entries.append(entry)
-            
+
             # Persist
             if self._persistence_path:
                 self._persist_entry(entry)
-            
+
             # Notify subscribers
             for subscriber in self._subscribers:
                 try:
                     subscriber(entry)
                 except Exception:
                     pass
-            
+
             return entry
-    
-    def verify_chain(self) -> Tuple[bool, Optional[int], str]:
+
+    def verify_chain(self) -> tuple[bool, int | None, str]:
         """
         Verify the integrity of the entire audit chain.
-        
+
         Returns:
             (valid, first_invalid_sequence, error_message)
         """
         if not self._entries:
             return (True, None, "")
-        
+
         prev_hash = self.GENESIS_HASH
-        
+
         for entry in self._entries:
             # Check hash chain
             if entry.prev_hash != prev_hash:
@@ -234,7 +235,7 @@ class AuditLog:
                     entry.sequence,
                     f"Hash chain broken at sequence {entry.sequence}"
                 )
-            
+
             # Verify hash
             computed_hash = entry.compute_hash()
             if entry.hash != computed_hash:
@@ -243,7 +244,7 @@ class AuditLog:
                     entry.sequence,
                     f"Hash mismatch at sequence {entry.sequence}"
                 )
-            
+
             # Verify signature
             try:
                 valid = self._signing_key.verify(
@@ -262,11 +263,11 @@ class AuditLog:
                     entry.sequence,
                     f"Signature verification error at {entry.sequence}: {e}"
                 )
-            
+
             prev_hash = entry.hash
-        
+
         return (True, None, "Chain verified successfully")
-    
+
     def verify_entry(self, entry: AuditEntry) -> bool:
         """Verify a single entry's signature."""
         try:
@@ -276,19 +277,19 @@ class AuditLog:
             )
         except Exception:
             return False
-    
+
     def get_entries(
         self,
-        start_sequence: Optional[int] = None,
-        end_sequence: Optional[int] = None,
-        event_type: Optional[AuditEventType] = None,
-        agent_id: Optional[str] = None,
-        user_id: Optional[str] = None,
+        start_sequence: int | None = None,
+        end_sequence: int | None = None,
+        event_type: AuditEventType | None = None,
+        agent_id: str | None = None,
+        user_id: str | None = None,
         limit: int = 100
-    ) -> List[AuditEntry]:
+    ) -> list[AuditEntry]:
         """
         Query audit entries with filters.
-        
+
         Args:
             start_sequence: Start from this sequence (inclusive)
             end_sequence: End at this sequence (inclusive)
@@ -296,16 +297,16 @@ class AuditLog:
             agent_id: Filter by agent
             user_id: Filter by user
             limit: Maximum entries to return
-            
+
         Returns:
             List of matching entries
         """
         results = []
-        
+
         for entry in reversed(self._entries):  # Most recent first
             if len(results) >= limit:
                 break
-            
+
             if start_sequence and entry.sequence < start_sequence:
                 continue
             if end_sequence and entry.sequence > end_sequence:
@@ -316,34 +317,34 @@ class AuditLog:
                 continue
             if user_id and entry.user_id != user_id:
                 continue
-            
+
             results.append(entry)
-        
+
         return results
-    
-    def get_by_id(self, entry_id: str) -> Optional[AuditEntry]:
+
+    def get_by_id(self, entry_id: str) -> AuditEntry | None:
         """Get entry by ID."""
         for entry in self._entries:
             if entry.id == entry_id:
                 return entry
         return None
-    
+
     def subscribe(self, callback: Callable[[AuditEntry], None]):
         """Subscribe to new entries."""
         self._subscribers.append(callback)
-    
+
     def compute_merkle_root(self) -> str:
         """
         Compute Merkle root of all entries.
-        
+
         This allows efficient verification that a specific entry
         is part of the log.
         """
         if not self._entries:
             return self.GENESIS_HASH
-        
+
         hashes = [e.hash for e in self._entries]
-        
+
         while len(hashes) > 1:
             new_hashes = []
             for i in range(0, len(hashes), 2):
@@ -354,13 +355,13 @@ class AuditLog:
                 ).hexdigest()
                 new_hashes.append(combined)
             hashes = new_hashes
-        
+
         return hashes[0]
-    
+
     def export(self, path: str, format: str = "json"):
         """
         Export audit log to file.
-        
+
         Args:
             path: Output file path
             format: Export format (json, jsonl, csv)
@@ -378,16 +379,16 @@ class AuditLog:
                     f.write(json.dumps(entry.to_dict()) + "\n")
         else:
             raise ValueError(f"Unsupported format: {format}")
-    
+
     def _persist_entry(self, entry: AuditEntry):
         """Persist single entry (append mode)."""
         with open(self._persistence_path, 'a') as f:
             f.write(json.dumps(entry.to_dict()) + "\n")
-    
+
     def _load(self):
         """Load entries from persistence file."""
         try:
-            with open(self._persistence_path, 'r') as f:
+            with open(self._persistence_path) as f:
                 for line in f:
                     if line.strip():
                         entry = AuditEntry.from_dict(json.loads(line))
@@ -395,20 +396,20 @@ class AuditLog:
                         self._sequence = max(self._sequence, entry.sequence)
         except Exception as e:
             print(f"Warning: Failed to load audit log: {e}")
-    
+
     @property
     def length(self) -> int:
         """Number of entries in log."""
         return len(self._entries)
-    
+
     @property
     def latest_hash(self) -> str:
         """Hash of most recent entry."""
         if self._entries:
             return self._entries[-1].hash
         return self.GENESIS_HASH
-    
-    def stats(self) -> Dict[str, Any]:
+
+    def stats(self) -> dict[str, Any]:
         """Get audit log statistics."""
         if not self._entries:
             return {
@@ -417,12 +418,12 @@ class AuditLog:
                 "last_timestamp": None,
                 "merkle_root": self.GENESIS_HASH
             }
-        
+
         event_counts = {}
         for entry in self._entries:
             event_type = entry.event_type.value
             event_counts[event_type] = event_counts.get(event_type, 0) + 1
-        
+
         return {
             "total_entries": len(self._entries),
             "first_timestamp": self._entries[0].timestamp,
@@ -436,15 +437,15 @@ class AuditLog:
 if __name__ == "__main__":
     print("AgentAuth Core Audit System Test")
     print("=" * 50)
-    
+
     from .crypto import KeyManager
-    
+
     # Initialize
     km = KeyManager()
     audit_log = AuditLog(km.audit_signing_key)
-    
-    print(f"[+] Audit log initialized")
-    
+
+    print("[+] Audit log initialized")
+
     # Add some entries
     entries = [
         (AuditEventType.AUTHORIZATION_REQUEST, {
@@ -466,7 +467,7 @@ if __name__ == "__main__":
             "remaining_daily": 450.01
         }),
     ]
-    
+
     for event_type, data in entries:
         entry = audit_log.append(
             event_type=event_type,
@@ -475,27 +476,27 @@ if __name__ == "__main__":
             user_id="user_abc"
         )
         print(f"  + {event_type.value}: {entry.id} (seq: {entry.sequence})")
-    
+
     print(f"\n[+] Total entries: {audit_log.length}")
-    
+
     # Verify chain
     valid, seq, msg = audit_log.verify_chain()
     print(f"[+] Chain verification: {'PASS' if valid else 'FAIL'}")
     if not valid:
         print(f"    Error at sequence {seq}: {msg}")
-    
+
     # Compute merkle root
     merkle_root = audit_log.compute_merkle_root()
     print(f"[+] Merkle root: {merkle_root[:32]}...")
-    
+
     # Query entries
     recent = audit_log.get_entries(limit=2)
-    print(f"\n[+] Most recent 2 entries:")
+    print("\n[+] Most recent 2 entries:")
     for entry in recent:
         print(f"    - {entry.event_type.value} at {entry.timestamp}")
-    
+
     # Stats
     stats = audit_log.stats()
     print(f"\n[+] Stats: {stats['total_entries']} entries, {len(stats['event_counts'])} event types")
-    
+
     print("\n[*] All audit tests passed!")

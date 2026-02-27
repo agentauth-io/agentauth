@@ -2,7 +2,7 @@
 Consent schemas - request/response models for /v1/consents
 """
 from datetime import datetime
-from typing import Optional, List
+
 from pydantic import BaseModel, Field
 
 
@@ -13,7 +13,7 @@ class ConsentIntent(BaseModel):
         description="Human-readable description of intent",
         examples=["Buy cheapest flight to NYC"]
     )
-    raw_input: Optional[str] = Field(
+    raw_input: str | None = Field(
         None,
         description="Original user input (voice/text)"
     )
@@ -24,23 +24,27 @@ class ConsentConstraints(BaseModel):
     max_amount: float = Field(
         ...,
         gt=0,
-        description="Maximum amount in the specified currency",
+        le=10_000_000,  # Maximum $10M per consent
+        description="Maximum amount in the specified currency (must be positive and <= $10,000,000)",
         examples=[500.0]
     )
     currency: str = Field(
         default="USD",
         min_length=3,
         max_length=3,
-        description="ISO 4217 currency code",
+        pattern=r"^[A-Z]{3}$",  # ISO 4217 currency code format
+        description="ISO 4217 currency code (uppercase, 3 letters)",
         examples=["USD", "EUR", "GBP"]
     )
-    allowed_merchants: Optional[List[str]] = Field(
+    allowed_merchants: list[str] | None = Field(
         None,
-        description="List of allowed merchant IDs (if restricted)"
+        max_length=100,  # Maximum 100 merchants in whitelist
+        description="List of allowed merchant IDs (if restricted, max 100)"
     )
-    allowed_categories: Optional[List[str]] = Field(
+    allowed_categories: list[str] | None = Field(
         None,
-        description="List of allowed merchant category codes (MCCs)"
+        max_length=50,  # Maximum 50 categories
+        description="List of allowed merchant category codes (MCCs, max 50)"
     )
 
 
@@ -72,7 +76,7 @@ class ConsentCreate(BaseModel):
     )
     intent: ConsentIntent
     constraints: ConsentConstraints
-    options: Optional[ConsentOptions] = Field(default_factory=ConsentOptions)
+    options: ConsentOptions | None = Field(default_factory=ConsentOptions)
     signature: str = Field(
         ...,
         description="Digital signature over intent + constraints"
@@ -81,7 +85,7 @@ class ConsentCreate(BaseModel):
         ...,
         description="User's public key for verification"
     )
-    
+
     model_config = {
         "json_schema_extra": {
             "examples": [
@@ -123,7 +127,7 @@ class ConsentResponse(BaseModel):
         ...,
         description="The constraints that were set"
     )
-    
+
     model_config = {
         "json_schema_extra": {
             "examples": [

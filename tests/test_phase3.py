@@ -5,6 +5,7 @@ Phase 3 Integration Test Script
 Tests LangChain and CrewAI integrations with the AgentAuth API.
 """
 import sys
+
 sys.path.insert(0, '/home/seyominaoto/Videos/AgentAuth/sdk/python/src')
 
 print("=" * 60)
@@ -16,24 +17,23 @@ print("\n📦 TEST 1: Import Integrations")
 print("-" * 40)
 try:
     from agentauth.integrations.langchain import (
+        HAS_LANGCHAIN,
         AuthorizedPurchaseTool,
         CheckSpendingLimitsTool,
         create_agentauth_tools,
-        HAS_LANGCHAIN
     )
-    print(f"  ✅ LangChain imports: OK")
+    print("  ✅ LangChain imports: OK")
     print(f"     HAS_LANGCHAIN: {HAS_LANGCHAIN}")
 except Exception as e:
     print(f"  ❌ LangChain imports: FAILED - {e}")
 
 try:
     from agentauth.integrations.crewai import (
+        HAS_CREWAI,
         AuthorizedPurchaseCrewTool,
         CheckLimitsCrewTool,
-        create_crewai_tools,
-        HAS_CREWAI
     )
-    print(f"  ✅ CrewAI imports: OK")
+    print("  ✅ CrewAI imports: OK")
     print(f"     HAS_CREWAI: {HAS_CREWAI}")
 except Exception as e:
     print(f"  ❌ CrewAI imports: FAILED - {e}")
@@ -43,7 +43,7 @@ print("\n🔑 TEST 2: Create Consent (get delegation token)")
 print("-" * 40)
 try:
     from agentauth import AgentAuth
-    
+
     client = AgentAuth(base_url="http://localhost:8000")
     consent = client.consents.create(
         user_id="test_user_phase3",
@@ -52,7 +52,7 @@ try:
         currency="USD"
     )
     token = consent.delegation_token
-    print(f"  ✅ Consent created")
+    print("  ✅ Consent created")
     print(f"     Token: {token[:30]}...")
 except Exception as e:
     print(f"  ❌ Consent creation: FAILED - {e}")
@@ -67,7 +67,7 @@ try:
         user_id="default"
     )
     result = limits_tool._run()
-    print(f"  ✅ CheckSpendingLimitsTool executed")
+    print("  ✅ CheckSpendingLimitsTool executed")
     print("     Result:")
     for line in result.split('\n')[:8]:
         print(f"       {line}")
@@ -84,7 +84,7 @@ if token:
             base_url="http://localhost:8000",
             agent_id="test_agent"
         )
-        
+
         # Test a valid purchase
         result = purchase_tool._run(
             item_description="Test Product",
@@ -92,14 +92,14 @@ if token:
             merchant="Amazon",
             category="ecommerce"
         )
-        
+
         if "AUTHORIZED" in result:
-            print(f"  ✅ Purchase authorized successfully")
+            print("  ✅ Purchase authorized successfully")
         elif "DENIED" in result:
-            print(f"  ⚠️ Purchase denied (expected if over limits)")
+            print("  ⚠️ Purchase denied (expected if over limits)")
         else:
-            print(f"  ❓ Unexpected result")
-        
+            print("  ❓ Unexpected result")
+
         print("     Result snippet:")
         for line in result.split('\n')[:6]:
             print(f"       {line}")
@@ -117,7 +117,7 @@ try:
         user_id="default"
     )
     result = crew_limits_tool._run()
-    print(f"  ✅ CheckLimitsCrewTool executed")
+    print("  ✅ CheckLimitsCrewTool executed")
     print("     Result:")
     for line in result.split('\n')[:5]:
         print(f"       {line}")
@@ -134,19 +134,19 @@ if token:
             base_url="http://localhost:8000",
             agent_id="crewai_test_agent"
         )
-        
+
         result = crew_purchase_tool._run(
             item_description="Test Service Subscription",
             amount=9.99,
             merchant="Stripe",
             category="saas"
         )
-        
+
         if "AUTHORIZED" in result:
-            print(f"  ✅ CrewAI purchase authorized")
+            print("  ✅ CrewAI purchase authorized")
         elif "DENIED" in result:
-            print(f"  ⚠️ CrewAI purchase denied")
-        
+            print("  ⚠️ CrewAI purchase denied")
+
         print("     Result snippet:")
         for line in result.split('\n')[:5]:
             print(f"       {line}")
@@ -176,6 +176,7 @@ else:
 print("\n🌐 TEST 8: API Endpoints Verification")
 print("-" * 40)
 import httpx
+
 endpoints = [
     ("GET", "/v1/limits", "Spending Limits"),
     ("GET", "/v1/limits/usage", "Usage Stats"),

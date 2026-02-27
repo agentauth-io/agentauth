@@ -3,17 +3,14 @@ Analytics API
 
 API endpoints for viewing authorization analytics and insights.
 """
-from decimal import Decimal
-from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.database import get_db
-from app.services.analytics import AnalyticsService
 from app.middleware import require_api_key
 from app.middleware.api_keys import get_current_user_id
-
+from app.models.database import get_db
+from app.services.analytics import AnalyticsService
 
 router = APIRouter(prefix="/v1/analytics", tags=["Analytics"])
 
@@ -33,28 +30,28 @@ class SummaryResponse(BaseModel):
     today_amount: str
     month_authorizations: int
     month_amount: str
-    top_merchants: List[dict]
-    top_agents: List[dict]
+    top_merchants: list[dict]
+    top_agents: list[dict]
 
 
 class TrendResponse(BaseModel):
     """Trend data response."""
-    dates: List[str]
-    authorizations: List[int]
-    amounts: List[float]
-    approval_rates: List[float]
+    dates: list[str]
+    authorizations: list[int]
+    amounts: list[float]
+    approval_rates: list[float]
 
 
 class LogEntry(BaseModel):
     """Authorization log entry."""
     id: str
-    agent_id: Optional[str]
-    merchant: Optional[str]
+    agent_id: str | None
+    merchant: str | None
     amount: str
-    category: Optional[str]
+    category: str | None
     decision: str
-    denial_reason: Optional[str]
-    processing_time_ms: Optional[int]
+    denial_reason: str | None
+    processing_time_ms: int | None
     created_at: str
 
 
@@ -69,12 +66,12 @@ async def get_summary(
 ):
     """
     Get analytics summary for dashboard.
-    
+
     Returns overall stats, today's activity, and top merchants/agents.
     """
     service = AnalyticsService(db)
     summary = await service.get_summary(user_id, days)
-    
+
     return SummaryResponse(
         total_authorizations=summary.total_authorizations,
         total_approved=summary.total_approved,
@@ -101,12 +98,12 @@ async def get_trends(
 ):
     """
     Get trend data for charts.
-    
+
     Returns daily authorization counts, amounts, and approval rates.
     """
     service = AnalyticsService(db)
     trends = await service.get_trends(user_id, days)
-    
+
     return TrendResponse(
         dates=trends.dates,
         authorizations=trends.authorizations,
@@ -115,23 +112,23 @@ async def get_trends(
     )
 
 
-@router.get("/logs", response_model=List[LogEntry])
+@router.get("/logs", response_model=list[LogEntry])
 async def get_logs(
     user_id: str = Depends(get_current_user_id),
     limit: int = Query(50, ge=1, le=500, description="Maximum logs to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
-    decision: Optional[str] = Query(None, description="Filter by decision: approved/denied"),
+    decision: str | None = Query(None, description="Filter by decision: approved/denied"),
     db: AsyncSession = Depends(get_db),
     api_key: dict = Depends(require_api_key)
 ):
     """
     Get authorization logs.
-    
+
     Returns recent authorization requests with filtering options.
     """
     service = AnalyticsService(db)
     logs = await service.get_authorization_logs(user_id, limit, offset, decision)
-    
+
     return [LogEntry(**log) for log in logs]
 
 
@@ -143,12 +140,12 @@ async def get_agent_stats(
 ):
     """
     Get per-agent statistics.
-    
+
     Returns breakdown of authorizations by agent.
     """
     service = AnalyticsService(db)
     agents = await service._get_top_agents(user_id, limit=20)
-    
+
     return {"agents": agents}
 
 
@@ -160,10 +157,10 @@ async def get_merchant_stats(
 ):
     """
     Get per-merchant statistics.
-    
+
     Returns breakdown of authorizations by merchant.
     """
     service = AnalyticsService(db)
     merchants = await service._get_top_merchants(user_id, limit=20)
-    
+
     return {"merchants": merchants}
