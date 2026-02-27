@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentauth"
-version = "0.1.0"
+version = "0.3.0"
 description = "Authorization layer for AI agent purchases"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -45,6 +45,8 @@ dependencies = [
     "cryptography>=42.0.0",
     "bcrypt>=4.0.0",
     "sentry-sdk[fastapi,sqlalchemy]>=2.0.0",
+    "email-validator>=2.0.0",
+    "rich>=13.0.0",
 ]
 
 [project.optional-dependencies]
@@ -87,7 +89,8 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["tests"]
+testpaths = ["tests", "sdk/python/tests"]
+addopts = "-v --tb=short"
 
 [tool.mypy]
 python_version = "3.10"

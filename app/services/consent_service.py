@@ -179,6 +179,15 @@ class ConsentService:
         consent.revoked_at = datetime.now(timezone.utc)
         consent.is_active = False
         await db.flush()
+        
+        # Invalidate the authorization cache so revoked consents are
+        # rejected immediately instead of being served from stale cache.
+        try:
+            from app.services.auth_service import _consent_cache
+            _consent_cache.pop(consent_id, None)
+        except Exception:
+            pass  # Cache invalidation is best-effort
+        
         return True
 
 

@@ -12,7 +12,7 @@ from fastapi.responses import HTMLResponse
 from app.config import get_settings
 from app.logging_config import setup_logging, api_logger
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 from app.api import consents_router, authorize_router, verify_router, payments_router, dashboard_router, admin_router, limits_router, rules_router, analytics_router, webhooks_router, billing_router, agents_router, auth_router
 from app.api.connect import router as connect_router
 from sqlalchemy.ext.asyncio import AsyncSession

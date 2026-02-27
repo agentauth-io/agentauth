@@ -22,21 +22,24 @@ from agentauth.exceptions import (
     RateLimitExceeded,
 )
 
+SDK_VERSION = "0.3.0"
+_USER_AGENT = f"agentauth-python/{SDK_VERSION}"
+
 
 class ConsentsAPI:
     """Consents API wrapper."""
-    
+
     def __init__(self, client: "AgentAuth"):
         self._client = client
-    
+
     def create(
         self,
         user_id: str,
         intent: str,
         max_amount: float,
         currency: str = "USD",
-        allowed_merchants: Optional[list[str]] = None,
-        allowed_categories: Optional[list[str]] = None,
+        allowed_merchants: Optional[List[str]] = None,
+        allowed_categories: Optional[List[str]] = None,
         expires_in_seconds: int = 3600,
         single_use: bool = True,
         signature: str = "sdk_generated",
@@ -44,7 +47,7 @@ class ConsentsAPI:
     ) -> Consent:
         """
         Create a new user consent.
-        
+
         Args:
             user_id: Unique identifier for the user
             intent: Description of what the user wants to authorize
@@ -56,7 +59,7 @@ class ConsentsAPI:
             single_use: Whether consent is single-use
             signature: User's signature
             public_key: User's public key
-            
+
         Returns:
             Consent object with delegation_token
         """
@@ -76,18 +79,123 @@ class ConsentsAPI:
             "signature": signature,
             "public_key": public_key,
         }
-        
+
         response = self._client._request("POST", "/v1/consents", json=data)
         return Consent(**response)
-    
+
+    def list(
+        self,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> Dict[str, Any]:
+        """List consents with pagination."""
+        return self._client._request(
+            "GET", "/v1/consents", params={"limit": limit, "offset": offset}
+        )
+
     def get(self, consent_id: str) -> Dict[str, Any]:
         """Get consent details by ID."""
         return self._client._request("GET", f"/v1/consents/{consent_id}")
-    
+
     def revoke(self, consent_id: str) -> bool:
         """Revoke a consent."""
         self._client._request("DELETE", f"/v1/consents/{consent_id}")
         return True
+
+
+class AgentsAPI:
+    """Agents API wrapper."""
+
+    def __init__(self, client: "AgentAuth"):
+        self._client = client
+
+    def list(self) -> Dict[str, Any]:
+        """List all registered agents."""
+        return self._client._request("GET", "/v1/agents")
+
+    def create(self, name: str, description: Optional[str] = None, permissions: Optional[List[str]] = None) -> Dict[str, Any]:
+        """Register a new agent."""
+        data: Dict[str, Any] = {"name": name}
+        if description:
+            data["description"] = description
+        if permissions:
+            data["permissions"] = permissions
+        return self._client._request("POST", "/v1/agents", json=data)
+
+    def get(self, agent_id: str) -> Dict[str, Any]:
+        """Get agent details."""
+        return self._client._request("GET", f"/v1/agents/{agent_id}")
+
+    def delete(self, agent_id: str) -> Dict[str, Any]:
+        """Delete an agent."""
+        return self._client._request("DELETE", f"/v1/agents/{agent_id}")
+
+
+class LimitsAPI:
+    """Limits API wrapper."""
+
+    def __init__(self, client: "AgentAuth"):
+        self._client = client
+
+    def get(self, user_id: Optional[str] = None) -> Dict[str, Any]:
+        """Get spending limits."""
+        params = {"user_id": user_id} if user_id else {}
+        return self._client._request("GET", "/v1/limits", params=params)
+
+    def set(
+        self,
+        user_id: str,
+        daily_limit: Optional[float] = None,
+        monthly_limit: Optional[float] = None,
+        per_transaction_limit: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        """Set spending limits."""
+        data: Dict[str, Any] = {"user_id": user_id}
+        if daily_limit is not None:
+            data["daily_limit"] = daily_limit
+        if monthly_limit is not None:
+            data["monthly_limit"] = monthly_limit
+        if per_transaction_limit is not None:
+            data["per_transaction_limit"] = per_transaction_limit
+        return self._client._request("POST", "/v1/limits", json=data)
+
+    def usage(self, user_id: Optional[str] = None) -> Dict[str, Any]:
+        """Get usage stats."""
+        params = {"user_id": user_id} if user_id else {}
+        return self._client._request("GET", "/v1/limits/usage", params=params)
+
+
+class WebhooksAPI:
+    """Webhooks API wrapper."""
+
+    def __init__(self, client: "AgentAuth"):
+        self._client = client
+
+    def list(self) -> Dict[str, Any]:
+        """List configured webhooks."""
+        return self._client._request("GET", "/v1/webhooks")
+
+    def create(self, url: str, events: List[str], secret: Optional[str] = None) -> Dict[str, Any]:
+        """Register a new webhook."""
+        data: Dict[str, Any] = {"url": url, "events": events}
+        if secret:
+            data["secret"] = secret
+        return self._client._request("POST", "/v1/webhooks", json=data)
+
+    def delete(self, webhook_id: str) -> Dict[str, Any]:
+        """Delete a webhook."""
+        return self._client._request("DELETE", f"/v1/webhooks/{webhook_id}")
+
+
+class AnalyticsAPI:
+    """Analytics API wrapper."""
+
+    def __init__(self, client: "AgentAuth"):
+        self._client = client
+
+    def summary(self, period: str = "7d") -> Dict[str, Any]:
+        """Get analytics summary."""
+        return self._client._request("GET", "/v1/analytics", params={"period": period})
 
 
 class AgentAuth:
@@ -131,7 +239,7 @@ class AgentAuth:
     ):
         """
         Initialize the AgentAuth client.
-        
+
         Args:
             api_key: API key for authentication (optional for local dev)
             base_url: Base URL for the AgentAuth API
@@ -140,20 +248,27 @@ class AgentAuth:
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
-        
+
         # Initialize API wrappers
         self.consents = ConsentsAPI(self)
-        
+        self.agents = AgentsAPI(self)
+        self.limits = LimitsAPI(self)
+        self.webhooks = WebhooksAPI(self)
+        self.analytics = AnalyticsAPI(self)
+
         # Retry configuration
         self.max_retries = 3
         self.base_delay = 0.5  # seconds
         self.max_delay = 4.0   # seconds
-        
+
         # Setup HTTP client
-        headers = {"Content-Type": "application/json"}
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": _USER_AGENT,
+        }
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
-        
+
         self._http = httpx.Client(
             base_url=self.base_url,
             headers=headers,
@@ -393,18 +508,18 @@ class AgentAuth:
 
 class AsyncConsentsAPI:
     """Async Consents API wrapper."""
-    
+
     def __init__(self, client: "AsyncAgentAuth"):
         self._client = client
-    
+
     async def create(
         self,
         user_id: str,
         intent: str,
         max_amount: float,
         currency: str = "USD",
-        allowed_merchants: Optional[list[str]] = None,
-        allowed_categories: Optional[list[str]] = None,
+        allowed_merchants: Optional[List[str]] = None,
+        allowed_categories: Optional[List[str]] = None,
         expires_in_seconds: int = 3600,
         single_use: bool = True,
         signature: str = "sdk_generated",
@@ -427,9 +542,63 @@ class AsyncConsentsAPI:
             "signature": signature,
             "public_key": public_key,
         }
-        
+
         response = await self._client._request("POST", "/v1/consents", json=data)
         return Consent(**response)
+
+    async def list(self, limit: int = 20, offset: int = 0) -> Dict[str, Any]:
+        """List consents with pagination (async)."""
+        return await self._client._request(
+            "GET", "/v1/consents", params={"limit": limit, "offset": offset}
+        )
+
+    async def get(self, consent_id: str) -> Dict[str, Any]:
+        """Get consent details by ID (async)."""
+        return await self._client._request("GET", f"/v1/consents/{consent_id}")
+
+    async def revoke(self, consent_id: str) -> bool:
+        """Revoke a consent (async)."""
+        await self._client._request("DELETE", f"/v1/consents/{consent_id}")
+        return True
+
+
+class AsyncAgentsAPI:
+    """Async Agents API wrapper."""
+
+    def __init__(self, client: "AsyncAgentAuth"):
+        self._client = client
+
+    async def list(self) -> Dict[str, Any]:
+        return await self._client._request("GET", "/v1/agents")
+
+    async def create(self, name: str, description: Optional[str] = None, permissions: Optional[List[str]] = None) -> Dict[str, Any]:
+        data: Dict[str, Any] = {"name": name}
+        if description:
+            data["description"] = description
+        if permissions:
+            data["permissions"] = permissions
+        return await self._client._request("POST", "/v1/agents", json=data)
+
+    async def get(self, agent_id: str) -> Dict[str, Any]:
+        return await self._client._request("GET", f"/v1/agents/{agent_id}")
+
+    async def delete(self, agent_id: str) -> Dict[str, Any]:
+        return await self._client._request("DELETE", f"/v1/agents/{agent_id}")
+
+
+class AsyncLimitsAPI:
+    """Async Limits API wrapper."""
+
+    def __init__(self, client: "AsyncAgentAuth"):
+        self._client = client
+
+    async def get(self, user_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {"user_id": user_id} if user_id else {}
+        return await self._client._request("GET", "/v1/limits", params=params)
+
+    async def usage(self, user_id: Optional[str] = None) -> Dict[str, Any]:
+        params = {"user_id": user_id} if user_id else {}
+        return await self._client._request("GET", "/v1/limits/usage", params=params)
 
 
 class AsyncAgentAuth:
@@ -461,16 +630,21 @@ class AsyncAgentAuth:
         self.timeout = timeout
         
         self.consents = AsyncConsentsAPI(self)
-        
+        self.agents = AsyncAgentsAPI(self)
+        self.limits = AsyncLimitsAPI(self)
+
         # Retry configuration
         self.max_retries = 3
         self.base_delay = 0.5  # seconds
         self.max_delay = 4.0   # seconds
-        
-        headers = {"Content-Type": "application/json"}
+
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": _USER_AGENT,
+        }
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
-        
+
         self._http = httpx.AsyncClient(
             base_url=self.base_url,
             headers=headers,
