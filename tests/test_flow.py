@@ -8,6 +8,7 @@ Tests the complete flow:
 
 Fixtures are defined in conftest.py for proper test isolation.
 """
+
 import uuid
 
 import pytest
@@ -76,17 +77,13 @@ class TestTokenService:
 
         # Under limit - should pass
         result = token_service.verify_token(
-            token,
-            request_amount=300.0,
-            request_currency="USD"
+            token, request_amount=300.0, request_currency="USD"
         )
         assert result.valid is True
 
         # Over limit - should fail
         result = token_service.verify_token(
-            token,
-            request_amount=600.0,
-            request_currency="USD"
+            token, request_amount=600.0, request_currency="USD"
         )
         assert result.valid is False
         assert result.reason == "amount_exceeded"
@@ -105,17 +102,13 @@ class TestTokenService:
 
         # Matching currency - should pass
         result = token_service.verify_token(
-            token,
-            request_amount=300.0,
-            request_currency="USD"
+            token, request_amount=300.0, request_currency="USD"
         )
         assert result.valid is True
 
         # Different currency - should fail
         result = token_service.verify_token(
-            token,
-            request_amount=300.0,
-            request_currency="EUR"
+            token, request_amount=300.0, request_currency="EUR"
         )
         assert result.valid is False
         assert result.reason == "currency_mismatch"
@@ -138,7 +131,7 @@ class TestTokenService:
             token,
             request_amount=300.0,
             request_currency="USD",
-            request_merchant_id="delta"
+            request_merchant_id="delta",
         )
         assert result.valid is True
 
@@ -147,7 +140,7 @@ class TestTokenService:
             token,
             request_amount=300.0,
             request_currency="USD",
-            request_merchant_id="southwest"
+            request_merchant_id="southwest",
         )
         assert result.valid is False
         assert result.reason == "merchant_not_allowed"
@@ -163,19 +156,12 @@ class TestConsentFlow:
             "/v1/consents",
             json={
                 "user_id": "user_123",
-                "intent": {
-                    "description": "Buy cheapest flight to NYC"
-                },
-                "constraints": {
-                    "max_amount": 500,
-                    "currency": "USD"
-                },
-                "options": {
-                    "expires_in_seconds": 3600
-                },
+                "intent": {"description": "Buy cheapest flight to NYC"},
+                "constraints": {"max_amount": 500, "currency": "USD"},
+                "options": {"expires_in_seconds": 3600},
                 "signature": "test_signature",
-                "public_key": "test_public_key"
-            }
+                "public_key": "test_public_key",
+            },
         )
 
         assert response.status_code == 201
@@ -202,8 +188,8 @@ class TestFullFlow:
                 "constraints": {"max_amount": 500, "currency": "USD"},
                 "options": {"expires_in_seconds": 3600},
                 "signature": "sig",
-                "public_key": "key"
-            }
+                "public_key": "key",
+            },
         )
         assert consent_response.status_code == 201
         consent_data = consent_response.json()
@@ -218,9 +204,9 @@ class TestFullFlow:
                 "transaction": {
                     "amount": 347,
                     "currency": "USD",
-                    "merchant_id": "delta_airlines"
-                }
-            }
+                    "merchant_id": "delta_airlines",
+                },
+            },
         )
         assert auth_response.status_code == 200
         auth_data = auth_response.json()
@@ -232,11 +218,8 @@ class TestFullFlow:
             "/v1/verify",
             json={
                 "authorization_code": authorization_code,
-                "transaction": {
-                    "amount": 347,
-                    "currency": "USD"
-                }
-            }
+                "transaction": {"amount": 347, "currency": "USD"},
+            },
         )
         assert verify_response.status_code == 200
         verify_data = verify_response.json()
@@ -257,8 +240,8 @@ class TestFullFlow:
                 "constraints": {"max_amount": 500, "currency": "USD"},
                 "options": {"expires_in_seconds": 3600},
                 "signature": "sig",
-                "public_key": "key"
-            }
+                "public_key": "key",
+            },
         )
         delegation_token = consent_response.json()["delegation_token"]
 
@@ -268,11 +251,8 @@ class TestFullFlow:
             json={
                 "delegation_token": delegation_token,
                 "action": "payment",
-                "transaction": {
-                    "amount": 600,
-                    "currency": "USD"
-                }
-            }
+                "transaction": {"amount": 600, "currency": "USD"},
+            },
         )
         assert auth_response.status_code == 200
         auth_data = auth_response.json()

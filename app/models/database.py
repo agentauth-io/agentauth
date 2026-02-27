@@ -6,6 +6,7 @@ OPTIMIZED for low-latency authorization:
 - Pool pre-ping for connection health
 - Fast timeout settings
 """
+
 import ssl
 from collections.abc import AsyncGenerator
 
@@ -51,11 +52,11 @@ engine = create_async_engine(
     future=True,
     connect_args={"ssl": ssl_context},
     # Connection pool settings for low latency
-    pool_size=5,           # Minimum connections to keep ready
-    max_overflow=15,       # Allow up to 20 total connections
-    pool_pre_ping=False,   # Disabled - causes issues with Neon pooler
-    pool_recycle=300,      # Recycle connections every 5 mins
-    pool_timeout=10,       # Wait max 10s for connection
+    pool_size=5,  # Minimum connections to keep ready
+    max_overflow=15,  # Allow up to 20 total connections
+    pool_pre_ping=False,  # Disabled - causes issues with Neon pooler
+    pool_recycle=300,  # Recycle connections every 5 mins
+    pool_timeout=10,  # Wait max 10s for connection
 )
 
 # Create async session factory
@@ -68,6 +69,7 @@ async_session_maker = async_sessionmaker(
 
 class Base(DeclarativeBase):
     """Base class for all models."""
+
     pass
 
 

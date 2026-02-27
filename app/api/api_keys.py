@@ -3,6 +3,7 @@ API Key Management API
 
 Endpoints for managing API keys including rotation and revocation.
 """
+
 import hashlib
 import logging
 import secrets
@@ -24,11 +25,13 @@ router = APIRouter(prefix="/v1/api-keys", tags=["API Keys"])
 
 class RotateKeyRequest(BaseModel):
     """Request to rotate an API key."""
+
     ttl_days: int = Field(default=90, ge=1, le=365, description="New key TTL in days")
 
 
 class RotateKeyResponse(BaseModel):
     """Response after key rotation."""
+
     key_id: str
     new_key: str
     old_key_expires_at: str
@@ -38,6 +41,7 @@ class RotateKeyResponse(BaseModel):
 
 class RevokeKeyResponse(BaseModel):
     """Response after key revocation."""
+
     key_id: str
     revoked_at: str
     message: str
@@ -62,7 +66,7 @@ async def rotate_api_key(
             and_(
                 ApiKey.key_id == key_id,
                 ApiKey.owner == current_user_id,
-                ApiKey.is_active
+                ApiKey.is_active,
             )
         )
     )
@@ -71,14 +75,14 @@ async def rotate_api_key(
     if not existing_key:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="API key not found or you don't have permission to rotate it"
+            detail="API key not found or you don't have permission to rotate it",
         )
 
     # Check if key is already expired
     if existing_key.expires_at and existing_key.expires_at < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot rotate an expired key. Generate a new one instead."
+            detail="Cannot rotate an expired key. Generate a new one instead.",
         )
 
     # Set old key to expire in 24 hours
@@ -112,7 +116,7 @@ async def rotate_api_key(
         new_key=full_key,
         old_key_expires_at=old_key_expires_at.isoformat(),
         new_key_expires_at=new_key_expires_at.isoformat(),
-        message="Key rotated successfully. Old key will expire in 24 hours. Save the new key securely."
+        message="Key rotated successfully. Old key will expire in 24 hours. Save the new key securely.",
     )
 
 
@@ -133,7 +137,7 @@ async def revoke_api_key(
             and_(
                 ApiKey.key_id == key_id,
                 ApiKey.owner == current_user_id,
-                ApiKey.is_active
+                ApiKey.is_active,
             )
         )
     )
@@ -142,7 +146,7 @@ async def revoke_api_key(
     if not api_key:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="API key not found or you don't have permission to revoke it"
+            detail="API key not found or you don't have permission to revoke it",
         )
 
     # Revoke the key
@@ -154,6 +158,7 @@ async def revoke_api_key(
 
     # Clear from cache
     from app.middleware.api_keys import _KEY_CACHE
+
     key_hash = hashlib.sha256(api_key.key_hash.encode()).hexdigest()
     _KEY_CACHE.pop(key_hash, None)
 
@@ -162,7 +167,7 @@ async def revoke_api_key(
     return RevokeKeyResponse(
         key_id=key_id,
         revoked_at=revoked_at.isoformat(),
-        message="Key revoked successfully. It will no longer work."
+        message="Key revoked successfully. It will no longer work.",
     )
 
 
@@ -175,12 +180,7 @@ async def list_api_keys(
     List all API keys for the authenticated user.
     """
     result = await db.execute(
-        select(ApiKey).where(
-            and_(
-                ApiKey.owner == current_user_id,
-                ApiKey.is_active
-            )
-        )
+        select(ApiKey).where(and_(ApiKey.owner == current_user_id, ApiKey.is_active))
     )
     keys = result.scalars().all()
 
@@ -190,11 +190,13 @@ async def list_api_keys(
                 "key_id": key.key_id,
                 "created_at": key.created_at.isoformat() if key.created_at else None,
                 "expires_at": key.expires_at.isoformat() if key.expires_at else None,
-                "last_used_at": key.last_used_at.isoformat() if key.last_used_at else None,
+                "last_used_at": (
+                    key.last_used_at.isoformat() if key.last_used_at else None
+                ),
                 "permissions": key.permissions,
                 "rate_limit": key.rate_limit,
             }
             for key in keys
         ],
-        "total": len(keys)
+        "total": len(keys),
     }

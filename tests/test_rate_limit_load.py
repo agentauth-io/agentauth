@@ -7,6 +7,7 @@ Tests the rate limiter under high concurrency to verify:
 3. Performance under stress
 4. Distributed rate limiting behavior
 """
+
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from unittest.mock import AsyncMock, MagicMock
@@ -21,6 +22,7 @@ from app.middleware.rate_limiter import (
 # ============================================================================
 # Load Test Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def fresh_store():
@@ -42,6 +44,7 @@ def mock_request():
 # ============================================================================
 # Concurrent Rate Limiting Tests
 # ============================================================================
+
 
 class TestConcurrentRateLimiting:
     """Tests for rate limiting under concurrent load."""
@@ -129,6 +132,7 @@ class TestConcurrentRateLimiting:
 # Performance Tests
 # ============================================================================
 
+
 class TestRateLimitPerformance:
     """Performance tests for rate limiting operations."""
 
@@ -203,6 +207,7 @@ class TestRateLimitPerformance:
 # Window Boundary Tests
 # ============================================================================
 
+
 class TestWindowBoundaries:
     """Tests for rate limit window edge cases."""
 
@@ -214,7 +219,9 @@ class TestWindowBoundaries:
 
         # Use up all requests
         for _ in range(max_requests):
-            limited, _, _ = fresh_store.is_rate_limited(key, max_requests, window_seconds)
+            limited, _, _ = fresh_store.is_rate_limited(
+                key, max_requests, window_seconds
+            )
             assert not limited
 
         # Next request should be limited
@@ -236,7 +243,9 @@ class TestWindowBoundaries:
 
         # Use half the quota
         for _ in range(5):
-            limited, remaining, _ = fresh_store.is_rate_limited(key, max_requests, window_seconds)
+            limited, remaining, _ = fresh_store.is_rate_limited(
+                key, max_requests, window_seconds
+            )
             assert not limited
 
         # Check remaining
@@ -277,6 +286,7 @@ class TestWindowBoundaries:
 # Edge Case Tests
 # ============================================================================
 
+
 class TestEdgeCases:
     """Tests for edge cases and error conditions."""
 
@@ -295,7 +305,9 @@ class TestEdgeCases:
 
         # Should allow requests
         for _ in range(10):
-            limited, _, _ = fresh_store.is_rate_limited(key, max_requests, window_seconds)
+            limited, _, _ = fresh_store.is_rate_limited(
+                key, max_requests, window_seconds
+            )
             assert not limited
 
     def test_very_long_window(self, fresh_store):
@@ -306,11 +318,15 @@ class TestEdgeCases:
 
         # Use up quota
         for _ in range(max_requests):
-            limited, _, _ = fresh_store.is_rate_limited(key, max_requests, window_seconds)
+            limited, _, _ = fresh_store.is_rate_limited(
+                key, max_requests, window_seconds
+            )
             assert not limited
 
         # Should be limited for a long time
-        limited, _, reset_time = fresh_store.is_rate_limited(key, max_requests, window_seconds)
+        limited, _, reset_time = fresh_store.is_rate_limited(
+            key, max_requests, window_seconds
+        )
         assert limited
         assert reset_time > 3500  # Should be close to an hour
 
@@ -355,6 +371,7 @@ class TestEdgeCases:
 # ============================================================================
 # Cleanup Tests
 # ============================================================================
+
 
 class TestCleanup:
     """Tests for rate limit store cleanup."""
@@ -402,6 +419,7 @@ class TestCleanup:
 # Middleware Integration Tests
 # ============================================================================
 
+
 class TestMiddlewareIntegration:
     """Tests for rate limit middleware integration."""
 
@@ -439,13 +457,15 @@ class TestMiddlewareIntegration:
         success = 0
         for _ in range(15):  # Strict limit is 10/min
             response = await middleware.dispatch(mock_request, call_next)
-            if hasattr(response, 'status_code') and response.status_code == 429:
+            if hasattr(response, "status_code") and response.status_code == 429:
                 rate_limited += 1
             else:
                 success += 1
 
         # Some should be rate limited (limit is 10, so at least 5 should be limited)
-        assert rate_limited > 0, f"Expected some rate limit responses, got {success} success, {rate_limited} limited"
+        assert (
+            rate_limited > 0
+        ), f"Expected some rate limit responses, got {success} success, {rate_limited} limited"
 
     @pytest.mark.asyncio
     async def test_middleware_api_key_rate_limit(self, mock_request):
@@ -466,6 +486,7 @@ class TestMiddlewareIntegration:
 # ============================================================================
 # Stress Tests
 # ============================================================================
+
 
 class TestStress:
     """Stress tests for rate limiting."""
@@ -535,6 +556,7 @@ class TestStress:
 # Redis Integration Tests (if available)
 # ============================================================================
 
+
 class TestRedisIntegration:
     """Tests for Redis-backed rate limiting."""
 
@@ -556,6 +578,7 @@ class TestRedisIntegration:
 # Summary Statistics
 # ============================================================================
 
+
 def test_rate_limit_statistics():
     """Generate summary statistics for rate limiting."""
     store = RateLimitStore()
@@ -563,7 +586,12 @@ def test_rate_limit_statistics():
     # Run various scenarios
     scenarios = [
         ("single_key", lambda: store.is_rate_limited("stat_key", 100, 60)),
-        ("many_keys", lambda: store.is_rate_limited(f"stat_key_{hash(str(time.time()))}", 100, 60)),
+        (
+            "many_keys",
+            lambda: store.is_rate_limited(
+                f"stat_key_{hash(str(time.time()))}", 100, 60
+            ),
+        ),
     ]
 
     for name, func in scenarios:

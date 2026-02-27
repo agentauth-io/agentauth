@@ -46,6 +46,7 @@ router = APIRouter(
 
 # ==================== Request/Response Models ====================
 
+
 class ThreatAssessmentRequest(BaseModel):
     request_id: str | None = None
     agent_id: str
@@ -100,6 +101,7 @@ class ConsensusOperationRequest(BaseModel):
 
 # ==================== Threat Intelligence ====================
 
+
 @router.post("/threat/assess")
 async def assess_threat(request: ThreatAssessmentRequest):
     """
@@ -109,17 +111,19 @@ async def assess_threat(request: ThreatAssessmentRequest):
     """
     ti = get_threat_intelligence()
 
-    assessment = ti.assess_threat({
-        "request_id": request.request_id,
-        "agent_id": request.agent_id,
-        "action": request.action,
-        "amount": request.amount,
-        "merchant": request.merchant,
-        "ip_address": request.ip_address,
-        "trust_score": request.trust_score,
-        "new_device": request.new_device,
-        "distance_km": request.distance_km,
-    })
+    assessment = ti.assess_threat(
+        {
+            "request_id": request.request_id,
+            "agent_id": request.agent_id,
+            "action": request.action,
+            "amount": request.amount,
+            "merchant": request.merchant,
+            "ip_address": request.ip_address,
+            "trust_score": request.trust_score,
+            "new_device": request.new_device,
+            "distance_km": request.distance_km,
+        }
+    )
 
     return assessment.to_dict()
 
@@ -146,6 +150,7 @@ async def block_ip(ip: str):
 
 
 # ==================== Blockchain Audit Trail ====================
+
 
 @router.post("/audit/log")
 async def create_audit_log(request: AuditLogRequest):
@@ -254,6 +259,7 @@ async def flush_audit():
 
 
 # ==================== Vault Secrets Management ====================
+
 
 @router.post("/vault/secrets")
 async def store_secret(request: SecretRequest):
@@ -369,6 +375,7 @@ async def get_vault_health():
 
 # ==================== Zero-Trust Mesh ====================
 
+
 @router.post("/mesh/services")
 async def register_service(request: ServiceRegistrationRequest):
     """Register a service in the zero-trust mesh."""
@@ -463,6 +470,7 @@ async def get_certificate_revocation_list():
 
 # ==================== Distributed Consensus ====================
 
+
 @router.post("/consensus/submit")
 async def submit_consensus_operation(request: ConsensusOperationRequest):
     """Submit an operation for distributed consensus."""
@@ -507,6 +515,7 @@ async def get_consensus_status():
 
 # ==================== Unified Security Dashboard ====================
 
+
 @router.get("/dashboard")
 async def get_security_dashboard():
     """Get unified security dashboard data."""
@@ -531,6 +540,7 @@ async def get_security_dashboard():
 
 
 # ==================== Health Check ====================
+
 
 @router.get("/health")
 async def security_health_check():

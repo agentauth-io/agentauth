@@ -78,8 +78,8 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                 status_code=400,
                 content={
                     "error": "invalid_idempotency_key",
-                    "detail": "Idempotency-Key must be at least 16 characters"
-                }
+                    "detail": "Idempotency-Key must be at least 16 characters",
+                },
             )
 
         # Create composite key with endpoint and method
@@ -95,8 +95,8 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                 content=cached_response.get("body"),
                 headers={
                     "Idempotent-Replayed": "true",
-                    "X-Idempotency-Key": idempotency_key
-                }
+                    "X-Idempotency-Key": idempotency_key,
+                },
             )
 
         # Try to acquire lock (prevent race conditions)
@@ -108,8 +108,8 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                 status_code=409,
                 content={
                     "error": "idempotency_conflict",
-                    "detail": "A request with this idempotency key is already in progress"
-                }
+                    "detail": "A request with this idempotency key is already in progress",
+                },
             )
 
         try:
@@ -125,20 +125,21 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
 
                 # Cache it
                 await self._cache_response(
-                    cache_key,
-                    response.status_code,
-                    body.decode() if body else "{}"
+                    cache_key, response.status_code, body.decode() if body else "{}"
                 )
 
                 # Return new response with body
                 import json
+
                 return JSONResponse(
                     status_code=response.status_code,
-                    content=json.loads(body.decode()) if body else {},  # Safe JSON parsing
+                    content=(
+                        json.loads(body.decode()) if body else {}
+                    ),  # Safe JSON parsing
                     headers={
                         "X-Idempotency-Key": idempotency_key,
-                        **dict(response.headers)
-                    }
+                        **dict(response.headers),
+                    },
                 )
 
             return response
@@ -158,26 +159,26 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         """Get cached response from Redis."""
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             return await cache.check_idempotency(cache_key)
         except Exception:
             return None
 
     async def _cache_response(
-        self,
-        cache_key: str,
-        status_code: int,
-        body: str
+        self, cache_key: str, status_code: int, body: str
     ) -> bool:
         """Cache response in Redis."""
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             import json
+
             return await cache.set_idempotency(
                 cache_key,
                 {"status_code": status_code, "body": json.loads(body) if body else {}},
-                ttl_hours=self.TTL_HOURS
+                ttl_hours=self.TTL_HOURS,
             )
         except Exception:
             return False
@@ -186,6 +187,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         """Acquire distributed lock."""
         try:
             from app.services.cache_service import get_redis
+
             client = await get_redis()
             lock_key = f"lock:{cache_key}"
             # SET NX with 60 second timeout
@@ -198,11 +200,13 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         """Release distributed lock."""
         try:
             from app.services.cache_service import get_redis
+
             client = await get_redis()
             lock_key = f"lock:{cache_key}"
             await client.delete(lock_key)
-        except Exception:
-            pass
+        except Exception as e:
+            # Lock release failure is non-critical, log for debugging
+            logger.debug(f"Failed to release lock for {cache_key}: {e}")
 
 
 def get_idempotency_key(request: Request) -> str | None:
@@ -227,15 +231,15 @@ def require_idempotency_key(request: Request) -> str:
             status_code=400,
             detail={
                 "error": "missing_idempotency_key",
-                "detail": "Idempotency-Key header is required for this endpoint"
-            }
+                "detail": "Idempotency-Key header is required for this endpoint",
+            },
         )
     if not validate_idempotency_key(key):
         raise HTTPException(
             status_code=400,
             detail={
                 "error": "invalid_idempotency_key",
-                "detail": "Idempotency-Key must be at least 16 characters"
-            }
+                "detail": "Idempotency-Key must be at least 16 characters",
+            },
         )
     return key

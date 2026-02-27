@@ -3,6 +3,7 @@ Verify API - POST /v1/verify
 
 Merchant verification of authorization codes.
 """
+
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -53,12 +54,11 @@ async def verify(
     except ValueError as e:
         logger.warning(f"Verification validation error: {e}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid request: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid request: {str(e)}"
         )
     except Exception as e:
         logger.error(f"Verification failed unexpectedly: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Verification failed"
+            detail="Verification failed",
         )

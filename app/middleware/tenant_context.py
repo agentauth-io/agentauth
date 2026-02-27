@@ -5,7 +5,6 @@ Sets PostgreSQL session variable for Row-Level Security (RLS).
 Each request sets app.tenant_id which RLS policies use for isolation.
 """
 
-
 from fastapi import HTTPException, Request
 from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -72,8 +71,7 @@ async def set_tenant_context(session, tenant_id: str) -> None:
     if tenant_id:
         # Set the session variable that RLS policies will use
         await session.execute(
-            text("SET LOCAL app.tenant_id = :tenant_id"),
-            {"tenant_id": tenant_id}
+            text("SET LOCAL app.tenant_id = :tenant_id"), {"tenant_id": tenant_id}
         )
 
 
@@ -103,7 +101,7 @@ def require_tenant_id(request: Request) -> str:
     if not tenant_id:
         raise HTTPException(
             status_code=401,
-            detail={"error": "authentication_required", "message": "API key required"}
+            detail={"error": "authentication_required", "message": "API key required"},
         )
     return tenant_id
 

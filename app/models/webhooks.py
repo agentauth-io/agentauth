@@ -3,6 +3,7 @@ Webhook Models
 
 Database models for webhook endpoints and delivery tracking.
 """
+
 import secrets
 import uuid
 from datetime import datetime, timezone
@@ -20,6 +21,7 @@ class Webhook(Base):
 
     Stores user-defined webhook URLs and event subscriptions.
     """
+
     __tablename__ = "webhooks"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -33,14 +35,12 @@ class Webhook(Base):
 
     # Event subscriptions (stored as comma-separated string for simplicity)
     events: Mapped[str] = mapped_column(
-        String(1000),
-        default="authorization.approved,authorization.denied"
+        String(1000), default="authorization.approved,authorization.denied"
     )
 
     # Security
     secret: Mapped[str] = mapped_column(
-        String(64),
-        default=lambda: secrets.token_hex(32)
+        String(64), default=lambda: secrets.token_hex(32)
     )
 
     # Status
@@ -58,7 +58,9 @@ class Webhook(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     def get_events_list(self) -> list[str]:
@@ -76,6 +78,7 @@ class WebhookDelivery(Base):
 
     Tracks each attempt to deliver a webhook.
     """
+
     __tablename__ = "webhook_deliveries"
 
     id: Mapped[uuid.UUID] = mapped_column(

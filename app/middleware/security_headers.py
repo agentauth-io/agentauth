@@ -3,6 +3,7 @@ Security headers middleware.
 
 Adds standard security headers to all responses.
 """
+
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.config import get_settings
@@ -52,6 +53,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             ]
             response.headers["Content-Security-Policy"] = "; ".join(csp_directives)
 
-        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Permissions-Policy"] = (
+            "camera=(), microphone=(), geolocation=()"
+        )
 
         return response

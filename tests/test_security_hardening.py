@@ -9,6 +9,7 @@ Covers:
 - API key expiry
 - API key rotation/revocation endpoints
 """
+
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -16,6 +17,7 @@ import pytest
 from httpx import AsyncClient
 
 # ==================== Security Headers ====================
+
 
 class TestSecurityHeaders:
     """Verify security headers are present on all responses."""
@@ -29,10 +31,15 @@ class TestSecurityHeaders:
         assert response.headers.get("x-content-type-options") == "nosniff"
         assert response.headers.get("x-frame-options") == "DENY"
         assert response.headers.get("x-xss-protection") == "0"
-        assert response.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
+        assert (
+            response.headers.get("referrer-policy") == "strict-origin-when-cross-origin"
+        )
         csp = response.headers.get("content-security-policy", "")
         assert "default-src 'self'" in csp
-        assert response.headers.get("permissions-policy") == "camera=(), microphone=(), geolocation=()"
+        assert (
+            response.headers.get("permissions-policy")
+            == "camera=(), microphone=(), geolocation=()"
+        )
 
     @pytest.mark.anyio
     async def test_no_hsts_in_dev(self, client: AsyncClient):
@@ -48,6 +55,7 @@ class TestSecurityHeaders:
 
 
 # ==================== Token Revocation ====================
+
 
 class TestTokenRevocation:
     """Test JWT token revocation service."""
@@ -93,6 +101,7 @@ class TestTokenRevocation:
 
 
 # ==================== Bcrypt Admin Auth ====================
+
 
 class TestBcryptAdmin:
     """Test admin login uses bcrypt."""
@@ -160,6 +169,7 @@ class TestBcryptAdmin:
 
 # ==================== IDOR Protection ====================
 
+
 class TestIDORProtection:
     """Verify user_id is derived from API key, not from user input."""
 
@@ -226,6 +236,7 @@ class TestIDORProtection:
 
 # ==================== API Key Expiry ====================
 
+
 class TestAPIKeyExpiry:
     """Test that expired API keys are rejected."""
 
@@ -242,10 +253,12 @@ class TestAPIKeyExpiry:
         # For cache-only keys, they still work within TTL since cache doesn't track expiry
         # The expiry check is at DB level, so this tests the model field exists
         from app.models.api_key import ApiKey
+
         assert hasattr(ApiKey, "expires_at")
 
 
 # ==================== Docs Disabled in Production ====================
+
 
 class TestProductionDocs:
     """Test that docs endpoint config is correct."""
@@ -257,9 +270,11 @@ class TestProductionDocs:
         settings = get_settings()
         if settings.environment == "production":
             from app.main import app
+
             assert app.docs_url is None
             assert app.redoc_url is None
         else:
             from app.main import app
+
             assert app.docs_url == "/docs"
             assert app.redoc_url == "/redoc"

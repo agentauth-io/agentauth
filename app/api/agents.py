@@ -3,6 +3,7 @@ Agents API endpoints.
 
 Provides CRUD operations for agent registrations.
 """
+
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -15,6 +16,7 @@ router = APIRouter(prefix="/v1/agents", tags=["agents"])
 
 class Agent(BaseModel):
     """Agent registration model."""
+
     id: str
     name: str
     description: str | None = None
@@ -25,6 +27,7 @@ class Agent(BaseModel):
 
 class AgentCreate(BaseModel):
     """Request body for creating an agent."""
+
     name: str
     description: str | None = None
     permissions: list[str] = ["read", "write"]
@@ -32,6 +35,7 @@ class AgentCreate(BaseModel):
 
 class AgentList(BaseModel):
     """Response model for listing agents."""
+
     agents: list[Agent]
     total: int
 
@@ -56,6 +60,7 @@ async def create_agent(
 ):
     """Register a new agent."""
     import uuid
+
     agent_id = str(uuid.uuid4())[:8]
     agent = Agent(
         id=agent_id,

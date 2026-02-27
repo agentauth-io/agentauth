@@ -3,6 +3,7 @@ Audit Service - Comprehensive security logging
 
 Provides tamper-evident audit logging for all sensitive operations.
 """
+
 import hashlib
 import hmac
 import logging
@@ -31,20 +32,20 @@ def sign_audit_entry(event_data: dict[str, Any]) -> str:
     The signature covers all critical fields to ensure tamper evidence.
     """
     # Create a canonical string representation
-    canonical = "|".join([
-        event_data.get("event_type", ""),
-        event_data.get("actor_id", ""),
-        event_data.get("action", ""),
-        event_data.get("resource_id", ""),
-        event_data.get("outcome", ""),
-        event_data.get("created_at", ""),
-    ])
+    canonical = "|".join(
+        [
+            event_data.get("event_type", ""),
+            event_data.get("actor_id", ""),
+            event_data.get("action", ""),
+            event_data.get("resource_id", ""),
+            event_data.get("outcome", ""),
+            event_data.get("created_at", ""),
+        ]
+    )
 
     # Sign with HMAC-SHA256 using the secret key
     signature = hmac.new(
-        settings.secret_key.encode(),
-        canonical.encode(),
-        hashlib.sha256
+        settings.secret_key.encode(), canonical.encode(), hashlib.sha256
     ).hexdigest()
 
     return signature

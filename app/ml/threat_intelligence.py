@@ -62,9 +62,7 @@ class ThreatAssessment:
                 for s in self.signals
             ],
             "top_risk_factors": sorted(
-                self.feature_contributions.items(),
-                key=lambda x: x[1],
-                reverse=True
+                self.feature_contributions.items(), key=lambda x: x[1], reverse=True
             )[:5],
             "model_scores": {k: round(v, 4) for k, v in self.model_scores.items()},
             "processing_time_ms": round(self.processing_time_ms, 2),
@@ -83,7 +81,6 @@ class FeatureVector:
         "day_of_week",
         "is_weekend",
         "is_business_hours",
-
         # Velocity features
         "requests_last_minute",
         "requests_last_hour",
@@ -91,25 +88,21 @@ class FeatureVector:
         "amount_last_hour",
         "amount_last_day",
         "unique_merchants_last_day",
-
         # Behavioral features
         "deviation_from_avg_amount",
         "deviation_from_avg_time",
         "new_merchant",
         "new_category",
         "new_location",
-
         # Risk indicators
         "failed_attempts_recent",
         "trust_score",
         "account_age_days",
         "verification_level",
-
         # Geographic features
         "distance_from_usual",
         "high_risk_country",
         "vpn_detected",
-
         # Device/session features
         "new_device",
         "session_age_minutes",
@@ -194,8 +187,10 @@ class IsolationTree:
         if depth >= self.max_depth or len(data) <= 1:
             return node
 
+        # Note: Using standard random module for ML model training (isolation forest)
+        # This is NOT for cryptographic purposes - acceptable for ML operations
         n_features = len(data[0].values)
-        node.split_feature = random.randint(0, n_features - 1)
+        node.split_feature = random.randint(0, n_features - 1)  # nosec: B311 - ML model training, not cryptographic
 
         feature_values = [d.values[node.split_feature] for d in data]
         min_val, max_val = min(feature_values), max(feature_values)
@@ -203,11 +198,13 @@ class IsolationTree:
         if min_val == max_val:
             return node
 
-        node.split_value = random.uniform(min_val, max_val)
+        node.split_value = random.uniform(min_val, max_val)  # nosec: B311 - ML model training, not cryptographic
         node.is_leaf = False
 
         left_data = [d for d in data if d.values[node.split_feature] < node.split_value]
-        right_data = [d for d in data if d.values[node.split_feature] >= node.split_value]
+        right_data = [
+            d for d in data if d.values[node.split_feature] >= node.split_value
+        ]
 
         if left_data and right_data:
             node.left = self._build_tree(left_data, depth + 1)
@@ -220,7 +217,9 @@ class IsolationTree:
     def path_length(self, x: FeatureVector) -> float:
         return self._path_length(self.root, x, 0)
 
-    def _path_length(self, node: IsolationTreeNode, x: FeatureVector, depth: int) -> float:
+    def _path_length(
+        self, node: IsolationTreeNode, x: FeatureVector, depth: int
+    ) -> float:
         if node is None or node.is_leaf:
             # Add expected path length for remaining isolation
             if node and node.size > 1:
@@ -255,7 +254,9 @@ class IsolationForestDetector:
 
         for _ in range(self.n_trees):
             tree = IsolationTree(self.max_depth)
-            sample = random.sample(data, min(self.sample_size, len(data)))
+            # Note: Using standard random module for ML model training (isolation forest)
+            # This is NOT for cryptographic purposes - acceptable for ML operations
+            sample = random.sample(data, min(self.sample_size, len(data)))  # nosec: B311 - ML model training, not cryptographic
             tree.fit(sample)
             self.trees.append(tree)
 
@@ -296,9 +297,11 @@ class AutoencoderDetector:
         self.trained_samples = 0
 
     def _xavier_init(self, in_dim: int, out_dim: int) -> list[list[float]]:
+        # Note: Using standard random module for ML model weight initialization
+        # This is NOT for cryptographic purposes - acceptable for ML operations
         limit = math.sqrt(6.0 / (in_dim + out_dim))
         return [
-            [random.uniform(-limit, limit) for _ in range(out_dim)]
+            [random.uniform(-limit, limit) for _ in range(out_dim)]  # nosec: B311 - ML model training, not cryptographic
             for _ in range(in_dim)
         ]
 
@@ -335,12 +338,16 @@ class AutoencoderDetector:
 
         # Backpropagation
         # Output layer gradients
-        output_grads = [2 * (decoded[i] - x[i]) / self.input_dim for i in range(self.input_dim)]
+        output_grads = [
+            2 * (decoded[i] - x[i]) / self.input_dim for i in range(self.input_dim)
+        ]
 
         # Update decoder weights
         for i in range(self.encoding_dim):
             for j in range(self.input_dim):
-                self.decoder_weights[i][j] -= self.learning_rate * output_grads[j] * encoded[i]
+                self.decoder_weights[i][j] -= (
+                    self.learning_rate * output_grads[j] * encoded[i]
+                )
 
         for j in range(self.input_dim):
             self.decoder_bias[j] -= self.learning_rate * output_grads[j]
@@ -355,7 +362,9 @@ class AutoencoderDetector:
         # Update encoder weights
         for i in range(self.input_dim):
             for j in range(self.encoding_dim):
-                self.encoder_weights[i][j] -= self.learning_rate * hidden_grads[j] * x[i]
+                self.encoder_weights[i][j] -= (
+                    self.learning_rate * hidden_grads[j] * x[i]
+                )
 
         for j in range(self.encoding_dim):
             self.encoder_bias[j] -= self.learning_rate * hidden_grads[j]
@@ -370,7 +379,10 @@ class AutoencoderDetector:
     def score(self, x: list[float]) -> float:
         """Return anomaly score based on reconstruction error."""
         _, _, decoded = self._forward(x)
-        mse = sum((x[i] - decoded[i]) ** 2 for i in range(self.input_dim)) / self.input_dim
+        mse = (
+            sum((x[i] - decoded[i]) ** 2 for i in range(self.input_dim))
+            / self.input_dim
+        )
 
         # Normalize to 0-1 range
         if self.threshold == 0:
@@ -400,9 +412,13 @@ class VelocityTracker:
 
         # Cleanup old entries
         max_window = max(self.window_sizes)
-        while self.requests[entity_id] and self.requests[entity_id][0] < now - max_window:
+        while (
+            self.requests[entity_id] and self.requests[entity_id][0] < now - max_window
+        ):
             self.requests[entity_id].popleft()
-        while self.amounts[entity_id] and self.amounts[entity_id][0][0] < now - max_window:
+        while (
+            self.amounts[entity_id] and self.amounts[entity_id][0][0] < now - max_window
+        ):
             self.amounts[entity_id].popleft()
 
     def get_counts(self, entity_id: str) -> dict[str, int]:
@@ -472,7 +488,9 @@ class ThreatIntelligence:
         features["time_of_day"] = now.hour / 24.0
         features["day_of_week"] = now.weekday() / 6.0
         features["is_weekend"] = 1.0 if now.weekday() >= 5 else 0.0
-        features["is_business_hours"] = 1.0 if 9 <= now.hour < 17 and now.weekday() < 5 else 0.0
+        features["is_business_hours"] = (
+            1.0 if 9 <= now.hour < 17 and now.weekday() < 5 else 0.0
+        )
 
         # Velocity features
         agent_id = request.get("agent_id", "unknown")
@@ -492,16 +510,26 @@ class ThreatIntelligence:
         features["new_merchant"] = 1.0 if request.get("new_merchant", False) else 0.0
         features["new_category"] = 1.0 if request.get("new_category", False) else 0.0
         features["new_location"] = 1.0 if request.get("new_location", False) else 0.0
-        features["failed_attempts_recent"] = min(request.get("failed_attempts", 0) / 5, 1.0)
+        features["failed_attempts_recent"] = min(
+            request.get("failed_attempts", 0) / 5, 1.0
+        )
         features["trust_score"] = request.get("trust_score", 0.8)
-        features["account_age_days"] = min(request.get("account_age_days", 365) / 365, 1.0)
+        features["account_age_days"] = min(
+            request.get("account_age_days", 365) / 365, 1.0
+        )
         features["verification_level"] = request.get("verification_level", 0.5)
         features["distance_from_usual"] = min(request.get("distance_km", 0) / 1000, 1.0)
-        features["high_risk_country"] = 1.0 if request.get("country", "") in self.high_risk_countries else 0.0
+        features["high_risk_country"] = (
+            1.0 if request.get("country", "") in self.high_risk_countries else 0.0
+        )
         features["vpn_detected"] = 1.0 if request.get("vpn_detected", False) else 0.0
         features["new_device"] = 1.0 if request.get("new_device", False) else 0.0
-        features["session_age_minutes"] = min(request.get("session_age_minutes", 0) / 60, 1.0)
-        features["requests_in_session"] = min(request.get("requests_in_session", 0) / 50, 1.0)
+        features["session_age_minutes"] = min(
+            request.get("session_age_minutes", 0) / 60, 1.0
+        )
+        features["requests_in_session"] = min(
+            request.get("requests_in_session", 0) / 50, 1.0
+        )
 
         return FeatureVector.from_dict(features)
 
@@ -509,7 +537,9 @@ class ThreatIntelligence:
         """Perform complete threat assessment."""
         start_time = time.time()
 
-        request_id = request.get("request_id", hashlib.md5(str(request).encode()).hexdigest()[:12])
+        request_id = request.get(
+            "request_id", hashlib.md5(str(request).encode(), usedforsecurity=False).hexdigest()[:12]  # nosec: B324 - MD5 used for non-security request ID generation
+        )
 
         # Extract features
         features = self.extract_features(request)
@@ -542,9 +572,9 @@ class ThreatIntelligence:
 
         # Statistical outliers
         z_scores = {}
-        for i, (name, val, mean, std) in enumerate(zip(
-            FeatureVector.FEATURE_NAMES, features.values, means, stds
-        )):
+        for i, (name, val, mean, std) in enumerate(
+            zip(FeatureVector.FEATURE_NAMES, features.values, means, stds)
+        ):
             if std > 0:
                 z_scores[name] = abs((val - mean) / std)
             else:
@@ -555,9 +585,9 @@ class ThreatIntelligence:
 
         # Ensemble score
         overall_risk = (
-            model_scores["isolation_forest"] * 0.4 +
-            model_scores["autoencoder"] * 0.4 +
-            model_scores["statistical"] * 0.2
+            model_scores["isolation_forest"] * 0.4
+            + model_scores["autoencoder"] * 0.4
+            + model_scores["statistical"] * 0.2
         )
 
         # Detect threat signals
@@ -565,46 +595,54 @@ class ThreatIntelligence:
 
         # High amount signal
         if request.get("amount", 0) > 5000:
-            signals.append(ThreatSignal(
-                signal_type="high_amount",
-                severity="medium" if request["amount"] < 10000 else "high",
-                confidence=0.8,
-                description=f"Unusually high transaction amount: ${request['amount']:.2f}",
-                indicators={"amount": request["amount"]},
-                mitigations=["require_approval", "step_up_auth"],
-            ))
+            signals.append(
+                ThreatSignal(
+                    signal_type="high_amount",
+                    severity="medium" if request["amount"] < 10000 else "high",
+                    confidence=0.8,
+                    description=f"Unusually high transaction amount: ${request['amount']:.2f}",
+                    indicators={"amount": request["amount"]},
+                    mitigations=["require_approval", "step_up_auth"],
+                )
+            )
 
         # Velocity abuse
         counts = self.velocity_tracker.get_counts(agent_id)
         if counts.get("count_60s", 0) > 5:
-            signals.append(ThreatSignal(
-                signal_type="velocity_abuse",
-                severity="high",
-                confidence=0.9,
-                description=f"High request velocity: {counts['count_60s']} requests in last minute",
-                indicators=counts,
-                mitigations=["rate_limit", "captcha"],
-            ))
+            signals.append(
+                ThreatSignal(
+                    signal_type="velocity_abuse",
+                    severity="high",
+                    confidence=0.9,
+                    description=f"High request velocity: {counts['count_60s']} requests in last minute",
+                    indicators=counts,
+                    mitigations=["rate_limit", "captcha"],
+                )
+            )
 
         # New device + high amount
         if request.get("new_device") and request.get("amount", 0) > 1000:
-            signals.append(ThreatSignal(
-                signal_type="new_device_high_value",
-                severity="high",
-                confidence=0.7,
-                description="High-value transaction from new device",
-                mitigations=["require_mfa", "device_verification"],
-            ))
+            signals.append(
+                ThreatSignal(
+                    signal_type="new_device_high_value",
+                    severity="high",
+                    confidence=0.7,
+                    description="High-value transaction from new device",
+                    mitigations=["require_mfa", "device_verification"],
+                )
+            )
 
         # Geographic anomaly
         if request.get("distance_km", 0) > 500:
-            signals.append(ThreatSignal(
-                signal_type="geographic_anomaly",
-                severity="medium",
-                confidence=0.6,
-                description=f"Request from unusual location ({request['distance_km']}km from usual)",
-                mitigations=["location_verification"],
-            ))
+            signals.append(
+                ThreatSignal(
+                    signal_type="geographic_anomaly",
+                    severity="medium",
+                    confidence=0.6,
+                    description=f"Request from unusual location ({request['distance_km']}km from usual)",
+                    mitigations=["location_verification"],
+                )
+            )
 
         # Calculate feature contributions
         feature_contributions = {}

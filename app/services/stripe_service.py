@@ -19,6 +19,7 @@ STRIPE_TIMEOUT = 15  # seconds
 
 class PaymentIntentResponse(BaseModel):
     """Payment intent creation response."""
+
     client_secret: str
     payment_intent_id: str
     amount: int
@@ -27,6 +28,7 @@ class PaymentIntentResponse(BaseModel):
 
 class SubscriptionResponse(BaseModel):
     """Subscription creation response."""
+
     subscription_id: str
     client_secret: str | None
     status: str
@@ -119,14 +121,18 @@ async def create_subscription(
 
     if payment_method_id:
         # Attach payment method to customer first
-        stripe.PaymentMethod.attach(payment_method_id, customer=customer_id, timeout=STRIPE_TIMEOUT)
+        stripe.PaymentMethod.attach(
+            payment_method_id, customer=customer_id, timeout=STRIPE_TIMEOUT
+        )
         stripe.Customer.modify(
             customer_id,
             invoice_settings={"default_payment_method": payment_method_id},
             timeout=STRIPE_TIMEOUT,
         )
 
-    subscription = stripe.Subscription.create(**subscription_params, timeout=STRIPE_TIMEOUT)
+    subscription = stripe.Subscription.create(
+        **subscription_params, timeout=STRIPE_TIMEOUT
+    )
 
     # Get client secret for incomplete subscriptions
     client_secret = None
@@ -188,8 +194,10 @@ def verify_webhook_signature(payload: bytes, sig_header: str) -> dict:
 
 # ============ Stripe Connect Functions ============
 
+
 class ConnectAccountResponse(BaseModel):
     """Stripe Connect account response."""
+
     account_id: str
     onboarding_url: str | None = None
     details_submitted: bool = False
@@ -313,15 +321,17 @@ async def list_connect_transactions(
 
     transactions = []
     for charge in charges.data:
-        transactions.append({
-            "id": charge.id,
-            "amount": charge.amount / 100,  # Convert from cents
-            "currency": charge.currency.upper(),
-            "status": charge.status,
-            "description": charge.description or "No description",
-            "created_at": charge.created,
-            "merchant": charge.metadata.get("merchant", "Unknown"),
-        })
+        transactions.append(
+            {
+                "id": charge.id,
+                "amount": charge.amount / 100,  # Convert from cents
+                "currency": charge.currency.upper(),
+                "status": charge.status,
+                "description": charge.description or "No description",
+                "created_at": charge.created,
+                "merchant": charge.metadata.get("merchant", "Unknown"),
+            }
+        )
 
     return transactions
 
@@ -344,7 +354,6 @@ async def get_connect_balance(account_id: str) -> dict:
             for b in balance.available
         ],
         "pending": [
-            {"amount": b.amount / 100, "currency": b.currency}
-            for b in balance.pending
+            {"amount": b.amount / 100, "currency": b.currency} for b in balance.pending
         ],
     }

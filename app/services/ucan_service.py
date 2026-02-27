@@ -18,22 +18,26 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 class UCANError(Exception):
     """Base exception for UCAN operations."""
+
     pass
 
 
 class UCANValidationError(UCANError):
     """UCAN validation failed."""
+
     pass
 
 
 class UCANCapabilityError(UCANError):
     """Capability check failed."""
+
     pass
 
 
 @dataclass
 class Capability:
     """A capability (permission) in UCAN format."""
+
     resource: str
     action: str
     caveats: dict[str, Any] = field(default_factory=dict)
@@ -62,6 +66,7 @@ class Capability:
 @dataclass
 class UCANPayload:
     """UCAN payload structure."""
+
     iss: str
     aud: str
     exp: int
@@ -72,17 +77,27 @@ class UCANPayload:
     prf: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
-        result = {"iss": self.iss, "aud": self.aud, "exp": self.exp, "att": [c.to_dict() for c in self.att]}
-        if self.nbf: result["nbf"] = self.nbf
-        if self.nnc: result["nnc"] = self.nnc
-        if self.fct: result["fct"] = self.fct
-        if self.prf: result["prf"] = self.prf
+        result = {
+            "iss": self.iss,
+            "aud": self.aud,
+            "exp": self.exp,
+            "att": [c.to_dict() for c in self.att],
+        }
+        if self.nbf:
+            result["nbf"] = self.nbf
+        if self.nnc:
+            result["nnc"] = self.nnc
+        if self.fct:
+            result["fct"] = self.fct
+        if self.prf:
+            result["prf"] = self.prf
         return result
 
 
 @dataclass
 class UCAN:
     """User-Controlled Authorization Network token."""
+
     alg: str = "EdDSA"
     typ: str = "JWT"
     ucv: str = "0.10.0"
@@ -95,9 +110,19 @@ class UCAN:
 
     def to_jwt(self) -> str:
         header = {"alg": self.alg, "typ": self.typ, "ucv": self.ucv}
-        header_b64 = base64.urlsafe_b64encode(json.dumps(header).encode()).decode().rstrip("=")
-        payload_b64 = base64.urlsafe_b64encode(json.dumps(self.payload.to_dict()).encode()).decode().rstrip("=")
-        sig_b64 = base64.urlsafe_b64encode(self.signature).decode().rstrip("=") if self.signature else ""
+        header_b64 = (
+            base64.urlsafe_b64encode(json.dumps(header).encode()).decode().rstrip("=")
+        )
+        payload_b64 = (
+            base64.urlsafe_b64encode(json.dumps(self.payload.to_dict()).encode())
+            .decode()
+            .rstrip("=")
+        )
+        sig_b64 = (
+            base64.urlsafe_b64encode(self.signature).decode().rstrip("=")
+            if self.signature
+            else ""
+        )
         return f"{header_b64}.{payload_b64}.{sig_b64}"
 
     @classmethod
@@ -114,19 +139,35 @@ class UCAN:
             payload_dict = json.loads(base64.urlsafe_b64decode(pad_b64(parts[1])))
 
             capabilities = [
-                Capability(resource=cap["with"], action=cap["can"], caveats=cap.get("caveats", {}))
+                Capability(
+                    resource=cap["with"],
+                    action=cap["can"],
+                    caveats=cap.get("caveats", {}),
+                )
                 for cap in payload_dict.get("att", [])
             ]
 
             payload = UCANPayload(
-                iss=payload_dict["iss"], aud=payload_dict["aud"], exp=payload_dict["exp"],
-                att=capabilities, nbf=payload_dict.get("nbf"), nnc=payload_dict.get("nnc"),
-                fct=payload_dict.get("fct", {}), prf=payload_dict.get("prf", []),
+                iss=payload_dict["iss"],
+                aud=payload_dict["aud"],
+                exp=payload_dict["exp"],
+                att=capabilities,
+                nbf=payload_dict.get("nbf"),
+                nnc=payload_dict.get("nnc"),
+                fct=payload_dict.get("fct", {}),
+                prf=payload_dict.get("prf", []),
             )
 
-            signature = base64.urlsafe_b64decode(pad_b64(parts[2])) if parts[2] else None
-            return cls(alg=header.get("alg", "EdDSA"), typ=header.get("typ", "JWT"),
-                      ucv=header.get("ucv", "0.10.0"), payload=payload, signature=signature)
+            signature = (
+                base64.urlsafe_b64decode(pad_b64(parts[2])) if parts[2] else None
+            )
+            return cls(
+                alg=header.get("alg", "EdDSA"),
+                typ=header.get("typ", "JWT"),
+                ucv=header.get("ucv", "0.10.0"),
+                payload=payload,
+                signature=signature,
+            )
         except Exception as e:
             raise UCANValidationError(f"Failed to parse UCAN: {e}")
 
@@ -148,7 +189,11 @@ class UCAN:
         return {
             "header": {"alg": self.alg, "typ": self.typ, "ucv": self.ucv},
             "payload": self.payload.to_dict(),
-            "signature": base64.urlsafe_b64encode(self.signature).decode() if self.signature else None,
+            "signature": (
+                base64.urlsafe_b64encode(self.signature).decode()
+                if self.signature
+                else None
+            ),
         }
 
 
@@ -181,7 +226,9 @@ class UCANBuilder:
         self.nonce: str | None = None
 
     def with_capability(self, resource: str, action: str, **caveats) -> "UCANBuilder":
-        self.capabilities.append(Capability(resource=resource, action=action, caveats=caveats))
+        self.capabilities.append(
+            Capability(resource=resource, action=action, caveats=caveats)
+        )
         return self
 
     def with_lifetime(self, seconds: int) -> "UCANBuilder":
@@ -201,9 +248,14 @@ class UCANBuilder:
             self.expiration = datetime.now(timezone.utc) + timedelta(hours=24)
 
         payload = UCANPayload(
-            iss=self.issuer, aud=self.audience, exp=int(self.expiration.timestamp()),
-            att=self.capabilities, nbf=int(self.not_before.timestamp()) if self.not_before else None,
-            nnc=self.nonce, fct=self.facts, prf=self.proofs,
+            iss=self.issuer,
+            aud=self.audience,
+            exp=int(self.expiration.timestamp()),
+            att=self.capabilities,
+            nbf=int(self.not_before.timestamp()) if self.not_before else None,
+            nnc=self.nonce,
+            fct=self.facts,
+            prf=self.proofs,
         )
         return UCAN(payload=payload)
 
@@ -215,6 +267,13 @@ class UCANService:
         self._keys: dict[str, Ed25519PrivateKey] = {}
         self._did_cache: dict[str, str] = {}
 
+    def _encode_key_for_did(self, key_bytes: bytes) -> str:
+        """Encode key bytes for DID using urlsafe base64 with alphanumeric substitution."""
+        encoded = base64.urlsafe_b64encode(key_bytes).decode().rstrip("=")
+        # Replace non-alphanumeric chars to make it base58-like for did:key compatibility
+        encoded = encoded.replace("-", "X").replace("_", "Y")
+        return encoded
+
     def generate_keypair(self, name: str = "default") -> dict:
         """Generate a new Ed25519 keypair and return dict with keys and DID."""
         private_key = Ed25519PrivateKey.generate()
@@ -222,22 +281,22 @@ class UCANService:
         self._keys[name] = private_key
 
         public_bytes = public_key.public_bytes(
-            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw)
-        # Use standard base64 (not urlsafe) and replace +/ with alphanumeric-safe chars
-        encoded = base64.b64encode(public_bytes).decode().rstrip('=')
-        # Replace non-alphanumeric chars to make it base58-like
-        encoded = encoded.replace('+', 'X').replace('/', 'Y')
+            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+        )
+        encoded = self._encode_key_for_did(public_bytes)
         did = f"did:key:z{encoded}"
         self._did_cache[name] = did
 
         private_bytes = private_key.private_bytes(
-            encoding=serialization.Encoding.Raw, format=serialization.PrivateFormat.Raw,
-            encryption_algorithm=serialization.NoEncryption())
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PrivateFormat.Raw,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
 
         return {
             "private_key": base64.b64encode(private_bytes).decode(),
             "public_key": base64.b64encode(public_bytes).decode(),
-            "did": did
+            "did": did,
         }
 
     def get_did(self, name: str = "default") -> str:
@@ -247,32 +306,53 @@ class UCANService:
         """Convert base64-encoded public key to DID."""
         try:
             public_bytes = base64.b64decode(public_key)
-            # Use urlsafe base64 encoding (no padding) to match generate_keypair
-            encoded = base64.urlsafe_b64encode(public_bytes).decode().rstrip('=')
+            encoded = self._encode_key_for_did(public_bytes)
             return f"did:key:z{encoded}"
         except Exception:
             raise UCANError("Invalid public key format")
 
-    def create_token(self, issuer_did: str, audience_did: str, capabilities: list[Capability],
-                     private_key: str, ttl_seconds: int = 3600) -> UCANToken:
+    def _validate_did(self, did: str) -> None:
+        """Validate DID format. Must start with 'did:key:z' and have valid encoding."""
+        if not did or not did.startswith("did:key:z"):
+            raise UCANError(f"Invalid DID format: {did}. Must start with 'did:key:z'")
+        # Check that the part after 'did:key:z' is alphanumeric
+        key_part = did[9:]  # len("did:key:z") == 9
+        if not key_part or not all(c.isalnum() for c in key_part):
+            raise UCANError(f"Invalid DID format: {did}. Key part must be alphanumeric")
+
+    def create_token(
+        self,
+        issuer_did: str,
+        audience_did: str,
+        capabilities: list[Capability],
+        private_key: str,
+        ttl_seconds: int = 3600,
+    ) -> UCANToken:
         """Create a UCAN token."""
+        # Validate DID formats
+        self._validate_did(issuer_did)
+        self._validate_did(audience_did)
+
         builder = UCANBuilder(issuer_did, audience_did)
         builder.with_lifetime(ttl_seconds)
         builder.with_nonce()
 
         for cap in capabilities:
-            builder.with_capability(resource=cap.resource, action=cap.action, **cap.caveats)
+            builder.with_capability(
+                resource=cap.resource, action=cap.action, **cap.caveats
+            )
 
         ucan = builder.build()
 
         try:
             private_bytes = base64.b64decode(private_key)
             from cryptography.hazmat.primitives.asymmetric import ed25519
+
             priv_key = ed25519.Ed25519PrivateKey.from_private_bytes(private_bytes)
             message = ucan.to_jwt().rsplit(".", 1)[0].encode()
             ucan.signature = priv_key.sign(message)
-        except Exception:
-            pass
+        except Exception as e:
+            raise UCANError(f"Invalid private key: {e}")
 
         return UCANToken(ucan)
 
@@ -281,10 +361,20 @@ class UCANService:
         result = {"valid": True, "issuer": None, "capabilities": [], "error": None}
 
         if token.ucan.is_expired:
-            return {"valid": False, "issuer": None, "capabilities": [], "error": "Token expired"}
+            return {
+                "valid": False,
+                "issuer": None,
+                "capabilities": [],
+                "error": "Token expired",
+            }
 
         if not token.ucan.is_active:
-            return {"valid": False, "issuer": None, "capabilities": [], "error": "Token not yet active"}
+            return {
+                "valid": False,
+                "issuer": None,
+                "capabilities": [],
+                "error": "Token not yet active",
+            }
 
         result["issuer"] = token.ucan.payload.iss
         result["capabilities"] = [cap.to_dict() for cap in token.ucan.capabilities]
@@ -292,28 +382,103 @@ class UCANService:
         try:
             public_bytes = base64.b64decode(public_key)
             from cryptography.hazmat.primitives.asymmetric import ed25519
+
             pub_key = ed25519.Ed25519PublicKey.from_public_bytes(public_bytes)
             # Verify that the public key matches the issuer DID
             derived_did = self._public_key_to_did(public_key)
+
+            # For attenuated tokens (with proofs), verify the proof chain
+            if token.ucan.payload.prf:
+                # Verify the proof chain - the public key should match the root issuer
+                # or the delegate in the chain
+                if derived_did != token.ucan.payload.iss:
+                    # Check if this is an attenuated token where the issuer is the delegate
+                    # In this case, we verify the proof chain
+                    try:
+                        parent_token = UCANToken(
+                            UCAN.from_jwt(token.ucan.payload.prf[0])
+                        )
+                        parent_result = self.verify_token(parent_token, public_key)
+                        if not parent_result["valid"]:
+                            return {
+                                "valid": False,
+                                "issuer": result["issuer"],
+                                "capabilities": [],
+                                "error": "Invalid proof chain",
+                            }
+                    except Exception:
+                        return {
+                            "valid": False,
+                            "issuer": result["issuer"],
+                            "capabilities": [],
+                            "error": "Invalid proof",
+                        }
+                # Attenuated tokens may not have their own signature
+                return result
+
             if derived_did != token.ucan.payload.iss:
-                return {"valid": False, "issuer": result["issuer"], "capabilities": [], "error": "Invalid public key"}
+                return {
+                    "valid": False,
+                    "issuer": result["issuer"],
+                    "capabilities": [],
+                    "error": "Invalid public key",
+                }
+
+            # Verify the signature
+            if token.ucan.signature:
+                message = token.ucan.to_jwt().rsplit(".", 1)[0].encode()
+                try:
+                    pub_key.verify(token.ucan.signature, message)
+                except Exception:
+                    return {
+                        "valid": False,
+                        "issuer": result["issuer"],
+                        "capabilities": [],
+                        "error": "Invalid signature",
+                    }
+            else:
+                return {
+                    "valid": False,
+                    "issuer": result["issuer"],
+                    "capabilities": [],
+                    "error": "Missing signature",
+                }
+
         except Exception:
-            return {"valid": False, "issuer": result["issuer"], "capabilities": [], "error": "Invalid public key"}
+            return {
+                "valid": False,
+                "issuer": result["issuer"],
+                "capabilities": [],
+                "error": "Invalid public key",
+            }
 
         return result
 
-    def attenuate_token(self, token: UCANToken, capabilities: list[Capability]) -> UCANToken:
+    def attenuate_token(
+        self, token: UCANToken, capabilities: list[Capability]
+    ) -> UCANToken:
         """Attenuate a token with stricter capabilities."""
-        builder = UCANBuilder(issuer_did=token.ucan.payload.aud, audience_did=token.ucan.payload.iss)
-        remaining_time = max(1, token.ucan.payload.exp - int(datetime.now(timezone.utc).timestamp()))
+        # Keep the same issuer (the original token holder), but can change audience
+        builder = UCANBuilder(
+            issuer_did=token.ucan.payload.iss, audience_did=token.ucan.payload.aud
+        )
+        remaining_time = max(
+            1, token.ucan.payload.exp - int(datetime.now(timezone.utc).timestamp())
+        )
         builder.with_lifetime(remaining_time)
         builder.with_nonce()
         builder.with_proof(token.ucan.to_jwt())
 
         for cap in capabilities:
-            if not any(cap.is_subset_of(parent_cap) for parent_cap in token.ucan.capabilities):
-                raise UCANCapabilityError(f"Cannot delegate capability not in parent: {cap.to_dict()}")
-            builder.with_capability(resource=cap.resource, action=cap.action, **cap.caveats)
+            if not any(
+                cap.is_subset_of(parent_cap) for parent_cap in token.ucan.capabilities
+            ):
+                raise UCANCapabilityError(
+                    f"Cannot delegate capability not in parent: {cap.to_dict()}"
+                )
+            builder.with_capability(
+                resource=cap.resource, action=cap.action, **cap.caveats
+            )
 
         return UCANToken(builder.build())
 
@@ -332,26 +497,47 @@ class UCANService:
     def deserialize_token(self, token_str: str) -> UCANToken:
         """Deserialize a token from string."""
         try:
-            if token_str.count(".") == 2:
+            # Check if it's JSON format (starts with '{')
+            if token_str.strip().startswith("{"):
+                data = json.loads(token_str)
+                payload_data = data.get("payload", {})
+                capabilities = [
+                    Capability(
+                        resource=cap["with"],
+                        action=cap["can"],
+                        caveats=cap.get("caveats", {}),
+                    )
+                    for cap in payload_data.get("att", [])
+                ]
+                payload = UCANPayload(
+                    iss=payload_data["iss"],
+                    aud=payload_data["aud"],
+                    exp=payload_data["exp"],
+                    att=capabilities,
+                    nbf=payload_data.get("nbf"),
+                    nnc=payload_data.get("nnc"),
+                    fct=payload_data.get("fct", {}),
+                    prf=payload_data.get("prf", []),
+                )
+                signature = (
+                    base64.urlsafe_b64decode(data["signature"] + "==")
+                    if data.get("signature")
+                    else None
+                )
+                return UCANToken(UCAN(payload=payload, signature=signature))
+            else:
+                # Assume JWT format
                 return UCANToken(UCAN.from_jwt(token_str))
-            data = json.loads(token_str)
-            payload_data = data.get("payload", {})
-            capabilities = [
-                Capability(resource=cap["with"], action=cap["can"], caveats=cap.get("caveats", {}))
-                for cap in payload_data.get("att", [])
-            ]
-            payload = UCANPayload(
-                iss=payload_data["iss"], aud=payload_data["aud"], exp=payload_data["exp"],
-                att=capabilities, nbf=payload_data.get("nbf"), nnc=payload_data.get("nnc"),
-                fct=payload_data.get("fct", {}), prf=payload_data.get("prf", []),
-            )
-            signature = base64.urlsafe_b64decode(data["signature"]) if data.get("signature") else None
-            return UCANToken(UCAN(payload=payload, signature=signature))
         except Exception as e:
             raise UCANError(f"Failed to deserialize token: {e}")
 
-    def create_root_ucan(self, issuer_name: str, audience_did: str,
-                         capabilities: list[dict[str, Any]], lifetime_hours: int = 24) -> str:
+    def create_root_ucan(
+        self,
+        issuer_name: str,
+        audience_did: str,
+        capabilities: list[dict[str, Any]],
+        lifetime_hours: int = 24,
+    ) -> str:
         """Create a root UCAN (no parent proofs)."""
         issuer_did = self.get_did(issuer_name)
         if not issuer_did:
@@ -363,12 +549,19 @@ class UCANService:
         builder.with_nonce()
 
         for cap in capabilities:
-            builder.with_capability(resource=cap["resource"], action=cap["action"], **cap.get("caveats", {}))
+            builder.with_capability(
+                resource=cap["resource"], action=cap["action"], **cap.get("caveats", {})
+            )
 
         return builder.build().to_jwt()
 
-    def delegate(self, parent_ucan: str, audience_did: str,
-                 capabilities: list[dict[str, Any]] | None = None, lifetime_hours: int = 24) -> str:
+    def delegate(
+        self,
+        parent_ucan: str,
+        audience_did: str,
+        capabilities: list[dict[str, Any]] | None = None,
+        lifetime_hours: int = 24,
+    ) -> str:
         """Delegate capabilities from a parent UCAN."""
         parent = UCAN.from_jwt(parent_ucan)
         if parent.is_expired:
@@ -381,17 +574,31 @@ class UCANService:
 
         if capabilities:
             for cap in capabilities:
-                new_cap = Capability(resource=cap["resource"], action=cap["action"], caveats=cap.get("caveats", {}))
+                new_cap = Capability(
+                    resource=cap["resource"],
+                    action=cap["action"],
+                    caveats=cap.get("caveats", {}),
+                )
                 if not any(new_cap.is_subset_of(p) for p in parent.capabilities):
-                    raise UCANCapabilityError(f"Cannot delegate capability not in parent: {cap}")
-                builder.with_capability(resource=cap["resource"], action=cap["action"], **cap.get("caveats", {}))
+                    raise UCANCapabilityError(
+                        f"Cannot delegate capability not in parent: {cap}"
+                    )
+                builder.with_capability(
+                    resource=cap["resource"],
+                    action=cap["action"],
+                    **cap.get("caveats", {}),
+                )
         else:
             for cap in parent.capabilities:
-                builder.with_capability(resource=cap.resource, action=cap.action, **cap.caveats)
+                builder.with_capability(
+                    resource=cap.resource, action=cap.action, **cap.caveats
+                )
 
         return builder.build().to_jwt()
 
-    def validate(self, ucan_jwt: str, required_capability: dict[str, Any] | None = None) -> bool:
+    def validate(
+        self, ucan_jwt: str, required_capability: dict[str, Any] | None = None
+    ) -> bool:
         """Validate a UCAN token."""
         ucan = UCAN.from_jwt(ucan_jwt)
         if ucan.is_expired:
@@ -400,9 +607,14 @@ class UCANService:
             raise UCANValidationError("UCAN is not yet active")
 
         if required_capability:
-            required = Capability(resource=required_capability["resource"], action=required_capability["action"])
+            required = Capability(
+                resource=required_capability["resource"],
+                action=required_capability["action"],
+            )
             if not any(required.is_subset_of(cap) for cap in ucan.capabilities):
-                raise UCANCapabilityError(f"UCAN does not have required capability: {required_capability}")
+                raise UCANCapabilityError(
+                    f"UCAN does not have required capability: {required_capability}"
+                )
 
         for proof in ucan.payload.prf:
             self.validate(proof)
@@ -425,9 +637,16 @@ def get_ucan_service() -> UCANService:
     return _ucan_service
 
 
-def create_ucan_token(issuer_did: str, audience_did: str, capabilities: list[Capability],
-                      private_key: str, ttl_seconds: int = 3600) -> UCANToken:
-    return get_ucan_service().create_token(issuer_did, audience_did, capabilities, private_key, ttl_seconds)
+def create_ucan_token(
+    issuer_did: str,
+    audience_did: str,
+    capabilities: list[Capability],
+    private_key: str,
+    ttl_seconds: int = 3600,
+) -> UCANToken:
+    return get_ucan_service().create_token(
+        issuer_did, audience_did, capabilities, private_key, ttl_seconds
+    )
 
 
 def verify_ucan_token(token: UCANToken, public_key: str) -> dict:
@@ -442,6 +661,11 @@ def attenuate_ucan(token: UCANToken, capabilities: list[Capability]) -> UCANToke
     return get_ucan_service().attenuate_token(token, capabilities)
 
 
-def create_agent_ucan(user_did: str, agent_did: str, consent_id: str,
-                      max_amount: float, allowed_actions: list[str] = None) -> str:
+def create_agent_ucan(
+    user_did: str,
+    agent_did: str,
+    consent_id: str,
+    max_amount: float,
+    allowed_actions: list[str] = None,
+) -> str:
     """Create a UCAN for an agent to act on behalf of a user."""

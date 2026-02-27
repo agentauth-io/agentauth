@@ -19,6 +19,7 @@ Production features:
 
 Targets <100ms latency for fraud detection.
 """
+
 import json
 import logging
 from dataclasses import dataclass
@@ -170,16 +171,29 @@ class FeatureStore:
     def __init__(self):
         self._feature_names = [
             # Transaction features
-            "amount", "amount_log", "amount_normalized",
-            "hour_of_day", "day_of_week", "is_weekend", "is_night",
-            "is_new_merchant", "is_cross_border",
+            "amount",
+            "amount_log",
+            "amount_normalized",
+            "hour_of_day",
+            "day_of_week",
+            "is_weekend",
+            "is_night",
+            "is_new_merchant",
+            "is_cross_border",
             # User behavior features
-            "txn_count_1h", "txn_count_24h", "txn_count_7d",
-            "avg_amount_7d", "max_amount_7d",
-            "total_amount_24h", "total_amount_7d",
-            "txn_velocity_1h", "amount_velocity_1h",
-            "unique_merchants_7d", "pct_new_merchants_7d",
-            "declined_count_24h", "velocity_check_failures_24h",
+            "txn_count_1h",
+            "txn_count_24h",
+            "txn_count_7d",
+            "avg_amount_7d",
+            "max_amount_7d",
+            "total_amount_24h",
+            "total_amount_7d",
+            "txn_velocity_1h",
+            "amount_velocity_1h",
+            "unique_merchants_7d",
+            "pct_new_merchants_7d",
+            "declined_count_24h",
+            "velocity_check_failures_24h",
         ]
 
     @property
@@ -190,6 +204,7 @@ class FeatureStore:
     async def _get_redis(self):
         """Get Redis client."""
         from app.services.cache_service import get_redis
+
         return await get_redis()
 
     # ==================== Feature Retrieval ====================
@@ -298,7 +313,7 @@ class FeatureStore:
         amount: float,
         merchant_id: str,
         category_code: str = "",
-        country: str = ""
+        country: str = "",
     ) -> TransactionFeatures:
         """Compute features for a specific transaction."""
         import math
@@ -321,9 +336,12 @@ class FeatureStore:
         try:
             client = await self._get_redis()
             merchant_key = self.MERCHANT_SET_KEY.format(user_id=user_id)
-            features.is_new_merchant = not await client.sismember(merchant_key, merchant_id)
-        except Exception:
-            pass
+            features.is_new_merchant = not await client.sismember(
+                merchant_key, merchant_id
+            )
+        except Exception as e:
+            # Feature extraction continues even if Redis check fails
+            logger.debug(f"Failed to check new merchant status: {e}")
 
         return features
 
@@ -335,7 +353,7 @@ class FeatureStore:
         amount: float,
         merchant_id: str,
         category_code: str = "",
-        decision: str = "ALLOW"
+        decision: str = "ALLOW",
     ) -> None:
         """Record a transaction for feature computation."""
         try:
@@ -360,11 +378,14 @@ class FeatureStore:
                 await client.expire(merchant_key, self.TXN_HISTORY_TTL)
 
             # Invalidate cached features
-            feature_key = self.USER_FEATURES_KEY.format(user_id=user_id, version=self.VERSION)
+            feature_key = self.USER_FEATURES_KEY.format(
+                user_id=user_id, version=self.VERSION
+            )
             await client.delete(feature_key)
 
-        except Exception:
-            pass
+        except Exception as e:
+            # Transaction recording failure is non-critical for authorization
+            logger.warning(f"Failed to record transaction features: {e}")
 
     # ==================== Combined Feature Vector ====================
 
@@ -374,7 +395,7 @@ class FeatureStore:
         amount: float,
         merchant_id: str,
         category_code: str = "",
-        country: str = ""
+        country: str = "",
     ) -> tuple[list[float], dict[str, float]]:
         """
         Get complete feature vector for ML inference.
@@ -420,10 +441,7 @@ def get_feature_store() -> FeatureStore:
 
 # Convenience functions
 async def get_fraud_features(
-    user_id: str,
-    amount: float,
-    merchant_id: str,
-    **kwargs
+    user_id: str, amount: float, merchant_id: str, **kwargs
 ) -> tuple[list[float], dict[str, float]]:
     """Get features for fraud detection."""
     store = get_feature_store()
@@ -431,10 +449,7 @@ async def get_fraud_features(
 
 
 async def record_transaction(
-    user_id: str,
-    amount: float,
-    merchant_id: str,
-    decision: str = "ALLOW"
+    user_id: str, amount: float, merchant_id: str, decision: str = "ALLOW"
 ) -> None:
     """Record transaction for feature computation."""
     store = get_feature_store()

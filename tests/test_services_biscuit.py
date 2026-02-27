@@ -8,6 +8,7 @@ Tests the full Biscuit token lifecycle:
 4. Authorization checks
 5. Token serialization
 """
+
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
@@ -28,6 +29,7 @@ from app.services.biscuit_service import (
 # ============================================================================
 # Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def service():
@@ -50,13 +52,14 @@ def sample_checks():
     """Sample checks for testing."""
     return [
         BiscuitCheck("time($t), $t <= 1704067200"),
-        BiscuitCheck("merchant($m), $m in [\"amazon\", \"walmart\"]"),
+        BiscuitCheck('merchant($m), $m in ["amazon", "walmart"]'),
     ]
 
 
 # ============================================================================
 # Key Generation Tests
 # ============================================================================
+
 
 class TestKeyGeneration:
     """Tests for Ed25519 key generation."""
@@ -88,6 +91,7 @@ class TestKeyGeneration:
 
         # Should be base64-encoded strings
         import base64
+
         try:
             base64.b64decode(keypair["public_key"])
             base64.b64decode(keypair["private_key"])
@@ -98,6 +102,7 @@ class TestKeyGeneration:
 # ============================================================================
 # Token Creation Tests
 # ============================================================================
+
 
 class TestTokenCreation:
     """Tests for Biscuit token creation."""
@@ -176,6 +181,7 @@ class TestTokenCreation:
 # Token Attenuation Tests
 # ============================================================================
 
+
 class TestTokenAttenuation:
     """Tests for offline token attenuation."""
 
@@ -247,6 +253,7 @@ class TestTokenAttenuation:
 # Token Verification Tests
 # ============================================================================
 
+
 class TestTokenVerification:
     """Tests for token verification."""
 
@@ -282,6 +289,7 @@ class TestTokenVerification:
 
         # Wait for expiration
         import time
+
         time.sleep(2)
 
         result = service.verify_token(
@@ -335,6 +343,7 @@ class TestTokenVerification:
 # ============================================================================
 # Authorization Tests
 # ============================================================================
+
 
 class TestAuthorization:
     """Tests for Datalog-based authorization."""
@@ -422,6 +431,7 @@ class TestAuthorization:
 # Convenience Function Tests
 # ============================================================================
 
+
 class TestConvenienceFunctions:
     """Tests for module-level convenience functions."""
 
@@ -433,7 +443,7 @@ class TestConvenienceFunctions:
 
     def test_create_biscuit_token(self):
         """Test create_biscuit_token convenience function."""
-        with patch('app.services.biscuit_service.get_biscuit_service') as mock_get:
+        with patch("app.services.biscuit_service.get_biscuit_service") as mock_get:
             mock_service = MagicMock()
             mock_service.create_token.return_value = MagicMock(
                 token_id="test_token",
@@ -451,7 +461,7 @@ class TestConvenienceFunctions:
 
     def test_verify_biscuit_token(self):
         """Test verify_biscuit_token convenience function."""
-        with patch('app.services.biscuit_service.get_biscuit_service') as mock_get:
+        with patch("app.services.biscuit_service.get_biscuit_service") as mock_get:
             mock_service = MagicMock()
             mock_service.verify_token.return_value = {"valid": True}
             mock_get.return_value = mock_service
@@ -465,7 +475,7 @@ class TestConvenienceFunctions:
 
     def test_authorize_with_biscuit(self):
         """Test authorize_with_biscuit convenience function."""
-        with patch('app.services.biscuit_service.get_biscuit_service') as mock_get:
+        with patch("app.services.biscuit_service.get_biscuit_service") as mock_get:
             mock_service = MagicMock()
             mock_service.authorize.return_value = {"authorized": True}
             mock_get.return_value = mock_service
@@ -482,6 +492,7 @@ class TestConvenienceFunctions:
 # ============================================================================
 # Error Handling Tests
 # ============================================================================
+
 
 class TestErrorHandling:
     """Tests for error conditions."""
@@ -520,6 +531,7 @@ class TestErrorHandling:
 # ============================================================================
 # Performance Tests
 # ============================================================================
+
 
 class TestPerformance:
     """Performance tests for Biscuit operations."""
@@ -562,7 +574,9 @@ class TestPerformance:
             times.append((time.perf_counter() - start) * 1000)
 
         avg_time = sum(times) / len(times)
-        assert avg_time < 20, f"Token verification took {avg_time:.2f}ms, expected <20ms"
+        assert (
+            avg_time < 20
+        ), f"Token verification took {avg_time:.2f}ms, expected <20ms"
 
     def test_authorization_performance(self, service):
         """Test authorization check is fast (<30ms)."""
@@ -591,4 +605,3 @@ class TestPerformance:
 
         avg_time = sum(times) / len(times)
         assert avg_time < 30, f"Authorization took {avg_time:.2f}ms, expected <30ms"
-

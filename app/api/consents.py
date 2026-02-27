@@ -3,6 +3,7 @@ Consents API - POST /v1/consents
 
 Create user consents and get delegation tokens.
 """
+
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -54,7 +55,7 @@ async def list_consents(
                 Consent.scope,
                 Consent.is_active,
                 Consent.created_at,
-                Consent.expires_at
+                Consent.expires_at,
             )
             .where(owner_filter)
             .order_by(Consent.created_at.desc())
@@ -73,8 +74,12 @@ async def list_consents(
                     "constraints": row.constraints,
                     "scope": row.scope,
                     "is_active": row.is_active,
-                    "created_at": row.created_at.isoformat() if row.created_at else None,
-                    "expires_at": row.expires_at.isoformat() if row.expires_at else None,
+                    "created_at": (
+                        row.created_at.isoformat() if row.created_at else None
+                    ),
+                    "expires_at": (
+                        row.expires_at.isoformat() if row.expires_at else None
+                    ),
                 }
                 for row in rows
             ],
@@ -86,7 +91,7 @@ async def list_consents(
         logger.error(f"Error listing consents: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to list consents"
+            detail="Failed to list consents",
         )
 
 
@@ -128,13 +133,13 @@ async def create_consent(
         logger.warning(f"Consent validation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid consent data: {str(e)}"
+            detail=f"Invalid consent data: {str(e)}",
         )
     except Exception as e:
         logger.error(f"Failed to create consent: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create consent. Please try again or contact support."
+            detail="Failed to create consent. Please try again or contact support.",
         )
 
 
@@ -153,8 +158,7 @@ async def get_consent(
     consent = await consent_service.get_consent(db, consent_id, developer_id=user_id)
     if consent is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Consent not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Consent not found"
         )
 
     return {
@@ -184,7 +188,6 @@ async def revoke_consent(
     success = await consent_service.revoke_consent(db, consent_id, developer_id=user_id)
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Consent not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Consent not found"
         )
     return None

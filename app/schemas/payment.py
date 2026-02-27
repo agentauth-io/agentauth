@@ -7,6 +7,7 @@ from pydantic import BaseModel, EmailStr
 
 class CreatePaymentIntentRequest(BaseModel):
     """Request to create a payment intent."""
+
     amount: int  # Amount in cents
     currency: str = "usd"
     customer_email: EmailStr | None = None
@@ -15,6 +16,7 @@ class CreatePaymentIntentRequest(BaseModel):
 
 class CreatePaymentIntentResponse(BaseModel):
     """Response with payment intent details."""
+
     client_secret: str
     payment_intent_id: str
     amount: int
@@ -23,6 +25,7 @@ class CreatePaymentIntentResponse(BaseModel):
 
 class CreateSubscriptionRequest(BaseModel):
     """Request to create a subscription."""
+
     email: EmailStr
     name: str | None = None
     price_id: str
@@ -31,6 +34,7 @@ class CreateSubscriptionRequest(BaseModel):
 
 class CreateSubscriptionResponse(BaseModel):
     """Response with subscription details."""
+
     subscription_id: str
     customer_id: str
     client_secret: str | None
@@ -40,6 +44,7 @@ class CreateSubscriptionResponse(BaseModel):
 
 class SubscriptionStatusResponse(BaseModel):
     """Response with subscription status."""
+
     subscription_id: str
     status: str
     current_period_start: int
@@ -49,6 +54,7 @@ class SubscriptionStatusResponse(BaseModel):
 
 class CancelSubscriptionResponse(BaseModel):
     """Response when canceling a subscription."""
+
     subscription_id: str
     status: str
     canceled_at: int | None
@@ -56,6 +62,7 @@ class CancelSubscriptionResponse(BaseModel):
 
 class PricingTier(BaseModel):
     """Pricing tier information."""
+
     id: str
     name: str
     price: int  # Monthly price in cents
@@ -65,4 +72,5 @@ class PricingTier(BaseModel):
 
 class PricingResponse(BaseModel):
     """Available pricing tiers."""
+
     tiers: list[PricingTier]

@@ -1,6 +1,7 @@
 """
 Consent model - stores user authorization intents
 """
+
 import uuid
 from datetime import datetime, timezone
 
@@ -17,28 +18,26 @@ class Consent(Base):
 
     This is the root of trust - everything flows from user consent.
     """
+
     __tablename__ = "consents"
 
     # Primary key
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
 
     # Consent identifier (external facing)
     consent_id: Mapped[str] = mapped_column(
-        String(64),
-        unique=True,
-        index=True,
-        nullable=False
+        String(64), unique=True, index=True, nullable=False
     )
 
     # User identification
     user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
 
     # Developer/Tenant identification (for RLS)
-    developer_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    developer_id: Mapped[str | None] = mapped_column(
+        String(64), nullable=True, index=True
+    )
 
     # Intent - what the user wants to do
     intent_description: Mapped[str] = mapped_column(Text, nullable=False)
@@ -72,10 +71,14 @@ class Consent(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
-        index=True  # Index for ORDER BY created_at DESC queries
+        index=True,  # Index for ORDER BY created_at DESC queries
     )
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    revoked_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -87,11 +90,7 @@ class Consent(Base):
     def is_valid(self) -> bool:
         """Check if consent is still valid (not expired, not revoked)."""
         now = datetime.now(timezone.utc)
-        return (
-            self.is_active
-            and self.revoked_at is None
-            and self.expires_at > now
-        )
+        return self.is_active and self.revoked_at is None and self.expires_at > now
 
     @property
     def max_amount(self) -> float | None:

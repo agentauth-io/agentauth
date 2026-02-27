@@ -3,6 +3,7 @@ Usage tracking model for API metering.
 
 Records individual API calls for billing and analytics.
 """
+
 import uuid
 from datetime import datetime, timezone
 
@@ -19,6 +20,7 @@ class UsageRecord(Base):
     Tracks each API call for metering, billing, and analytics.
     Designed for high-volume inserts with efficient querying by user and date.
     """
+
     __tablename__ = "usage_records"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -42,8 +44,8 @@ class UsageRecord(Base):
 
     # Composite indexes for common queries
     __table_args__ = (
-        Index('ix_usage_user_period', 'user_id', 'billing_period'),
-        Index('ix_usage_user_endpoint', 'user_id', 'endpoint'),
+        Index("ix_usage_user_period", "user_id", "billing_period"),
+        Index("ix_usage_user_endpoint", "user_id", "endpoint"),
     )
 
     def __repr__(self):
@@ -57,6 +59,7 @@ class UsageSummary(Base):
     Pre-aggregated data for fast billing queries.
     Updated incrementally as usage is recorded.
     """
+
     __tablename__ = "usage_summaries"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -76,11 +79,13 @@ class UsageSummary(Base):
     # Timestamps
     first_call_at = Column(DateTime, nullable=True)
     last_call_at = Column(DateTime, nullable=True)
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
 
     # Unique constraint on user + period
     __table_args__ = (
-        Index('ix_summary_user_period', 'user_id', 'billing_period', unique=True),
+        Index("ix_summary_user_period", "user_id", "billing_period", unique=True),
     )
 
     def __repr__(self):

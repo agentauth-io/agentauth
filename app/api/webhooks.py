@@ -3,6 +3,7 @@ Webhooks API
 
 API endpoints for managing webhook endpoints.
 """
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -20,18 +21,23 @@ router = APIRouter(prefix="/v1/webhooks", tags=["Webhooks"])
 
 # Schemas
 
+
 class WebhookCreate(BaseModel):
     """Request to create a webhook."""
-    url: HttpUrl = Field(..., description="Webhook endpoint URL (must be HTTPS in production)")
+
+    url: HttpUrl = Field(
+        ..., description="Webhook endpoint URL (must be HTTPS in production)"
+    )
     events: list[str] = Field(
         default=["authorization.approved", "authorization.denied"],
-        description="Events to subscribe to"
+        description="Events to subscribe to",
     )
     description: str | None = Field(None, description="Description of the webhook")
 
 
 class WebhookUpdate(BaseModel):
     """Request to update a webhook."""
+
     url: str | None = None
     events: list[str] | None = None
     description: str | None = None
@@ -40,6 +46,7 @@ class WebhookUpdate(BaseModel):
 
 class WebhookResponse(BaseModel):
     """Webhook response."""
+
     id: str
     url: str
     events: list[str]
@@ -53,11 +60,12 @@ class WebhookResponse(BaseModel):
 
 # Endpoints
 
+
 @router.get("", response_model=list[WebhookResponse])
 async def list_webhooks(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    api_key: dict = Depends(require_api_key)
+    api_key: dict = Depends(require_api_key),
 ):
     """
     List all webhooks.
@@ -75,9 +83,11 @@ async def list_webhooks(
             description=w.description,
             secret=None,  # Never expose secrets in list responses
             is_active=w.is_active,
-            last_triggered_at=w.last_triggered_at.isoformat() if w.last_triggered_at else None,
+            last_triggered_at=(
+                w.last_triggered_at.isoformat() if w.last_triggered_at else None
+            ),
             failure_count=w.failure_count,
-            created_at=w.created_at.isoformat()
+            created_at=w.created_at.isoformat(),
         )
         for w in webhooks
     ]
@@ -88,7 +98,7 @@ async def create_webhook(
     webhook: WebhookCreate,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    api_key: dict = Depends(require_api_key)
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Create a new webhook.
@@ -100,7 +110,7 @@ async def create_webhook(
         user_id=user_id,
         url=webhook.url,
         events=webhook.events,
-        description=webhook.description
+        description=webhook.description,
     )
 
     return WebhookResponse(
@@ -112,7 +122,7 @@ async def create_webhook(
         is_active=w.is_active,
         last_triggered_at=None,
         failure_count=0,
-        created_at=w.created_at.isoformat()
+        created_at=w.created_at.isoformat(),
     )
 
 
@@ -121,7 +131,7 @@ async def get_webhook(
     webhook_id: UUID,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    api_key: dict = Depends(require_api_key)
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Get a specific webhook.
@@ -139,9 +149,11 @@ async def get_webhook(
         description=w.description,
         secret=None,  # Never expose secrets in GET responses
         is_active=w.is_active,
-        last_triggered_at=w.last_triggered_at.isoformat() if w.last_triggered_at else None,
+        last_triggered_at=(
+            w.last_triggered_at.isoformat() if w.last_triggered_at else None
+        ),
         failure_count=w.failure_count,
-        created_at=w.created_at.isoformat()
+        created_at=w.created_at.isoformat(),
     )
 
 
@@ -151,7 +163,7 @@ async def update_webhook(
     update: WebhookUpdate,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    api_key: dict = Depends(require_api_key)
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Update a webhook.
@@ -163,7 +175,7 @@ async def update_webhook(
         url=update.url,
         events=update.events,
         description=update.description,
-        is_active=update.is_active
+        is_active=update.is_active,
     )
 
     if not w:
@@ -176,9 +188,11 @@ async def update_webhook(
         description=w.description,
         secret=None,  # Never expose secrets in update responses
         is_active=w.is_active,
-        last_triggered_at=w.last_triggered_at.isoformat() if w.last_triggered_at else None,
+        last_triggered_at=(
+            w.last_triggered_at.isoformat() if w.last_triggered_at else None
+        ),
         failure_count=w.failure_count,
-        created_at=w.created_at.isoformat()
+        created_at=w.created_at.isoformat(),
     )
 
 
@@ -187,7 +201,7 @@ async def delete_webhook(
     webhook_id: UUID,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    api_key: dict = Depends(require_api_key)
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Delete a webhook.

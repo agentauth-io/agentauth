@@ -3,6 +3,7 @@ Payment API routes for Stripe integration.
 
 Handles payment intents, subscriptions, and webhooks.
 """
+
 import logging
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -157,6 +158,7 @@ async def create_agent_purchase(
 
     # Verify the authorization code is valid
     from app.services.auth_service import _auth_cache
+
     cached_auth = _auth_cache.get(authorization_code)
     if not cached_auth:
         raise HTTPException(
@@ -261,7 +263,9 @@ async def create_subscription(
         raise HTTPException(status_code=400, detail="Failed to create subscription")
 
 
-@router.get("/subscriptions/{subscription_id}", response_model=SubscriptionStatusResponse)
+@router.get(
+    "/subscriptions/{subscription_id}", response_model=SubscriptionStatusResponse
+)
 async def get_subscription_status(
     subscription_id: str,
     user_id: str = Depends(get_current_user_id),
@@ -272,7 +276,10 @@ async def get_subscription_status(
         subscription = await stripe_service.get_subscription(subscription_id)
         # Verify the subscription belongs to the authenticated user via metadata
         metadata = subscription.get("metadata", {})
-        if metadata.get("agentauth_user_id") and metadata["agentauth_user_id"] != user_id:
+        if (
+            metadata.get("agentauth_user_id")
+            and metadata["agentauth_user_id"] != user_id
+        ):
             raise HTTPException(status_code=404, detail="Subscription not found")
         return SubscriptionStatusResponse(**subscription)
     except HTTPException:
@@ -282,7 +289,9 @@ async def get_subscription_status(
         raise HTTPException(status_code=404, detail="Subscription not found")
 
 
-@router.delete("/subscriptions/{subscription_id}", response_model=CancelSubscriptionResponse)
+@router.delete(
+    "/subscriptions/{subscription_id}", response_model=CancelSubscriptionResponse
+)
 async def cancel_subscription(
     subscription_id: str,
     user_id: str = Depends(get_current_user_id),
@@ -293,7 +302,10 @@ async def cancel_subscription(
         # Verify ownership before canceling
         subscription = await stripe_service.get_subscription(subscription_id)
         metadata = subscription.get("metadata", {})
-        if metadata.get("agentauth_user_id") and metadata["agentauth_user_id"] != user_id:
+        if (
+            metadata.get("agentauth_user_id")
+            and metadata["agentauth_user_id"] != user_id
+        ):
             raise HTTPException(status_code=404, detail="Subscription not found")
 
         result = await stripe_service.cancel_subscription(subscription_id)
@@ -369,15 +381,20 @@ async def stripe_webhook(
 
 # --- Webhook Handler Functions ---
 
+
 async def _record_payment_event(event_type: str, payment_intent: dict) -> None:
     """Record a payment event to the audit log."""
-    logger.debug(f"Recording payment event: {event_type} for {payment_intent.get('id')}")
+    logger.debug(
+        f"Recording payment event: {event_type} for {payment_intent.get('id')}"
+    )
 
 
 async def _handle_subscription_created(subscription: dict) -> None:
     """Handle new subscription creation - grant access to user."""
     customer_id = subscription.get("customer")
-    plan_id = subscription.get("items", {}).get("data", [{}])[0].get("price", {}).get("id")
+    plan_id = (
+        subscription.get("items", {}).get("data", [{}])[0].get("price", {}).get("id")
+    )
     logger.info(f"Granting access for customer {customer_id} on plan {plan_id}")
 
 

@@ -3,6 +3,7 @@ Tests for Webhooks service.
 
 Requires database fixtures + httpx mocking.
 """
+
 import hashlib
 import hmac
 from unittest.mock import AsyncMock, patch
@@ -61,23 +62,33 @@ class TestWebhooksServiceCRUD:
     @pytest.mark.asyncio
     async def test_list_webhooks(self, db_session):
         service = WebhooksService(db_session)
-        await service.create_webhook("user_1", "https://a.com/hook", ["authorization.approved"])
-        await service.create_webhook("user_1", "https://b.com/hook", ["authorization.denied"])
+        await service.create_webhook(
+            "user_1", "https://a.com/hook", ["authorization.approved"]
+        )
+        await service.create_webhook(
+            "user_1", "https://b.com/hook", ["authorization.denied"]
+        )
         result = await service.list_webhooks("user_1")
         assert len(result) == 2
 
     @pytest.mark.asyncio
     async def test_list_webhooks_user_isolation(self, db_session):
         service = WebhooksService(db_session)
-        await service.create_webhook("user_1", "https://a.com/hook", ["authorization.approved"])
-        await service.create_webhook("user_2", "https://b.com/hook", ["authorization.approved"])
+        await service.create_webhook(
+            "user_1", "https://a.com/hook", ["authorization.approved"]
+        )
+        await service.create_webhook(
+            "user_2", "https://b.com/hook", ["authorization.approved"]
+        )
         result = await service.list_webhooks("user_1")
         assert len(result) == 1
 
     @pytest.mark.asyncio
     async def test_get_webhook(self, db_session):
         service = WebhooksService(db_session)
-        created = await service.create_webhook("user_1", "https://a.com/hook", ["authorization.approved"])
+        created = await service.create_webhook(
+            "user_1", "https://a.com/hook", ["authorization.approved"]
+        )
         found = await service.get_webhook(created.id, "user_1")
         assert found is not None
         assert found.id == created.id
@@ -85,7 +96,9 @@ class TestWebhooksServiceCRUD:
     @pytest.mark.asyncio
     async def test_get_webhook_wrong_user(self, db_session):
         service = WebhooksService(db_session)
-        created = await service.create_webhook("user_1", "https://a.com/hook", ["authorization.approved"])
+        created = await service.create_webhook(
+            "user_1", "https://a.com/hook", ["authorization.approved"]
+        )
         found = await service.get_webhook(created.id, "user_2")
         assert found is None
 
@@ -98,14 +111,20 @@ class TestWebhooksServiceCRUD:
     @pytest.mark.asyncio
     async def test_update_webhook_url(self, db_session):
         service = WebhooksService(db_session)
-        created = await service.create_webhook("user_1", "https://old.com/hook", ["authorization.approved"])
-        updated = await service.update_webhook(created.id, "user_1", url="https://new.com/hook")
+        created = await service.create_webhook(
+            "user_1", "https://old.com/hook", ["authorization.approved"]
+        )
+        updated = await service.update_webhook(
+            created.id, "user_1", url="https://new.com/hook"
+        )
         assert updated.url == "https://new.com/hook"
 
     @pytest.mark.asyncio
     async def test_update_webhook_events(self, db_session):
         service = WebhooksService(db_session)
-        created = await service.create_webhook("user_1", "https://a.com/hook", ["authorization.approved"])
+        created = await service.create_webhook(
+            "user_1", "https://a.com/hook", ["authorization.approved"]
+        )
         updated = await service.update_webhook(
             created.id, "user_1", events=["authorization.denied", "limit.exceeded"]
         )
@@ -116,7 +135,9 @@ class TestWebhooksServiceCRUD:
     @pytest.mark.asyncio
     async def test_update_webhook_is_active(self, db_session):
         service = WebhooksService(db_session)
-        created = await service.create_webhook("user_1", "https://a.com/hook", ["authorization.approved"])
+        created = await service.create_webhook(
+            "user_1", "https://a.com/hook", ["authorization.approved"]
+        )
         updated = await service.update_webhook(created.id, "user_1", is_active=False)
         assert updated.is_active is False
 
@@ -129,7 +150,9 @@ class TestWebhooksServiceCRUD:
     @pytest.mark.asyncio
     async def test_delete_webhook(self, db_session):
         service = WebhooksService(db_session)
-        created = await service.create_webhook("user_1", "https://a.com/hook", ["authorization.approved"])
+        created = await service.create_webhook(
+            "user_1", "https://a.com/hook", ["authorization.approved"]
+        )
         deleted = await service.delete_webhook(created.id, "user_1")
         assert deleted is True
         # Should not appear in list (soft delete)
@@ -149,7 +172,9 @@ class TestWebhooksServiceSignature:
         payload = '{"event": "test"}'
         secret = "test_secret"
         sig = service._generate_signature(payload, secret)
-        expected = hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
+        expected = hmac.new(
+            secret.encode(), payload.encode(), hashlib.sha256
+        ).hexdigest()
         assert sig == expected
 
     def test_verify_signature_valid(self):
@@ -159,7 +184,9 @@ class TestWebhooksServiceSignature:
         assert WebhooksService.verify_signature(payload, sig, secret) is True
 
     def test_verify_signature_invalid(self):
-        assert WebhooksService.verify_signature('{"a":1}', "wrong_sig", "secret") is False
+        assert (
+            WebhooksService.verify_signature('{"a":1}', "wrong_sig", "secret") is False
+        )
 
 
 class TestWebhooksServiceDispatch:
@@ -179,8 +206,12 @@ class TestWebhooksServiceDispatch:
     @pytest.mark.asyncio
     async def test_dispatch_event_filters_by_subscription(self, db_session):
         service = WebhooksService(db_session)
-        await service.create_webhook("user_1", "https://a.com", ["authorization.approved"])
-        await service.create_webhook("user_1", "https://b.com", ["authorization.denied"])
+        await service.create_webhook(
+            "user_1", "https://a.com", ["authorization.approved"]
+        )
+        await service.create_webhook(
+            "user_1", "https://b.com", ["authorization.denied"]
+        )
 
         deliver_calls = []
         original_deliver = service._deliver_webhook
@@ -205,7 +236,10 @@ class TestEmitAuthorizationEvent:
             "user_1", "https://example.com/hook", ["authorization.approved"]
         )
 
-        with patch("app.services.webhooks.WebhooksService._deliver_webhook", new_callable=AsyncMock):
+        with patch(
+            "app.services.webhooks.WebhooksService._deliver_webhook",
+            new_callable=AsyncMock,
+        ):
             await emit_authorization_event(
                 db_session, "user_1", "approved", amount=49.99, merchant="amazon"
             )

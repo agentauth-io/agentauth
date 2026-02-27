@@ -3,6 +3,7 @@ Comprehensive tests for core/engine.py and core/main.py modules.
 Covers the AuthorizationEngine, RateLimiter, SpendingTracker, AgentAuthCore,
 and create_spending_policy to push coverage toward 80% target.
 """
+
 import json
 import os
 import time
@@ -41,8 +42,10 @@ class TestAuthorizationStatus:
 class TestAuthorizationRequest:
     def test_basic_create(self):
         req = AuthorizationRequest(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", resource="order-123"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            resource="order-123",
         )
         assert req.agent_id == "agent-1"
         assert req.request_id.startswith("req_")
@@ -63,9 +66,14 @@ class TestAuthorizationRequest:
 
     def test_to_context_full(self):
         req = AuthorizationRequest(
-            agent_id="a", user_id="u", action="buy", resource="r",
-            amount=49.99, merchant="Amazon", category="electronics",
-            metadata={"ip": "1.2.3.4"}
+            agent_id="a",
+            user_id="u",
+            action="buy",
+            resource="r",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
+            metadata={"ip": "1.2.3.4"},
         )
         ctx = req.to_context()
         assert ctx["amount"] == 49.99
@@ -75,8 +83,7 @@ class TestAuthorizationRequest:
 
     def test_hash_deterministic(self):
         req = AuthorizationRequest(
-            agent_id="a", user_id="u", action="buy", resource="r",
-            amount=50.0
+            agent_id="a", user_id="u", action="buy", resource="r", amount=50.0
         )
         h1 = req.hash()
         h2 = req.hash()
@@ -100,10 +107,14 @@ class TestAuthorizationResponse:
     def test_to_dict(self):
         resp = AuthorizationResponse(
             status=AuthorizationStatus.APPROVED,
-            request_id="req-1", authorized=True,
-            token="base64token", token_id="tok-1",
-            reason="Allowed", risk_score=0.1,
-            policy_id="pol-1", constraints={"max": 200},
+            request_id="req-1",
+            authorized=True,
+            token="base64token",
+            token_id="tok-1",
+            reason="Allowed",
+            risk_score=0.1,
+            policy_id="pol-1",
+            constraints={"max": 200},
             expires_at=time.time() + 3600,
             evaluation_time_ms=5.0,
         )
@@ -116,8 +127,9 @@ class TestAuthorizationResponse:
     def test_denied_response(self):
         resp = AuthorizationResponse(
             status=AuthorizationStatus.DENIED,
-            request_id="req-1", authorized=False,
-            reason="Policy blocked"
+            request_id="req-1",
+            authorized=False,
+            reason="Policy blocked",
         )
         assert resp.authorized is False
         assert resp.token is None
@@ -134,8 +146,12 @@ class TestRateLimiter:
         assert reason == ""
 
     def test_per_minute_limit(self):
-        config = RateLimitConfig(requests_per_minute=3, requests_per_hour=1000,
-                                 requests_per_day=10000, burst_limit=10)
+        config = RateLimitConfig(
+            requests_per_minute=3,
+            requests_per_hour=1000,
+            requests_per_day=10000,
+            burst_limit=10,
+        )
         rl = RateLimiter(config)
         for _ in range(3):
             allowed, _ = rl.check("user-1")
@@ -230,9 +246,13 @@ class TestAuthorizationEngine:
     def test_authorize_low_amount_approved(self):
         engine = self._make_engine()
         req = AuthorizationRequest(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", resource="order-1",
-            amount=49.99, merchant="Amazon", category="electronics"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            resource="order-1",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         resp = engine.authorize(req)
         assert resp.status == AuthorizationStatus.APPROVED
@@ -243,9 +263,13 @@ class TestAuthorizationEngine:
     def test_authorize_blocked_category(self):
         engine = self._make_engine()
         req = AuthorizationRequest(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", resource="order-1",
-            amount=25.0, merchant="CryptoEx", category="crypto"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            resource="order-1",
+            amount=25.0,
+            merchant="CryptoEx",
+            category="crypto",
         )
         resp = engine.authorize(req)
         assert resp.authorized is False
@@ -255,9 +279,13 @@ class TestAuthorizationEngine:
         engine = self._make_engine()
         engine.set_user_limits("user-1", daily_limit=50.0)
         req = AuthorizationRequest(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", resource="order-1",
-            amount=100.0, merchant="Amazon", category="electronics"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            resource="order-1",
+            amount=100.0,
+            merchant="Amazon",
+            category="electronics",
         )
         resp = engine.authorize(req)
         assert resp.authorized is False
@@ -273,14 +301,12 @@ class TestAuthorizationEngine:
         )
         for i in range(2):
             req = AuthorizationRequest(
-                agent_id="a", user_id="u",
-                action="buy", resource=f"r{i}", amount=10.0
+                agent_id="a", user_id="u", action="buy", resource=f"r{i}", amount=10.0
             )
             engine.authorize(req)
         # Third should be rate limited
         req = AuthorizationRequest(
-            agent_id="a", user_id="u",
-            action="buy", resource="r3", amount=10.0
+            agent_id="a", user_id="u", action="buy", resource="r3", amount=10.0
         )
         resp = engine.authorize(req)
         assert resp.status == AuthorizationStatus.RATE_LIMITED
@@ -288,9 +314,13 @@ class TestAuthorizationEngine:
     def test_verify_token(self):
         engine = self._make_engine()
         req = AuthorizationRequest(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", resource="order-1",
-            amount=49.99, merchant="Amazon", category="electronics"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            resource="order-1",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         resp = engine.authorize(req)
         assert resp.token is not None
@@ -308,9 +338,13 @@ class TestAuthorizationEngine:
     def test_revoke_token(self):
         engine = self._make_engine()
         req = AuthorizationRequest(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", resource="order-1",
-            amount=49.99, merchant="Amazon", category="electronics"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            resource="order-1",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         resp = engine.authorize(req)
         engine.revoke_token(resp.token_id)
@@ -324,7 +358,8 @@ class TestAuthorizationEngine:
         policy = (
             PolicyBuilder("test_pol", "Test Policy")
             .allow()
-            .when("action").equals("transfer")
+            .when("action")
+            .equals("transfer")
             .build()
         )
         engine.add_policy(policy)
@@ -343,9 +378,13 @@ class TestAuthorizationEngine:
     def test_get_user_spending(self):
         engine = self._make_engine()
         req = AuthorizationRequest(
-            agent_id="a", user_id="u1",
-            action="purchase", resource="r1",
-            amount=49.99, merchant="Amazon", category="electronics"
+            agent_id="a",
+            user_id="u1",
+            action="purchase",
+            resource="r1",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         engine.authorize(req)
         spending = engine.get_user_spending("u1")
@@ -355,9 +394,13 @@ class TestAuthorizationEngine:
     def test_get_audit_log(self):
         engine = self._make_engine()
         req = AuthorizationRequest(
-            agent_id="a", user_id="u1",
-            action="purchase", resource="r1",
-            amount=49.99, merchant="Amazon", category="electronics"
+            agent_id="a",
+            user_id="u1",
+            action="purchase",
+            resource="r1",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         engine.authorize(req)
         audit = engine.get_audit_log()
@@ -366,9 +409,13 @@ class TestAuthorizationEngine:
     def test_stats(self):
         engine = self._make_engine()
         req = AuthorizationRequest(
-            agent_id="a", user_id="u",
-            action="purchase", resource="r1",
-            amount=49.99, merchant="Amazon", category="electronics"
+            agent_id="a",
+            user_id="u",
+            action="purchase",
+            resource="r1",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         engine.authorize(req)
         s = engine.stats
@@ -387,8 +434,7 @@ class TestAuthorizationEngine:
         """Authorize request without amount should skip budget check."""
         engine = self._make_engine()
         req = AuthorizationRequest(
-            agent_id="a", user_id="u",
-            action="read", resource="doc-1"
+            agent_id="a", user_id="u", action="read", resource="doc-1"
         )
         resp = engine.authorize(req)
         assert resp.status in (AuthorizationStatus.APPROVED, AuthorizationStatus.DENIED)
@@ -397,9 +443,13 @@ class TestAuthorizationEngine:
         """Amounts > $100 should get ONE_TIME flag."""
         engine = self._make_engine()
         req = AuthorizationRequest(
-            agent_id="a", user_id="u",
-            action="purchase", resource="r1",
-            amount=150.0, merchant="Amazon", category="electronics"
+            agent_id="a",
+            user_id="u",
+            action="purchase",
+            resource="r1",
+            amount=150.0,
+            merchant="Amazon",
+            category="electronics",
         )
         resp = engine.authorize(req)
         assert resp.status == AuthorizationStatus.APPROVED
@@ -429,9 +479,12 @@ class TestAgentAuthCore:
     def test_authorize_approved(self):
         core = self._make_core()
         resp = core.authorize(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         assert resp.authorized is True
         assert resp.token is not None
@@ -440,35 +493,42 @@ class TestAgentAuthCore:
     def test_authorize_denied_category(self):
         core = self._make_core()
         resp = core.authorize(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", amount=25.0,
-            merchant="CryptoEx", category="crypto"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            amount=25.0,
+            merchant="CryptoEx",
+            category="crypto",
         )
         assert resp.authorized is False
 
     def test_authorize_auto_resource(self):
         core = self._make_core()
-        resp = core.authorize(
-            agent_id="a", user_id="u", action="read"
-        )
+        resp = core.authorize(agent_id="a", user_id="u", action="read")
         assert resp.status in (AuthorizationStatus.APPROVED, AuthorizationStatus.DENIED)
 
     def test_authorize_with_risk_assessment(self):
         core = self._make_core()
         core.set_agent_trust("agent-1", 0.9)
         resp = core.authorize(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         assert resp.authorized is True
 
     def test_verify_token(self):
         core = self._make_core()
         resp = core.authorize(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         assert resp.token is not None
         valid, data, error = core.verify_token(resp.token)
@@ -481,13 +541,15 @@ class TestAgentAuthCore:
         assert valid is False
         assert data is None
 
-
     def test_revoke_token(self):
         core = self._make_core()
         resp = core.authorize(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         core.revoke_token(resp.token_id)
         valid, _, error = core.verify_token(resp.token)
@@ -499,7 +561,8 @@ class TestAgentAuthCore:
         policy = (
             PolicyBuilder("test_pol", "Test")
             .allow()
-            .when("action").equals("transfer")
+            .when("action")
+            .equals("transfer")
             .build()
         )
         core.add_policy(policy)
@@ -510,7 +573,8 @@ class TestAgentAuthCore:
         policy = (
             PolicyBuilder("removable", "Removable")
             .allow()
-            .when("action").equals("x")
+            .when("action")
+            .equals("x")
             .build()
         )
         core.add_policy(policy)
@@ -529,7 +593,8 @@ class TestAgentAuthCore:
         policy = (
             PolicyBuilder("get_me", "Get Me")
             .deny()
-            .when("action").equals("delete")
+            .when("action")
+            .equals("delete")
             .build()
         )
         core.add_policy(policy)
@@ -546,9 +611,12 @@ class TestAgentAuthCore:
     def test_get_user_spending(self):
         core = self._make_core()
         core.authorize(
-            agent_id="a", user_id="u1",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="a",
+            user_id="u1",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         spending = core.get_user_spending("u1")
         assert spending["daily_spent"] >= 0
@@ -561,8 +629,11 @@ class TestAgentAuthCore:
     def test_assess_risk(self):
         core = self._make_core()
         risk = core.assess_risk(
-            user_id="u1", agent_id="a1",
-            amount=500.0, merchant="Unknown", category="gambling"
+            user_id="u1",
+            agent_id="a1",
+            amount=500.0,
+            merchant="Unknown",
+            category="gambling",
         )
         assert risk.overall_score >= 0.0
         assert risk.level is not None
@@ -570,9 +641,12 @@ class TestAgentAuthCore:
     def test_get_audit_log(self):
         core = self._make_core()
         core.authorize(
-            agent_id="a", user_id="u",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="a",
+            user_id="u",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         entries = core.get_audit_log()
         assert len(entries) >= 1
@@ -580,14 +654,20 @@ class TestAgentAuthCore:
     def test_get_audit_log_filtered(self):
         core = self._make_core()
         core.authorize(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         core.authorize(
-            agent_id="agent-2", user_id="user-2",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="agent-2",
+            user_id="user-2",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         entries = core.get_audit_log(user_id="user-1")
         for e in entries:
@@ -596,9 +676,12 @@ class TestAgentAuthCore:
     def test_verify_audit_chain(self):
         core = self._make_core()
         core.authorize(
-            agent_id="a", user_id="u",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="a",
+            user_id="u",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         valid, msg = core.verify_audit_chain()
         assert valid is True
@@ -606,9 +689,12 @@ class TestAgentAuthCore:
     def test_export_audit(self, tmp_path):
         core = self._make_core()
         core.authorize(
-            agent_id="a", user_id="u",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="a",
+            user_id="u",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         path = str(tmp_path / "audit.json")
         core.export_audit(path, format="json")
@@ -631,9 +717,12 @@ class TestAgentAuthCore:
     def test_stats(self):
         core = self._make_core()
         core.authorize(
-            agent_id="a", user_id="u",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="a",
+            user_id="u",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         s = core.stats
         assert s["version"] == "0.1.0"
@@ -647,9 +736,12 @@ class TestAgentAuthCore:
         ms = MasterSecret.generate()
         core = AgentAuthCore(master_secret=ms, audit_path=path)
         core.authorize(
-            agent_id="a", user_id="u",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="a",
+            user_id="u",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         assert os.path.exists(path)
 
@@ -657,9 +749,12 @@ class TestAgentAuthCore:
         """Approved transactions should be recorded for risk history."""
         core = self._make_core()
         core.authorize(
-            agent_id="a", user_id="u1",
-            action="purchase", amount=49.99,
-            merchant="Amazon", category="electronics"
+            agent_id="a",
+            user_id="u1",
+            action="purchase",
+            amount=49.99,
+            merchant="Amazon",
+            category="electronics",
         )
         # Check that the risk engine has the transaction
         history = core._risk_engine._get_history("u1")
@@ -688,9 +783,7 @@ class TestCreateSpendingPolicy:
         assert len(policies) == 2
 
     def test_custom_blocked_categories(self):
-        policies = create_spending_policy(
-            blocked_categories=["gambling", "weapons"]
-        )
+        policies = create_spending_policy(blocked_categories=["gambling", "weapons"])
         assert len(policies) == 2
 
     def test_empty_blocked_categories(self):

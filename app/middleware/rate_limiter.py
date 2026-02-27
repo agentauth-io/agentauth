@@ -4,6 +4,7 @@ Rate Limiting Middleware
 Redis-backed distributed rate limiter with token bucket algorithm.
 Supports both per-API-key and per-IP limiting.
 """
+
 import time
 from collections import defaultdict
 
@@ -29,17 +30,15 @@ class RateLimitStore:
             return
         self._last_cleanup = now
         stale_keys = [
-            k for k, v in self.requests.items()
+            k
+            for k, v in self.requests.items()
             if not v or max(v) < now - 120  # No activity in 2 minutes
         ]
         for k in stale_keys:
             del self.requests[k]
 
     def is_rate_limited(
-        self,
-        key: str,
-        max_requests: int,
-        window_seconds: int
+        self, key: str, max_requests: int, window_seconds: int
     ) -> tuple[bool, int, int]:
         """
         Check if a key is rate limited.
@@ -54,10 +53,7 @@ class RateLimitStore:
         self._cleanup_stale_keys(now)
 
         # Clean old requests for this key
-        self.requests[key] = [
-            ts for ts in self.requests[key]
-            if ts > window_start
-        ]
+        self.requests[key] = [ts for ts in self.requests[key] if ts > window_start]
 
         current_count = len(self.requests[key])
         remaining = max(0, max_requests - current_count)
@@ -92,9 +88,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     - By API key: 1000 requests per minute (100/sec burst)
     """
 
-    EXEMPT_PATHS = {
-        "/docs", "/redoc", "/openapi.json", "/health", "/", "/metrics"
-    }
+    EXEMPT_PATHS = {"/docs", "/redoc", "/openapi.json", "/health", "/", "/metrics"}
 
     # Auth endpoints get stricter rate limits (10 req/min per IP) to prevent brute force
     STRICT_PATHS = {
@@ -125,14 +119,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self._redis_available = None
 
     async def _check_redis_rate_limit(
-        self,
-        key: str,
-        limit: int,
-        window_seconds: int = 1
+        self, key: str, limit: int, window_seconds: int = 1
     ) -> tuple[bool, int, int]:
         """Check rate limit using Redis."""
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             return await cache.check_rate_limit(key, limit, window_seconds)
         except Exception:
@@ -176,7 +168,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             window_seconds = 60  # Per-minute for IPs
 
         # Try Redis first
-        redis_result = await self._check_redis_rate_limit(key, max_requests, window_seconds)
+        redis_result = await self._check_redis_rate_limit(
+            key, max_requests, window_seconds
+        )
 
         if redis_result is not None:
             is_limited = not redis_result[0]
@@ -187,7 +181,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             is_limited, remaining, reset_in = rate_limit_store.is_rate_limited(
                 key=key,
                 max_requests=max_requests * window_seconds,  # Adjust for window
-                window_seconds=window_seconds
+                window_seconds=window_seconds,
             )
 
         if is_limited:
@@ -196,14 +190,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 content={
                     "error": "rate_limit_exceeded",
                     "detail": f"Rate limit exceeded. Try again in {reset_in} seconds.",
-                    "retry_after": reset_in
+                    "retry_after": reset_in,
                 },
                 headers={
                     "Retry-After": str(reset_in),
                     "X-RateLimit-Limit": str(max_requests),
                     "X-RateLimit-Remaining": "0",
-                    "X-RateLimit-Reset": str(reset_in)
-                }
+                    "X-RateLimit-Reset": str(reset_in),
+                },
             )
 
         # Process request
@@ -225,9 +219,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
 
 async def rate_limit_check(
-    api_key: str,
-    limit: int = 100,
-    window_seconds: int = 1
+    api_key: str, limit: int = 100, window_seconds: int = 1
 ) -> None:
     """
     Standalone rate limit check function for use in endpoints.
@@ -238,25 +230,21 @@ async def rate_limit_check(
     """
     try:
         from app.services.cache_service import get_cache_service
+
         cache = get_cache_service()
         allowed, remaining, retry_after = await cache.check_rate_limit(
-            api_key=api_key,
-            limit=limit,
-            window_seconds=window_seconds
+            api_key=api_key, limit=limit, window_seconds=window_seconds
         )
 
         if not allowed:
             raise HTTPException(
                 status_code=429,
-                detail={
-                    "error": "rate_limit_exceeded",
-                    "retry_after": retry_after
-                },
+                detail={"error": "rate_limit_exceeded", "retry_after": retry_after},
                 headers={
                     "Retry-After": str(retry_after),
                     "X-RateLimit-Limit": str(limit),
                     "X-RateLimit-Remaining": "0",
-                }
+                },
             )
     except ImportError:
         pass  # Redis not available, skip check

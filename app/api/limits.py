@@ -3,6 +3,7 @@ Spending Limits API
 
 API endpoints for managing spending limits and viewing usage.
 """
+
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -19,8 +20,10 @@ router = APIRouter(prefix="/v1/limits", tags=["Spending Limits"])
 
 # Schemas
 
+
 class SpendingLimitsResponse(BaseModel):
     """Response with current spending limits."""
+
     daily_limit: Decimal
     monthly_limit: Decimal
     per_transaction_limit: Decimal
@@ -30,14 +33,24 @@ class SpendingLimitsResponse(BaseModel):
 
 class SpendingLimitsUpdate(BaseModel):
     """Request to update spending limits."""
-    daily_limit: Decimal | None = Field(None, ge=0, description="Maximum daily spending")
-    monthly_limit: Decimal | None = Field(None, ge=0, description="Maximum monthly spending")
-    per_transaction_limit: Decimal | None = Field(None, ge=0, description="Maximum per transaction")
-    require_approval_above: Decimal | None = Field(None, ge=0, description="Require human approval above this amount")
+
+    daily_limit: Decimal | None = Field(
+        None, ge=0, description="Maximum daily spending"
+    )
+    monthly_limit: Decimal | None = Field(
+        None, ge=0, description="Maximum monthly spending"
+    )
+    per_transaction_limit: Decimal | None = Field(
+        None, ge=0, description="Maximum per transaction"
+    )
+    require_approval_above: Decimal | None = Field(
+        None, ge=0, description="Require human approval above this amount"
+    )
 
 
 class UsageResponse(BaseModel):
     """Response with current usage statistics."""
+
     daily_spent: Decimal
     monthly_spent: Decimal
     daily_transaction_count: int
@@ -50,10 +63,10 @@ class UsageResponse(BaseModel):
 
 # Endpoints
 
+
 @router.get("", response_model=SpendingLimitsResponse)
 async def get_limits(
-    user_id: str = Depends(get_current_user_id),
-    db: AsyncSession = Depends(get_db)
+    user_id: str = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)
 ):
     """
     Get current spending limits.
@@ -62,8 +75,7 @@ async def get_limits(
     """
     result = await db.execute(
         select(SpendingLimit).where(
-            SpendingLimit.user_id == user_id,
-            SpendingLimit.is_active
+            SpendingLimit.user_id == user_id, SpendingLimit.is_active
         )
     )
     limits = result.scalar_one_or_none()
@@ -75,7 +87,7 @@ async def get_limits(
             monthly_limit=Decimal("10000.00"),
             per_transaction_limit=Decimal("500.00"),
             require_approval_above=Decimal("100.00"),
-            is_active=True
+            is_active=True,
         )
 
     return SpendingLimitsResponse(
@@ -83,7 +95,7 @@ async def get_limits(
         monthly_limit=limits.monthly_limit,
         per_transaction_limit=limits.per_transaction_limit,
         require_approval_above=limits.require_approval_above,
-        is_active=limits.is_active
+        is_active=limits.is_active,
     )
 
 
@@ -91,7 +103,7 @@ async def get_limits(
 async def update_limits(
     update: SpendingLimitsUpdate,
     user_id: str = Depends(get_current_user_id),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Update spending limits.
@@ -99,9 +111,7 @@ async def update_limits(
     Only provided fields will be updated.
     """
     result = await db.execute(
-        select(SpendingLimit).where(
-            SpendingLimit.user_id == user_id
-        )
+        select(SpendingLimit).where(SpendingLimit.user_id == user_id)
     )
     limits = result.scalar_one_or_none()
 
@@ -128,14 +138,13 @@ async def update_limits(
         monthly_limit=limits.monthly_limit,
         per_transaction_limit=limits.per_transaction_limit,
         require_approval_above=limits.require_approval_above,
-        is_active=limits.is_active
+        is_active=limits.is_active,
     )
 
 
 @router.get("/usage", response_model=UsageResponse)
 async def get_usage(
-    user_id: str = Depends(get_current_user_id),
-    db: AsyncSession = Depends(get_db)
+    user_id: str = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)
 ):
     """
     Get current usage against limits.
@@ -145,8 +154,7 @@ async def get_usage(
     # Get limits
     limits_result = await db.execute(
         select(SpendingLimit).where(
-            SpendingLimit.user_id == user_id,
-            SpendingLimit.is_active
+            SpendingLimit.user_id == user_id, SpendingLimit.is_active
         )
     )
     limits = limits_result.scalar_one_or_none()
@@ -169,7 +177,7 @@ async def get_usage(
             daily_limit=daily_limit,
             monthly_limit=monthly_limit,
             daily_remaining=daily_limit,
-            monthly_remaining=monthly_limit
+            monthly_remaining=monthly_limit,
         )
 
     return UsageResponse(
@@ -180,7 +188,7 @@ async def get_usage(
         daily_limit=daily_limit,
         monthly_limit=monthly_limit,
         daily_remaining=max(Decimal("0.00"), daily_limit - usage.daily_spent),
-        monthly_remaining=max(Decimal("0.00"), monthly_limit - usage.monthly_spent)
+        monthly_remaining=max(Decimal("0.00"), monthly_limit - usage.monthly_spent),
     )
 
 
@@ -188,7 +196,7 @@ async def get_usage(
 async def reset_usage(
     reset_type: str = "daily",  # "daily" or "monthly"
     user_id: str = Depends(get_current_user_id),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Manually reset usage counters.
@@ -214,7 +222,9 @@ async def reset_usage(
         usage.monthly_transaction_count = 0
         usage.last_monthly_reset = date.today()
     else:
-        raise HTTPException(status_code=400, detail="reset_type must be 'daily' or 'monthly'")
+        raise HTTPException(
+            status_code=400, detail="reset_type must be 'daily' or 'monthly'"
+        )
 
     await db.commit()
 

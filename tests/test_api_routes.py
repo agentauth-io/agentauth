@@ -88,11 +88,14 @@ class TestLimitsEndpoints:
 
     @pytest.mark.asyncio
     async def test_update_limits(self, client):
-        response = await client.put("/v1/limits", json={
-            "daily_limit": 500.0,
-            "monthly_limit": 5000.0,
-            "per_transaction_limit": 200.0,
-        })
+        response = await client.put(
+            "/v1/limits",
+            json={
+                "daily_limit": 500.0,
+                "monthly_limit": 5000.0,
+                "per_transaction_limit": 200.0,
+            },
+        )
         assert response.status_code == 200
 
     @pytest.mark.asyncio
@@ -109,10 +112,13 @@ class TestRulesEndpoints:
 
     @pytest.mark.asyncio
     async def test_add_merchant_rule(self, client):
-        response = await client.post("/v1/rules/merchants", json={
-            "merchant_pattern": "scam_store",
-            "action": "block",
-        })
+        response = await client.post(
+            "/v1/rules/merchants",
+            json={
+                "merchant_pattern": "scam_store",
+                "action": "block",
+            },
+        )
         assert response.status_code == 200
 
     @pytest.mark.asyncio
@@ -122,10 +128,13 @@ class TestRulesEndpoints:
 
     @pytest.mark.asyncio
     async def test_add_category_rule(self, client):
-        response = await client.post("/v1/rules/categories", json={
-            "category": "gambling",
-            "action": "block",
-        })
+        response = await client.post(
+            "/v1/rules/categories",
+            json={
+                "category": "gambling",
+                "action": "block",
+            },
+        )
         assert response.status_code == 200
 
 
@@ -156,18 +165,16 @@ class TestBillingEndpoints:
 class TestConsentEndpoints:
     @pytest.mark.asyncio
     async def test_create_consent(self, client):
-        response = await client.post("/v1/consents", json={
-            "user_id": "user_123",
-            "intent": {
-                "description": "Buy a laptop under $1000"
+        response = await client.post(
+            "/v1/consents",
+            json={
+                "user_id": "user_123",
+                "intent": {"description": "Buy a laptop under $1000"},
+                "constraints": {"max_amount": 1000.0, "currency": "USD"},
+                "signature": "test_signature_base64",
+                "public_key": "test_public_key_base64",
             },
-            "constraints": {
-                "max_amount": 1000.0,
-                "currency": "USD"
-            },
-            "signature": "test_signature_base64",
-            "public_key": "test_public_key_base64"
-        })
+        )
         assert response.status_code in (200, 201)  # 201 Created is also valid
         data = response.json()
         assert "consent_id" in data
@@ -176,18 +183,16 @@ class TestConsentEndpoints:
     @pytest.mark.asyncio
     async def test_list_consents(self, client):
         # Create one first
-        await client.post("/v1/consents", json={
-            "user_id": "user_123",
-            "intent": {
-                "description": "Test"
+        await client.post(
+            "/v1/consents",
+            json={
+                "user_id": "user_123",
+                "intent": {"description": "Test"},
+                "constraints": {"max_amount": 100.0, "currency": "USD"},
+                "signature": "test_signature_base64",
+                "public_key": "test_public_key_base64",
             },
-            "constraints": {
-                "max_amount": 100.0,
-                "currency": "USD"
-            },
-            "signature": "test_signature_base64",
-            "public_key": "test_public_key_base64"
-        })
+        )
         response = await client.get("/v1/consents")
         assert response.status_code == 200
 
@@ -196,32 +201,33 @@ class TestAuthorizationEndpoints:
     @pytest.mark.asyncio
     async def test_authorize_flow(self, client):
         # Create consent first
-        consent_resp = await client.post("/v1/consents", json={
-            "user_id": "user_123",
-            "intent": {
-                "description": "Buy electronics"
+        consent_resp = await client.post(
+            "/v1/consents",
+            json={
+                "user_id": "user_123",
+                "intent": {"description": "Buy electronics"},
+                "constraints": {"max_amount": 500.0, "currency": "USD"},
+                "signature": "test_signature_base64",
+                "public_key": "test_public_key_base64",
             },
-            "constraints": {
-                "max_amount": 500.0,
-                "currency": "USD"
-            },
-            "signature": "test_signature_base64",
-            "public_key": "test_public_key_base64"
-        })
+        )
         assert consent_resp.status_code in (200, 201)
         token = consent_resp.json()["delegation_token"]
 
         # Authorize
-        auth_resp = await client.post("/v1/authorize", json={
-            "delegation_token": token,
-            "action": "purchase",
-            "transaction": {
-                "amount": 99.99,
-                "currency": "USD",
-                "merchant_id": "amazon",
-                "merchant_name": "Amazon"
-            }
-        })
+        auth_resp = await client.post(
+            "/v1/authorize",
+            json={
+                "delegation_token": token,
+                "action": "purchase",
+                "transaction": {
+                    "amount": 99.99,
+                    "currency": "USD",
+                    "merchant_id": "amazon",
+                    "merchant_name": "Amazon",
+                },
+            },
+        )
         assert auth_resp.status_code in (200, 201)
         data = auth_resp.json()
         assert data["decision"] in ("ALLOW", "DENY", "STEP_UP")
@@ -229,40 +235,44 @@ class TestAuthorizationEndpoints:
     @pytest.mark.asyncio
     async def test_authorize_verify_flow(self, client):
         # Create consent
-        consent_resp = await client.post("/v1/consents", json={
-            "user_id": "user_456",
-            "intent": {
-                "description": "Order food"
+        consent_resp = await client.post(
+            "/v1/consents",
+            json={
+                "user_id": "user_456",
+                "intent": {"description": "Order food"},
+                "constraints": {"max_amount": 100.0, "currency": "USD"},
+                "signature": "test_signature_base64",
+                "public_key": "test_public_key_base64",
             },
-            "constraints": {
-                "max_amount": 100.0,
-                "currency": "USD"
-            },
-            "signature": "test_signature_base64",
-            "public_key": "test_public_key_base64"
-        })
+        )
         assert consent_resp.status_code in (200, 201)
         token = consent_resp.json()["delegation_token"]
 
         # Authorize
-        auth_resp = await client.post("/v1/authorize", json={
-            "delegation_token": token,
-            "action": "purchase",
-            "transaction": {
-                "amount": 25.0,
-                "currency": "USD",
-                "merchant_id": "doordash"
-            }
-        })
-
-        if auth_resp.status_code in (200, 201) and auth_resp.json().get("decision") == "ALLOW":
-            auth_code = auth_resp.json()["authorization_code"]
-            # Verify
-            verify_resp = await client.post("/v1/verify", json={
-                "authorization_code": auth_code,
+        auth_resp = await client.post(
+            "/v1/authorize",
+            json={
+                "delegation_token": token,
+                "action": "purchase",
                 "transaction": {
                     "amount": 25.0,
-                    "currency": "USD"
-                }
-            })
+                    "currency": "USD",
+                    "merchant_id": "doordash",
+                },
+            },
+        )
+
+        if (
+            auth_resp.status_code in (200, 201)
+            and auth_resp.json().get("decision") == "ALLOW"
+        ):
+            auth_code = auth_resp.json()["authorization_code"]
+            # Verify
+            verify_resp = await client.post(
+                "/v1/verify",
+                json={
+                    "authorization_code": auth_code,
+                    "transaction": {"amount": 25.0, "currency": "USD"},
+                },
+            )
             assert verify_resp.status_code in (200, 201)

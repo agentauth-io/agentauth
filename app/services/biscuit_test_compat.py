@@ -5,22 +5,21 @@ This module provides test-compatible classes and functions that wrap
 the main BiscuitService implementation.
 """
 
-import hashlib
 import base64
-import re
-from datetime import datetime, timezone, timedelta
-from typing import List, Optional, Any
+import hashlib
+from datetime import datetime
 
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from app.services.biscuit_service import (
-    BiscuitService as BaseBiscuitService,
     Biscuit,
-    BiscuitFact,
     BiscuitCheck,
-    BiscuitBlock,
+    BiscuitFact,
     get_biscuit_service,
+)
+from app.services.biscuit_service import (
+    BiscuitService as BaseBiscuitService,
 )
 
 
@@ -48,7 +47,9 @@ class BiscuitToken:
         return f"{self.root_key_id}:{self.biscuit.serialize()}"
 
     @classmethod
-    def deserialize(cls, token_str: str, root_key_id: str = "default") -> "BiscuitToken":
+    def deserialize(
+        cls, token_str: str, root_key_id: str = "default"
+    ) -> "BiscuitToken":
         """Deserialize token from string."""
         if ":" in token_str:
             parts = token_str.split(":", 1)
@@ -70,22 +71,17 @@ def _generate_keypair(self) -> dict:
     private_bytes = private_key.private_bytes(
         encoding=serialization.Encoding.Raw,
         format=serialization.PrivateFormat.Raw,
-        encryption_algorithm=serialization.NoEncryption()
+        encryption_algorithm=serialization.NoEncryption(),
     )
     public_bytes = public_key.public_bytes(
-        encoding=serialization.Encoding.Raw,
-        format=serialization.PublicFormat.Raw
+        encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
     )
 
     private_b64 = base64.b64encode(private_bytes).decode()
     public_b64 = base64.b64encode(public_bytes).decode()
     key_id = hashlib.sha256(public_bytes).hexdigest()[:16]
 
-    return {
-        "private_key": private_b64,
-        "public_key": public_b64,
-        "key_id": key_id
-    }
+    return {"private_key": private_b64, "public_key": public_b64, "key_id": key_id}
 
 
 BaseBiscuitService.generate_keypair = _generate_keypair
@@ -117,8 +113,8 @@ BaseBiscuitService.is_token_revoked = _is_token_revoked
 # Convenience functions for test compatibility
 def create_biscuit_token(
     root_key: str,
-    facts: List[BiscuitFact],
-    checks: Optional[List[BiscuitCheck]] = None,
+    facts: list[BiscuitFact],
+    checks: list[BiscuitCheck] | None = None,
     ttl_seconds: int = 3600,
 ) -> BiscuitToken:
     """Create a Biscuit token."""
@@ -138,7 +134,7 @@ def verify_biscuit_token(
 def authorize_with_biscuit(
     token: BiscuitToken,
     public_key: str,
-    query_facts: List[BiscuitFact],
+    query_facts: list[BiscuitFact],
 ) -> dict:
     """Authorize with Biscuit token."""
     service = get_biscuit_service()

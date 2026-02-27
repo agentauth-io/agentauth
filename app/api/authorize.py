@@ -3,6 +3,7 @@ Authorize API - POST /v1/authorize
 
 Real-time authorization decisions for agent actions.
 """
+
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -69,12 +70,11 @@ async def authorize(
     except ValueError as e:
         logger.warning(f"Authorization validation error: {e}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid request: {str(e)}"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid request: {str(e)}"
         )
     except Exception as e:
         logger.error(f"Authorization failed unexpectedly: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Authorization service error"
+            detail="Authorization service error",
         )

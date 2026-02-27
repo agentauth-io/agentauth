@@ -12,6 +12,7 @@ Architecture:
 
 Target: <100ms inference latency.
 """
+
 import json
 import logging
 import math
@@ -88,10 +89,7 @@ class NeuralNetwork:
     def _init_weights(self, fan_in: int, fan_out: int) -> list[list[float]]:
         """Xavier weight initialization."""
         scale = math.sqrt(2.0 / (fan_in + fan_out))
-        return [
-            [random.gauss(0, scale) for _ in range(fan_out)]
-            for _ in range(fan_in)
-        ]
+        return [[random.gauss(0, scale) for _ in range(fan_out)] for _ in range(fan_in)]
 
     @staticmethod
     def relu(x: float) -> float:
@@ -108,7 +106,7 @@ class NeuralNetwork:
         inputs: list[float],
         weights: list[list[float]],
         biases: list[float],
-        activation: str = "relu"
+        activation: str = "relu",
     ) -> list[float]:
         """Forward pass through a single layer."""
         output_size = len(biases)
@@ -158,10 +156,14 @@ class NeuralNetwork:
     def save_weights(self) -> dict:
         """Save weights to dictionary."""
         return {
-            "w1": self.w1, "b1": self.b1,
-            "w2": self.w2, "b2": self.b2,
-            "w3": self.w3, "b3": self.b3,
-            "w4": self.w4, "b4": self.b4,
+            "w1": self.w1,
+            "b1": self.b1,
+            "w2": self.w2,
+            "b2": self.b2,
+            "w3": self.w3,
+            "b3": self.b3,
+            "w4": self.w4,
+            "b4": self.b4,
         }
 
 
@@ -208,8 +210,9 @@ class FraudDetectionModel:
                     weights = json.load(f)
                 self.model.load_weights(weights)
                 self._loaded = True
-            except Exception:
-                pass
+            except Exception as e:
+                # Fall back to heuristic initialization if loading fails
+                logger.debug(f"Failed to load model weights from {weights_path}: {e}")
 
         # If no weights loaded, use heuristic-based initialization
         if not self._loaded:
@@ -224,12 +227,10 @@ class FraudDetectionModel:
 
             # Boost first layer weights for important features
             for j in range(len(self.model.w1[i]) if i < len(self.model.w1) else 0):
-                self.model.w1[i][j] *= (1 + importance * 5)
+                self.model.w1[i][j] *= 1 + importance * 5
 
     def predict(
-        self,
-        features: list[float],
-        feature_dict: dict[str, float]
+        self, features: list[float], feature_dict: dict[str, float]
     ) -> FraudPrediction:
         """
         Run fraud detection inference.
@@ -237,6 +238,7 @@ class FraudDetectionModel:
         Target: <100ms latency
         """
         import time
+
         start = time.perf_counter()
 
         # Normalize features
@@ -289,46 +291,58 @@ class FraudDetectionModel:
 
         # Check each known risk indicator
         if features.get("is_new_merchant", 0) > 0.5:
-            factors.append({
-                "factor": "new_merchant",
-                "description": "First transaction with this merchant",
-                "weight": 0.15
-            })
+            factors.append(
+                {
+                    "factor": "new_merchant",
+                    "description": "First transaction with this merchant",
+                    "weight": 0.15,
+                }
+            )
 
         if features.get("is_night", 0) > 0.5:
-            factors.append({
-                "factor": "unusual_time",
-                "description": "Transaction during unusual hours (10pm-6am)",
-                "weight": 0.10
-            })
+            factors.append(
+                {
+                    "factor": "unusual_time",
+                    "description": "Transaction during unusual hours (10pm-6am)",
+                    "weight": 0.10,
+                }
+            )
 
         if features.get("txn_velocity_1h", 0) > 0.1:
-            factors.append({
-                "factor": "high_velocity",
-                "description": "Unusually high transaction frequency",
-                "weight": 0.11
-            })
+            factors.append(
+                {
+                    "factor": "high_velocity",
+                    "description": "Unusually high transaction frequency",
+                    "weight": 0.11,
+                }
+            )
 
         if features.get("amount_normalized", 0) > 0.5:
-            factors.append({
-                "factor": "high_amount",
-                "description": "Transaction amount above typical range",
-                "weight": 0.12
-            })
+            factors.append(
+                {
+                    "factor": "high_amount",
+                    "description": "Transaction amount above typical range",
+                    "weight": 0.12,
+                }
+            )
 
         if features.get("declined_count_24h", 0) > 0:
-            factors.append({
-                "factor": "recent_declines",
-                "description": "Recent declined transactions",
-                "weight": 0.08
-            })
+            factors.append(
+                {
+                    "factor": "recent_declines",
+                    "description": "Recent declined transactions",
+                    "weight": 0.08,
+                }
+            )
 
         if features.get("is_cross_border", 0) > 0.5:
-            factors.append({
-                "factor": "cross_border",
-                "description": "International transaction",
-                "weight": 0.06
-            })
+            factors.append(
+                {
+                    "factor": "cross_border",
+                    "description": "International transaction",
+                    "weight": 0.06,
+                }
+            )
 
         # Sort by weight
         factors.sort(key=lambda x: x["weight"], reverse=True)
@@ -346,11 +360,17 @@ class FraudDetectionModel:
             score = min(1.0, score * 1.2)
 
         # New merchant + high amount = higher risk
-        if features.get("is_new_merchant", 0) > 0.5 and features.get("amount_normalized", 0) > 0.5:
+        if (
+            features.get("is_new_merchant", 0) > 0.5
+            and features.get("amount_normalized", 0) > 0.5
+        ):
             score = min(1.0, score * 1.15)
 
         # Night + high velocity = higher risk
-        if features.get("is_night", 0) > 0.5 and features.get("txn_velocity_1h", 0) > 0.05:
+        if (
+            features.get("is_night", 0) > 0.5
+            and features.get("txn_velocity_1h", 0) > 0.05
+        ):
             score = min(1.0, score * 1.1)
 
         return score
@@ -399,7 +419,7 @@ class FraudDetectionService:
         amount: float,
         merchant_id: str,
         category_code: str = "",
-        country: str = ""
+        country: str = "",
     ) -> FraudPrediction:
         """
         Run full fraud detection pipeline.
@@ -414,7 +434,7 @@ class FraudDetectionService:
             amount=amount,
             merchant_id=merchant_id,
             category_code=category_code,
-            country=country
+            country=country,
         )
 
         # Run inference
@@ -423,11 +443,7 @@ class FraudDetectionService:
         return prediction
 
     async def record_outcome(
-        self,
-        user_id: str,
-        amount: float,
-        merchant_id: str,
-        was_fraud: bool
+        self, user_id: str, amount: float, merchant_id: str, was_fraud: bool
     ) -> None:
         """
         Record actual fraud outcome for model training.
@@ -436,10 +452,7 @@ class FraudDetectionService:
         # For now, just record the transaction
         decision = "FRAUD" if was_fraud else "ALLOW"
         await self.feature_store.record_transaction(
-            user_id=user_id,
-            amount=amount,
-            merchant_id=merchant_id,
-            decision=decision
+            user_id=user_id, amount=amount, merchant_id=merchant_id, decision=decision
         )
 
 
@@ -457,10 +470,7 @@ def get_fraud_service() -> FraudDetectionService:
 
 # Convenience function
 async def detect_fraud(
-    user_id: str,
-    amount: float,
-    merchant_id: str,
-    **kwargs
+    user_id: str, amount: float, merchant_id: str, **kwargs
 ) -> FraudPrediction:
     """
     Quick fraud detection.

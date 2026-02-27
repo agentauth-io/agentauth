@@ -2,6 +2,7 @@
 Comprehensive tests for core/risk.py and core/audit.py modules.
 Targets the two lowest-coverage core modules to push toward 80% target.
 """
+
 import json
 import time
 
@@ -60,26 +61,20 @@ class TestRiskFactorScore:
             factor=RiskFactor.AMOUNT_HIGH,
             score=0.8,
             weight=0.25,
-            description="High amount"
+            description="High amount",
         )
         assert rfs.score == 0.8
         assert rfs.weight == 0.25
 
     def test_weighted_score(self):
         rfs = RiskFactorScore(
-            factor=RiskFactor.AMOUNT_HIGH,
-            score=0.8,
-            weight=0.25,
-            description="test"
+            factor=RiskFactor.AMOUNT_HIGH, score=0.8, weight=0.25, description="test"
         )
         assert rfs.weighted_score == pytest.approx(0.2)
 
     def test_weighted_score_zero(self):
         rfs = RiskFactorScore(
-            factor=RiskFactor.AMOUNT_HIGH,
-            score=0.0,
-            weight=0.5,
-            description="test"
+            factor=RiskFactor.AMOUNT_HIGH, score=0.0, weight=0.5, description="test"
         )
         assert rfs.weighted_score == 0.0
 
@@ -204,8 +199,11 @@ class TestRiskScoringEngine:
     def test_assess_first_transaction(self):
         engine = RiskScoringEngine()
         result = engine.assess(
-            user_id="new-user", agent_id="agent-1",
-            amount=25.0, merchant="Amazon", category="electronics"
+            user_id="new-user",
+            agent_id="agent-1",
+            amount=25.0,
+            merchant="Amazon",
+            category="electronics",
         )
         assert isinstance(result, RiskAssessment)
         assert result.overall_score >= 0.0
@@ -220,8 +218,11 @@ class TestRiskScoringEngine:
         for i in range(10):
             engine.record_transaction("user-1", 50.0, "Amazon", "electronics")
         result = engine.assess(
-            user_id="user-1", agent_id="trusted-agent",
-            amount=45.0, merchant="Amazon", category="electronics"
+            user_id="user-1",
+            agent_id="trusted-agent",
+            amount=45.0,
+            merchant="Amazon",
+            category="electronics",
         )
         assert result.level in (RiskLevel.LOW, RiskLevel.MEDIUM)
 
@@ -230,8 +231,11 @@ class TestRiskScoringEngine:
         for i in range(10):
             engine.record_transaction("user-1", 50.0, "Amazon", "electronics")
         result = engine.assess(
-            user_id="user-1", agent_id="agent-1",
-            amount=999.99, merchant="Amazon", category="electronics"
+            user_id="user-1",
+            agent_id="agent-1",
+            amount=999.99,
+            merchant="Amazon",
+            category="electronics",
         )
         factor_names = [f.factor for f in result.factors]
         assert RiskFactor.AMOUNT_HIGH in factor_names
@@ -239,8 +243,11 @@ class TestRiskScoringEngine:
     def test_assess_moderate_amount(self):
         engine = RiskScoringEngine()
         result = engine.assess(
-            user_id="user-1", agent_id="agent-1",
-            amount=300.0, merchant="Amazon", category="electronics"
+            user_id="user-1",
+            agent_id="agent-1",
+            amount=300.0,
+            merchant="Amazon",
+            category="electronics",
         )
         factor_names = [f.factor for f in result.factors]
         assert RiskFactor.AMOUNT_HIGH in factor_names
@@ -251,8 +258,11 @@ class TestRiskScoringEngine:
         for i in range(10):
             engine.record_transaction("user-1", 20.0, "Amazon", "electronics")
         result = engine.assess(
-            user_id="user-1", agent_id="agent-1",
-            amount=200.0, merchant="Amazon", category="electronics"
+            user_id="user-1",
+            agent_id="agent-1",
+            amount=200.0,
+            merchant="Amazon",
+            category="electronics",
         )
         factor_names = [f.factor for f in result.factors]
         assert RiskFactor.AMOUNT_UNUSUAL in factor_names
@@ -260,8 +270,11 @@ class TestRiskScoringEngine:
     def test_assess_risky_category(self):
         engine = RiskScoringEngine()
         result = engine.assess(
-            user_id="user-1", agent_id="agent-1",
-            amount=50.0, merchant="CryptoExchange", category="crypto"
+            user_id="user-1",
+            agent_id="agent-1",
+            amount=50.0,
+            merchant="CryptoExchange",
+            category="crypto",
         )
         factor_names = [f.factor for f in result.factors]
         assert RiskFactor.CATEGORY_BLOCKED in factor_names
@@ -269,8 +282,11 @@ class TestRiskScoringEngine:
     def test_assess_medium_risk_category(self):
         engine = RiskScoringEngine()
         result = engine.assess(
-            user_id="user-1", agent_id="agent-1",
-            amount=50.0, merchant="JewelryStore", category="jewelry"
+            user_id="user-1",
+            agent_id="agent-1",
+            amount=50.0,
+            merchant="JewelryStore",
+            category="jewelry",
         )
         factor_names = [f.factor for f in result.factors]
         assert RiskFactor.CATEGORY_RISKY in factor_names
@@ -280,8 +296,11 @@ class TestRiskScoringEngine:
         for i in range(5):
             engine.record_transaction("user-1", 50.0, "Amazon", "electronics")
         result = engine.assess(
-            user_id="user-1", agent_id="agent-1",
-            amount=50.0, merchant="NewStore", category="electronics"
+            user_id="user-1",
+            agent_id="agent-1",
+            amount=50.0,
+            merchant="NewStore",
+            category="electronics",
         )
         factor_names = [f.factor for f in result.factors]
         assert RiskFactor.MERCHANT_NEW in factor_names
@@ -289,8 +308,11 @@ class TestRiskScoringEngine:
     def test_assess_risky_merchant(self):
         engine = RiskScoringEngine()
         result = engine.assess(
-            user_id="user-1", agent_id="agent-1",
-            amount=50.0, merchant="UnknownSketchyShop", category="electronics"
+            user_id="user-1",
+            agent_id="agent-1",
+            amount=50.0,
+            merchant="UnknownSketchyShop",
+            category="electronics",
         )
         factor_names = [f.factor for f in result.factors]
         assert RiskFactor.MERCHANT_RISKY in factor_names
@@ -299,8 +321,11 @@ class TestRiskScoringEngine:
         engine = RiskScoringEngine()
         engine.set_agent_trust("shady-agent", 0.2)
         result = engine.assess(
-            user_id="user-1", agent_id="shady-agent",
-            amount=50.0, merchant="Amazon", category="electronics"
+            user_id="user-1",
+            agent_id="shady-agent",
+            amount=50.0,
+            merchant="Amazon",
+            category="electronics",
         )
         factor_names = [f.factor for f in result.factors]
         assert RiskFactor.AGENT_UNTRUSTED in factor_names
@@ -308,8 +333,11 @@ class TestRiskScoringEngine:
     def test_assess_new_agent(self):
         engine = RiskScoringEngine()
         result = engine.assess(
-            user_id="user-1", agent_id="never-seen-before",
-            amount=50.0, merchant="Amazon", category="electronics"
+            user_id="user-1",
+            agent_id="never-seen-before",
+            amount=50.0,
+            merchant="Amazon",
+            category="electronics",
         )
         factor_names = [f.factor for f in result.factors]
         assert RiskFactor.AGENT_NEW in factor_names
@@ -322,8 +350,11 @@ class TestRiskScoringEngine:
         for i in range(15):
             history.record(10.0, "M", "cat", timestamp=now - i * 60)
         result = engine.assess(
-            user_id="user-1", agent_id="agent-1",
-            amount=10.0, merchant="M", category="cat"
+            user_id="user-1",
+            agent_id="agent-1",
+            amount=10.0,
+            merchant="M",
+            category="cat",
         )
         factor_names = [f.factor for f in result.factors]
         assert RiskFactor.VELOCITY_HIGH in factor_names
@@ -335,8 +366,11 @@ class TestRiskScoringEngine:
         for i in range(7):
             history.record(10.0, "M", "cat", timestamp=now - i * 60)
         result = engine.assess(
-            user_id="user-1", agent_id="agent-1",
-            amount=10.0, merchant="M", category="cat"
+            user_id="user-1",
+            agent_id="agent-1",
+            amount=10.0,
+            merchant="M",
+            category="cat",
         )
         factor_names = [f.factor for f in result.factors]
         assert RiskFactor.VELOCITY_HIGH in factor_names
@@ -361,16 +395,22 @@ class TestRiskScoringEngine:
         engine = RiskScoringEngine()
         # Critical: score >= 0.8
         result = engine.assess(
-            user_id="user-1", agent_id="untrusted",
-            amount=5000.0, merchant="SketchyShop", category="gambling"
+            user_id="user-1",
+            agent_id="untrusted",
+            amount=5000.0,
+            merchant="SketchyShop",
+            category="gambling",
         )
         assert result.level in (RiskLevel.HIGH, RiskLevel.CRITICAL)
 
     def test_recommendations_high_risk(self):
         engine = RiskScoringEngine()
         result = engine.assess(
-            user_id="user-1", agent_id="agent-1",
-            amount=5000.0, merchant="Unknown", category="gambling"
+            user_id="user-1",
+            agent_id="agent-1",
+            amount=5000.0,
+            merchant="Unknown",
+            category="gambling",
         )
         # Should have at least one recommendation
         assert len(result.recommendations) > 0
@@ -378,8 +418,11 @@ class TestRiskScoringEngine:
     def test_evaluation_time(self):
         engine = RiskScoringEngine()
         result = engine.assess(
-            user_id="user-1", agent_id="agent-1",
-            amount=50.0, merchant="Amazon", category="electronics"
+            user_id="user-1",
+            agent_id="agent-1",
+            amount=50.0,
+            merchant="Amazon",
+            category="electronics",
         )
         assert result.evaluation_time_ms >= 0
 
@@ -602,8 +645,10 @@ class TestAuditLog:
     def test_subscribe_error_handling(self):
         """Subscriber errors should not crash append."""
         log, _ = self._make_log()
+
         def bad_subscriber(entry):
             raise ValueError("oops")
+
         log.subscribe(bad_subscriber)
         entry = log.append(AuditEventType.TOKEN_ISSUED, {"a": 1})
         assert entry is not None

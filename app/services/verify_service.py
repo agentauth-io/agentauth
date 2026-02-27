@@ -1,6 +1,7 @@
 """
 Verify Service - Merchant verification of authorization codes
 """
+
 import hashlib
 import hmac
 import logging
@@ -33,11 +34,7 @@ class VerifyService:
     3. Mark the authorization as used
     """
 
-    async def verify(
-        self,
-        db: AsyncSession,
-        request: VerifyRequest
-    ) -> VerifyResponse:
+    async def verify(self, db: AsyncSession, request: VerifyRequest) -> VerifyResponse:
         """
         Verify an authorization code and return consent proof.
 
@@ -56,43 +53,35 @@ class VerifyService:
                 return VerifyResponse(
                     valid=False,
                     verification_timestamp=now,
-                    error="authorization_already_used"
+                    error="authorization_already_used",
                 )
 
             if cached_auth["expires_at"] < now:
                 return VerifyResponse(
                     valid=False,
                     verification_timestamp=now,
-                    error="authorization_expired"
+                    error="authorization_expired",
                 )
 
             if abs(cached_auth["amount"] - request.transaction.amount) > 0.01:
                 return VerifyResponse(
-                    valid=False,
-                    verification_timestamp=now,
-                    error="amount_mismatch"
+                    valid=False, verification_timestamp=now, error="amount_mismatch"
                 )
 
             if cached_auth["currency"] != request.transaction.currency:
                 return VerifyResponse(
-                    valid=False,
-                    verification_timestamp=now,
-                    error="currency_mismatch"
+                    valid=False, verification_timestamp=now, error="currency_mismatch"
                 )
 
             # Get consent for proof
             consent_result = await db.execute(
-                select(Consent).where(
-                    Consent.consent_id == cached_auth["consent_id"]
-                )
+                select(Consent).where(Consent.consent_id == cached_auth["consent_id"])
             )
             consent = consent_result.scalar_one_or_none()
 
             if consent is None:
                 return VerifyResponse(
-                    valid=False,
-                    verification_timestamp=now,
-                    error="consent_not_found"
+                    valid=False, verification_timestamp=now, error="consent_not_found"
                 )
 
             # Mark as used in cache
@@ -115,7 +104,7 @@ class VerifyService:
                 consent_id=consent.consent_id,
                 user_id=consent.user_id,
                 signature=consent.signature,
-                public_key=consent.public_key
+                public_key=consent.public_key,
             )
 
             # Build consent proof
@@ -147,9 +136,7 @@ class VerifyService:
 
         if authorization is None:
             return VerifyResponse(
-                valid=False,
-                verification_timestamp=now,
-                error="authorization_not_found"
+                valid=False, verification_timestamp=now, error="authorization_not_found"
             )
 
         # Step 2: Check if already used
@@ -157,45 +144,35 @@ class VerifyService:
             return VerifyResponse(
                 valid=False,
                 verification_timestamp=now,
-                error="authorization_already_used"
+                error="authorization_already_used",
             )
 
         # Step 3: Check if expired
         if authorization.expires_at < now:
             return VerifyResponse(
-                valid=False,
-                verification_timestamp=now,
-                error="authorization_expired"
+                valid=False, verification_timestamp=now, error="authorization_expired"
             )
 
         # Step 4: Validate amount matches
         if abs(authorization.amount - request.transaction.amount) > 0.01:
             return VerifyResponse(
-                valid=False,
-                verification_timestamp=now,
-                error="amount_mismatch"
+                valid=False, verification_timestamp=now, error="amount_mismatch"
             )
 
         if authorization.currency != request.transaction.currency:
             return VerifyResponse(
-                valid=False,
-                verification_timestamp=now,
-                error="currency_mismatch"
+                valid=False, verification_timestamp=now, error="currency_mismatch"
             )
 
         # Step 5: Get the original consent for proof
         consent_result = await db.execute(
-            select(Consent).where(
-                Consent.consent_id == authorization.consent_id
-            )
+            select(Consent).where(Consent.consent_id == authorization.consent_id)
         )
         consent = consent_result.scalar_one_or_none()
 
         if consent is None:
             return VerifyResponse(
-                valid=False,
-                verification_timestamp=now,
-                error="consent_not_found"
+                valid=False, verification_timestamp=now, error="consent_not_found"
             )
 
         # Step 6: Mark as used
@@ -221,7 +198,7 @@ class VerifyService:
             consent_id=consent.consent_id,
             user_id=consent.user_id,
             signature=consent.signature,
-            public_key=consent.public_key
+            public_key=consent.public_key,
         )
 
         # Step 8: Build consent proof
@@ -248,7 +225,7 @@ class VerifyService:
         consent_id: str,
         user_id: str,
         signature: str | None,
-        public_key: str | None
+        public_key: str | None,
     ) -> bool:
         """
         Verify the cryptographic signature of a consent.
@@ -260,7 +237,9 @@ class VerifyService:
         """
         if not signature or not public_key:
             # Legacy consents without signatures - log warning but allow
-            logger.warning(f"Consent {consent_id} has no signature - skipping verification")
+            logger.warning(
+                f"Consent {consent_id} has no signature - skipping verification"
+            )
             return True
 
         try:
@@ -272,27 +251,27 @@ class VerifyService:
             if signature == "sdk_generated":
                 # Default SDK signature - verify by computing expected HMAC
                 expected = hmac.new(
-                    settings.secret_key.encode(),
-                    message.encode(),
-                    hashlib.sha256
+                    settings.secret_key.encode(), message.encode(), hashlib.sha256
                 ).hexdigest()
                 # SDK didn't provide actual hash, so we verify the consent
                 # was created through our API (which is the trust boundary)
-                logger.debug(f"SDK-generated signature for consent {consent_id} - trusted via API boundary")
+                logger.debug(
+                    f"SDK-generated signature for consent {consent_id} - trusted via API boundary"
+                )
                 return True
 
             if signature.startswith("hmac_"):
                 # HMAC signature verification
                 provided_hash = signature[5:]  # Remove "hmac_" prefix
                 expected = hmac.new(
-                    settings.secret_key.encode(),
-                    message.encode(),
-                    hashlib.sha256
+                    settings.secret_key.encode(), message.encode(), hashlib.sha256
                 ).hexdigest()
                 return hmac.compare_digest(provided_hash, expected)
 
             # Reject unknown signature formats
-            logger.warning(f"Unknown signature format for consent {consent_id} - rejecting")
+            logger.warning(
+                f"Unknown signature format for consent {consent_id} - rejecting"
+            )
             return False
 
         except Exception as e:

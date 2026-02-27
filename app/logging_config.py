@@ -3,6 +3,7 @@ AgentAuth Logging Configuration
 
 Structured JSON logging for production, readable logs for development.
 """
+
 import json
 import logging
 import sys
@@ -43,10 +44,10 @@ class DevFormatter(logging.Formatter):
     """Readable formatter for development."""
 
     COLORS = {
-        "DEBUG": "\033[36m",     # Cyan
-        "INFO": "\033[32m",      # Green
-        "WARNING": "\033[33m",   # Yellow
-        "ERROR": "\033[31m",     # Red
+        "DEBUG": "\033[36m",  # Cyan
+        "INFO": "\033[32m",  # Green
+        "WARNING": "\033[33m",  # Yellow
+        "ERROR": "\033[31m",  # Red
         "CRITICAL": "\033[35m",  # Magenta
     }
     RESET = "\033[0m"

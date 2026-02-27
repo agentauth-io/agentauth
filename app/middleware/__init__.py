@@ -1,6 +1,7 @@
 """
 AgentAuth Middleware Package
 """
+
 from app.middleware.api_keys import (
     DEMO_KEY,
     generate_api_key,

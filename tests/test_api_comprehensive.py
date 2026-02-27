@@ -11,6 +11,7 @@ Production-grade tests covering:
 - API key authentication
 - Agent management
 """
+
 import uuid
 
 import pytest
@@ -339,7 +340,11 @@ class TestAuthorization:
             json={
                 "delegation_token": token,
                 "action": "payment",
-                "transaction": {"amount": 347, "currency": "USD", "merchant_id": "delta"},
+                "transaction": {
+                    "amount": 347,
+                    "currency": "USD",
+                    "merchant_id": "delta",
+                },
             },
         )
         assert resp.status_code == 200
@@ -407,7 +412,11 @@ class TestAuthorization:
             json={
                 "delegation_token": token,
                 "action": "payment",
-                "transaction": {"amount": 100, "currency": "USD", "merchant_id": "delta"},
+                "transaction": {
+                    "amount": 100,
+                    "currency": "USD",
+                    "merchant_id": "delta",
+                },
             },
         )
         assert resp.json()["decision"] == "ALLOW"
@@ -418,7 +427,11 @@ class TestAuthorization:
             json={
                 "delegation_token": token,
                 "action": "payment",
-                "transaction": {"amount": 100, "currency": "USD", "merchant_id": "southwest"},
+                "transaction": {
+                    "amount": 100,
+                    "currency": "USD",
+                    "merchant_id": "southwest",
+                },
             },
         )
         assert resp2.json()["decision"] == "DENY"
@@ -478,7 +491,11 @@ class TestVerification:
             json={
                 "delegation_token": token,
                 "action": "payment",
-                "transaction": {"amount": amount, "currency": "USD", "merchant_id": "test_merchant"},
+                "transaction": {
+                    "amount": amount,
+                    "currency": "USD",
+                    "merchant_id": "test_merchant",
+                },
             },
         )
         return auth_resp.json()["authorization_code"], amount
@@ -584,7 +601,9 @@ class TestFullFlowIntegration:
     async def test_complete_flow_consent_authorize_verify(self, client: AsyncClient):
         """consent → authorize → verify full happy path."""
         # 1. Create consent
-        consent_resp = await client.post("/v1/consents", json=_consent_payload(max_amount=1000))
+        consent_resp = await client.post(
+            "/v1/consents", json=_consent_payload(max_amount=1000)
+        )
         assert consent_resp.status_code == 201
         consent = consent_resp.json()
         token = consent["delegation_token"]
@@ -619,14 +638,18 @@ class TestFullFlowIntegration:
         assert verify_resp.status_code == 200
         verification = verify_resp.json()
         assert verification["valid"] is True
-        assert verification["consent_proof"]["user_intent"] == "Buy cheapest flight to NYC"
+        assert (
+            verification["consent_proof"]["user_intent"] == "Buy cheapest flight to NYC"
+        )
         assert verification["consent_proof"]["max_authorized_amount"] == 1000
         assert verification["consent_proof"]["actual_amount"] == 499.99
 
     @pytest.mark.anyio
     async def test_flow_multiple_authorizations_same_consent(self, client: AsyncClient):
         """Multiple authorization requests against the same consent token."""
-        consent_resp = await client.post("/v1/consents", json=_consent_payload(max_amount=500))
+        consent_resp = await client.post(
+            "/v1/consents", json=_consent_payload(max_amount=500)
+        )
         token = consent_resp.json()["delegation_token"]
 
         # First auth — should work
@@ -682,9 +705,7 @@ class TestAgentsCRUD:
 
     @pytest.mark.anyio
     async def test_get_agent(self, client: AsyncClient):
-        create_resp = await client.post(
-            "/v1/agents", json={"name": "TestBot"}
-        )
+        create_resp = await client.post("/v1/agents", json={"name": "TestBot"})
         agent_id = create_resp.json()["id"]
 
         resp = await client.get(f"/v1/agents/{agent_id}")
@@ -698,9 +719,7 @@ class TestAgentsCRUD:
 
     @pytest.mark.anyio
     async def test_delete_agent(self, client: AsyncClient):
-        create_resp = await client.post(
-            "/v1/agents", json={"name": "DeleteMe"}
-        )
+        create_resp = await client.post("/v1/agents", json={"name": "DeleteMe"})
         agent_id = create_resp.json()["id"]
 
         resp = await client.delete(f"/v1/agents/{agent_id}")

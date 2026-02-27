@@ -3,6 +3,7 @@ Spending Limits and Rules Models
 
 Database models for the rules engine that controls AI agent spending.
 """
+
 import enum
 import uuid
 from datetime import date, datetime, timezone
@@ -18,6 +19,7 @@ from app.models.database import Base
 
 class RuleAction(str, enum.Enum):
     """Action to take when rule matches."""
+
     ALLOW = "allow"
     BLOCK = "block"
 
@@ -29,6 +31,7 @@ class SpendingLimit(Base):
     Defines maximum spending thresholds that the rules engine
     checks before approving any authorization request.
     """
+
     __tablename__ = "spending_limits"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -60,7 +63,9 @@ class SpendingLimit(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
 
@@ -70,12 +75,15 @@ class UsageTracking(Base):
 
     Automatically resets daily/monthly counters.
     """
+
     __tablename__ = "usage_tracking"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    user_id: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    user_id: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
 
     # Current usage
     daily_spent: Mapped[Decimal] = mapped_column(
@@ -95,7 +103,9 @@ class UsageTracking(Base):
 
     # Timestamps
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
 
@@ -105,6 +115,7 @@ class MerchantRule(Base):
 
     Supports pattern matching (e.g., "*.amazon.com").
     """
+
     __tablename__ = "merchant_rules"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -136,6 +147,7 @@ class CategoryRule(Base):
 
     Categories: saas, ecommerce, travel, entertainment, gambling, crypto, etc.
     """
+
     __tablename__ = "category_rules"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -169,6 +181,7 @@ class AuthorizationLog(Base):
 
     Captures full context of each decision.
     """
+
     __tablename__ = "authorization_logs"
 
     id: Mapped[uuid.UUID] = mapped_column(

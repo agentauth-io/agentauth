@@ -317,8 +317,12 @@ class TestZeroTrustPolicyEngine(unittest.TestCase):
     def test_add_policy(self):
         policy = AuthorizationPolicy(
             name="allow-api-calls",
-            source=ServiceIdentity.from_spiffe_id("spiffe://test.local/default/frontend"),
-            destination=ServiceIdentity.from_spiffe_id("spiffe://test.local/default/api"),
+            source=ServiceIdentity.from_spiffe_id(
+                "spiffe://test.local/default/frontend"
+            ),
+            destination=ServiceIdentity.from_spiffe_id(
+                "spiffe://test.local/default/api"
+            ),
             allowed_methods=["GET", "POST"],
             allowed_paths=["/v1/*"],
         )
@@ -333,7 +337,9 @@ class TestZeroTrustPolicyEngine(unittest.TestCase):
         policy = AuthorizationPolicy(
             name="allow-read",
             source=ServiceIdentity.from_spiffe_id("spiffe://test.local/default/reader"),
-            destination=ServiceIdentity.from_spiffe_id("spiffe://test.local/default/store"),
+            destination=ServiceIdentity.from_spiffe_id(
+                "spiffe://test.local/default/store"
+            ),
             allowed_methods=["GET"],
             allowed_paths=["/data/*"],
         )
@@ -429,35 +435,43 @@ class TestThreatIntelligence(unittest.TestCase):
         self.ti = ThreatIntelligence()
 
     def test_feature_extraction(self):
-        features = self.ti.extract_features({
-            "amount": 1000,
-            "agent_id": "test-agent",
-            "action": "purchase",
-        })
+        features = self.ti.extract_features(
+            {
+                "amount": 1000,
+                "agent_id": "test-agent",
+                "action": "purchase",
+            }
+        )
 
         self.assertIsInstance(features, FeatureVector)
         self.assertEqual(len(features.values), len(FeatureVector.FEATURE_NAMES))
 
     def test_threat_assessment(self):
-        assessment = self.ti.assess_threat({
-            "agent_id": "agent-1",
-            "action": "purchase",
-            "amount": 100,
-            "trust_score": 0.9,
-        })
+        assessment = self.ti.assess_threat(
+            {
+                "agent_id": "agent-1",
+                "action": "purchase",
+                "amount": 100,
+                "trust_score": 0.9,
+            }
+        )
 
         self.assertIsNotNone(assessment)
-        self.assertIn(assessment.risk_level, ["critical", "high", "medium", "low", "none"])
+        self.assertIn(
+            assessment.risk_level, ["critical", "high", "medium", "low", "none"]
+        )
         self.assertGreaterEqual(assessment.overall_risk, 0)
         self.assertLessEqual(assessment.overall_risk, 1)
 
     def test_high_amount_detection(self):
-        assessment = self.ti.assess_threat({
-            "agent_id": "agent-2",
-            "action": "transfer",
-            "amount": 50000,
-            "trust_score": 0.5,
-        })
+        assessment = self.ti.assess_threat(
+            {
+                "agent_id": "agent-2",
+                "action": "transfer",
+                "amount": 50000,
+                "trust_score": 0.5,
+            }
+        )
 
         # High amount should trigger signals
         signal_types = [s.signal_type for s in assessment.signals]
@@ -466,18 +480,22 @@ class TestThreatIntelligence(unittest.TestCase):
     def test_velocity_detection(self):
         # Simulate rapid requests
         for i in range(10):
-            self.ti.assess_threat({
+            self.ti.assess_threat(
+                {
+                    "agent_id": "rapid-agent",
+                    "action": "query",
+                    "amount": 10,
+                }
+            )
+
+        # Final request should detect high velocity
+        assessment = self.ti.assess_threat(
+            {
                 "agent_id": "rapid-agent",
                 "action": "query",
                 "amount": 10,
-            })
-
-        # Final request should detect high velocity
-        assessment = self.ti.assess_threat({
-            "agent_id": "rapid-agent",
-            "action": "query",
-            "amount": 10,
-        })
+            }
+        )
 
         signal_types = [s.signal_type for s in assessment.signals]
         self.assertIn("velocity_abuse", signal_types)
@@ -514,8 +532,7 @@ class TestIsolationForestDetector(unittest.TestCase):
 
         # Generate normal data
         normal_data = [
-            FeatureVector([0.5] * len(FeatureVector.FEATURE_NAMES))
-            for _ in range(100)
+            FeatureVector([0.5] * len(FeatureVector.FEATURE_NAMES)) for _ in range(100)
         ]
 
         detector.fit(normal_data)

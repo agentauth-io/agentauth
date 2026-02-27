@@ -3,6 +3,7 @@ AgentAuth - Main Application Entry Point
 
 The authorization layer for AI agent purchases.
 """
+
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -49,7 +50,7 @@ settings = get_settings()
 # Initialize logging first
 setup_logging(
     level=settings.log_level,
-    json_format=settings.log_json or settings.environment == "production"
+    json_format=settings.log_json or settings.environment == "production",
 )
 
 # Initialize Sentry for error tracking (optional)
@@ -98,6 +99,7 @@ async def lifespan(app: FastAPI):
     # Initialize OpenTelemetry tracing (optional)
     try:
         from app.tracing import init_tracing
+
         init_tracing(app, service_name="agentauth")
         api_logger.info("OpenTelemetry tracing initialized")
     except Exception as e:
@@ -106,6 +108,7 @@ async def lifespan(app: FastAPI):
     # Start background worker for async auth queue flushing
     try:
         from app.services.auth_service import start_background_worker
+
         start_background_worker()
         api_logger.info("Authorization background worker started")
     except Exception as e:
@@ -119,10 +122,9 @@ async def lifespan(app: FastAPI):
     try:
         await close_redis()
         api_logger.info("Redis connection closed")
-    except Exception:
-        pass
+    except Exception as e:
+        api_logger.warning(f"Error closing Redis connection: {e}")
     api_logger.info("AgentAuth API shutdown complete")
-
 
 
 # Create FastAPI application
@@ -178,6 +180,7 @@ from starlette.middleware.base import BaseHTTPMiddleware as _BaseMiddleware
 
 class RequestIDMiddleware(_BaseMiddleware):
     """Adds X-Request-ID header to all responses for tracing."""
+
     async def dispatch(self, request, call_next):
         request_id = request.headers.get("X-Request-ID", str(_uuid.uuid4()))
         request.state.request_id = request_id
@@ -188,6 +191,7 @@ class RequestIDMiddleware(_BaseMiddleware):
 
 class RequestSizeLimitMiddleware(_BaseMiddleware):
     """Limits request body size to prevent DoS attacks."""
+
     MAX_BODY_SIZE = 10 * 1024 * 1024  # 10MB
 
     async def dispatch(self, request, call_next):
@@ -201,8 +205,8 @@ class RequestSizeLimitMiddleware(_BaseMiddleware):
                         status_code=413,
                         content={
                             "error": "request_entity_too_large",
-                            "detail": f"Request body too large. Maximum size is {self.MAX_BODY_SIZE // (1024*1024)}MB"
-                        }
+                            "detail": f"Request body too large. Maximum size is {self.MAX_BODY_SIZE // (1024*1024)}MB",
+                        },
                     )
             except ValueError:
                 pass  # Invalid content-length, let the request proceed
@@ -316,7 +320,9 @@ async def health_detailed():
         start = time.perf_counter()
         async with async_engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
-        checks["database"]["latency_ms"] = round((time.perf_counter() - start) * 1000, 2)
+        checks["database"]["latency_ms"] = round(
+            (time.perf_counter() - start) * 1000, 2
+        )
         checks["database"]["status"] = "healthy"
     except Exception as e:
         checks["database"]["status"] = "unhealthy"
@@ -357,7 +363,7 @@ async def create_api_key_endpoint(
     if settings.environment == "production":
         raise HTTPException(
             status_code=403,
-            detail="Use POST /v1/admin/login to authenticate, then POST /v1/admin/api-keys to generate keys."
+            detail="Use POST /v1/admin/login to authenticate, then POST /v1/admin/api-keys to generate keys.",
         )
     key_data = await generate_api_key(db, owner)
     return {
@@ -405,8 +411,7 @@ async def demo():
     if demo_path.exists():
         return demo_path.read_text()
     return HTMLResponse(
-        content="<h1>Demo not found</h1><p>demo.html not available</p>",
-        status_code=404
+        content="<h1>Demo not found</h1><p>demo.html not available</p>", status_code=404
     )
 
 
@@ -416,10 +421,7 @@ async def landing():
     landing_path = Path(__file__).parent.parent / "landing.html"
     if landing_path.exists():
         return landing_path.read_text()
-    return HTMLResponse(
-        content="<h1>Landing page not found</h1>",
-        status_code=404
-    )
+    return HTMLResponse(content="<h1>Landing page not found</h1>", status_code=404)
 
 
 @app.get("/metrics", tags=["Metrics"])
@@ -436,6 +438,6 @@ async def metrics():
         "infrastructure": {
             "rate_limiting": "enabled",
             "idempotency": "enabled",
-            "velocity_checks": "enabled"
-        }
+            "velocity_checks": "enabled",
+        },
     }

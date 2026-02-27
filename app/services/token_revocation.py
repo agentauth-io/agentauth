@@ -3,6 +3,7 @@ Token revocation service.
 
 Maintains a blacklist of revoked JWT token IDs (JTIs).
 """
+
 import logging
 import time
 from datetime import datetime
@@ -35,5 +36,5 @@ def _cleanup() -> None:
     # If still over limit, remove oldest
     if len(_REVOKED_TOKENS) > _MAX_REVOKED:
         sorted_jtis = sorted(_REVOKED_TOKENS, key=lambda k: _REVOKED_TOKENS[k])
-        for jti in sorted_jtis[:len(_REVOKED_TOKENS) - _MAX_REVOKED]:
+        for jti in sorted_jtis[: len(_REVOKED_TOKENS) - _MAX_REVOKED]:
             del _REVOKED_TOKENS[jti]

@@ -3,6 +3,7 @@ Rules API
 
 API endpoints for managing merchant and category rules.
 """
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -20,15 +21,20 @@ router = APIRouter(prefix="/v1/rules", tags=["Rules"])
 
 # Schemas
 
+
 class MerchantRuleCreate(BaseModel):
     """Request to create a merchant rule."""
-    merchant_pattern: str = Field(..., description="Merchant pattern (supports wildcards like *.amazon.com)")
+
+    merchant_pattern: str = Field(
+        ..., description="Merchant pattern (supports wildcards like *.amazon.com)"
+    )
     action: str = Field("block", description="Action: 'allow' or 'block'")
     description: str | None = None
 
 
 class MerchantRuleResponse(BaseModel):
     """Response with merchant rule details."""
+
     id: UUID
     merchant_pattern: str
     action: str
@@ -38,12 +44,16 @@ class MerchantRuleResponse(BaseModel):
 
 class CategoryRuleCreate(BaseModel):
     """Request to create a category rule."""
-    category: str = Field(..., description="Category name (e.g., gambling, saas, travel)")
+
+    category: str = Field(
+        ..., description="Category name (e.g., gambling, saas, travel)"
+    )
     action: str = Field("block", description="Action: 'allow' or 'block'")
 
 
 class CategoryRuleResponse(BaseModel):
     """Response with category rule details."""
+
     id: UUID
     category: str
     action: str
@@ -52,11 +62,12 @@ class CategoryRuleResponse(BaseModel):
 
 # Merchant Rules Endpoints
 
+
 @router.get("/merchants", response_model=list[MerchantRuleResponse])
 async def list_merchant_rules(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    api_key: dict = Depends(require_api_key)
+    api_key: dict = Depends(require_api_key),
 ):
     """
     List all merchant rules.
@@ -64,10 +75,9 @@ async def list_merchant_rules(
     Returns whitelist and blacklist rules for merchants.
     """
     result = await db.execute(
-        select(MerchantRule).where(
-            MerchantRule.user_id == user_id,
-            MerchantRule.is_active
-        ).order_by(MerchantRule.created_at.desc())
+        select(MerchantRule)
+        .where(MerchantRule.user_id == user_id, MerchantRule.is_active)
+        .order_by(MerchantRule.created_at.desc())
     )
     rules = result.scalars().all()
 
@@ -77,7 +87,7 @@ async def list_merchant_rules(
             merchant_pattern=rule.merchant_pattern,
             action=rule.action.value,
             description=rule.description,
-            is_active=rule.is_active
+            is_active=rule.is_active,
         )
         for rule in rules
     ]
@@ -88,7 +98,7 @@ async def create_merchant_rule(
     rule: MerchantRuleCreate,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    api_key: dict = Depends(require_api_key)
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Create a new merchant rule.
@@ -103,7 +113,7 @@ async def create_merchant_rule(
         user_id=user_id,
         merchant_pattern=rule.merchant_pattern,
         action=action,
-        description=rule.description
+        description=rule.description,
     )
     db.add(new_rule)
     await db.commit()
@@ -114,7 +124,7 @@ async def create_merchant_rule(
         merchant_pattern=new_rule.merchant_pattern,
         action=new_rule.action.value,
         description=new_rule.description,
-        is_active=new_rule.is_active
+        is_active=new_rule.is_active,
     )
 
 
@@ -123,7 +133,7 @@ async def delete_merchant_rule(
     rule_id: UUID,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    api_key: dict = Depends(require_api_key)
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Delete a merchant rule.
@@ -132,8 +142,7 @@ async def delete_merchant_rule(
     """
     result = await db.execute(
         select(MerchantRule).where(
-            MerchantRule.id == rule_id,
-            MerchantRule.user_id == user_id
+            MerchantRule.id == rule_id, MerchantRule.user_id == user_id
         )
     )
     rule = result.scalar_one_or_none()
@@ -149,11 +158,12 @@ async def delete_merchant_rule(
 
 # Category Rules Endpoints
 
+
 @router.get("/categories", response_model=list[CategoryRuleResponse])
 async def list_category_rules(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    api_key: dict = Depends(require_api_key)
+    api_key: dict = Depends(require_api_key),
 ):
     """
     List all category rules.
@@ -161,10 +171,9 @@ async def list_category_rules(
     Returns rules for spending categories.
     """
     result = await db.execute(
-        select(CategoryRule).where(
-            CategoryRule.user_id == user_id,
-            CategoryRule.is_active
-        ).order_by(CategoryRule.created_at.desc())
+        select(CategoryRule)
+        .where(CategoryRule.user_id == user_id, CategoryRule.is_active)
+        .order_by(CategoryRule.created_at.desc())
     )
     rules = result.scalars().all()
 
@@ -173,7 +182,7 @@ async def list_category_rules(
             id=rule.id,
             category=rule.category,
             action=rule.action.value,
-            is_active=rule.is_active
+            is_active=rule.is_active,
         )
         for rule in rules
     ]
@@ -184,7 +193,7 @@ async def create_category_rule(
     rule: CategoryRuleCreate,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    api_key: dict = Depends(require_api_key)
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Create a new category rule.
@@ -194,9 +203,7 @@ async def create_category_rule(
     action = RuleAction.ALLOW if rule.action.lower() == "allow" else RuleAction.BLOCK
 
     new_rule = CategoryRule(
-        user_id=user_id,
-        category=rule.category.lower(),
-        action=action
+        user_id=user_id, category=rule.category.lower(), action=action
     )
     db.add(new_rule)
     await db.commit()
@@ -206,7 +213,7 @@ async def create_category_rule(
         id=new_rule.id,
         category=new_rule.category,
         action=new_rule.action.value,
-        is_active=new_rule.is_active
+        is_active=new_rule.is_active,
     )
 
 
@@ -215,15 +222,14 @@ async def delete_category_rule(
     rule_id: UUID,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
-    api_key: dict = Depends(require_api_key)
+    api_key: dict = Depends(require_api_key),
 ):
     """
     Delete a category rule.
     """
     result = await db.execute(
         select(CategoryRule).where(
-            CategoryRule.id == rule_id,
-            CategoryRule.user_id == user_id
+            CategoryRule.id == rule_id, CategoryRule.user_id == user_id
         )
     )
     rule = result.scalar_one_or_none()
@@ -238,6 +244,7 @@ async def delete_category_rule(
 
 
 # Predefined categories for reference
+
 
 @router.get("/categories/available")
 async def get_available_categories():

@@ -17,6 +17,7 @@ Production features (with real biscuit-auth):
 
 See: https://biscuitsec.org/
 """
+
 import base64
 import hashlib
 import json
@@ -40,29 +41,32 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 
 class BiscuitError(Exception):
     """Base exception for Biscuit operations."""
+
     pass
 
 
 class BiscuitVerificationError(BiscuitError):
     """Token verification failed."""
+
     pass
 
 
 class BiscuitAuthorizationError(BiscuitError):
     """Authorization check failed."""
+
     pass
 
 
 @dataclass
 class BiscuitFact:
     """A Datalog fact in Biscuit format."""
+
     name: str
     terms: list[Any]
 
     def to_datalog(self) -> str:
         terms_str = ", ".join(
-            f'"{t}"' if isinstance(t, str) else str(t)
-            for t in self.terms
+            f'"{t}"' if isinstance(t, str) else str(t) for t in self.terms
         )
         return f"{self.name}({terms_str})"
 
@@ -70,6 +74,7 @@ class BiscuitFact:
 @dataclass
 class BiscuitRule:
     """A Datalog rule for authorization."""
+
     head: str
     body: list[str]
 
@@ -80,6 +85,7 @@ class BiscuitRule:
 @dataclass
 class BiscuitCheck:
     """A check that must pass for authorization."""
+
     rule: str
 
     def to_datalog(self) -> str:
@@ -89,6 +95,7 @@ class BiscuitCheck:
 @dataclass
 class BiscuitBlock:
     """A block in the Biscuit token chain."""
+
     facts: list[BiscuitFact] = field(default_factory=list)
     rules: list[BiscuitRule] = field(default_factory=list)
     checks: list[BiscuitCheck] = field(default_factory=list)
@@ -148,7 +155,9 @@ class Biscuit:
         try:
             data = json.loads(base64.urlsafe_b64decode(token))
             authority = BiscuitBlock(
-                facts=[], rules=[], checks=[],
+                facts=[],
+                rules=[],
+                checks=[],
                 context=data["authority"].get("context"),
             )
             blocks = [
@@ -156,8 +165,10 @@ class Biscuit:
                 for bd in data.get("blocks", [])
             ]
             return cls(
-                authority=authority, blocks=blocks,
-                token_id=data["token_id"], created_at=data["created_at"],
+                authority=authority,
+                blocks=blocks,
+                token_id=data["token_id"],
+                created_at=data["created_at"],
                 root_key_id=data["root_key_id"],
             )
         except Exception as e:
@@ -223,7 +234,9 @@ class BiscuitToken:
         return f"{self.root_key_id}:{self.biscuit.serialize()}"
 
     @classmethod
-    def deserialize(cls, token_str: str, root_key_id: str = "default") -> "BiscuitToken":
+    def deserialize(
+        cls, token_str: str, root_key_id: str = "default"
+    ) -> "BiscuitToken":
         if ":" in token_str:
             parts = token_str.split(":", 1)
             biscuit = Biscuit.deserialize(parts[1])
@@ -248,17 +261,16 @@ class BiscuitService:
         private_bytes = private_key.private_bytes(
             encoding=serialization.Encoding.Raw,
             format=serialization.PrivateFormat.Raw,
-            encryption_algorithm=serialization.NoEncryption()
+            encryption_algorithm=serialization.NoEncryption(),
         )
         public_bytes = public_key.public_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw
+            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
         )
 
         return {
             "private_key": base64.b64encode(private_bytes).decode(),
             "public_key": base64.b64encode(public_bytes).decode(),
-            "key_id": hashlib.sha256(public_bytes).hexdigest()[:16]
+            "key_id": hashlib.sha256(public_bytes).hexdigest()[:16],
         }
 
     def create_token(
@@ -272,10 +284,11 @@ class BiscuitService:
         try:
             private_bytes = base64.b64decode(root_key)
             from cryptography.hazmat.primitives.asymmetric import ed25519
+
             private_key = ed25519.Ed25519PrivateKey.from_private_bytes(private_bytes)
             public_bytes = private_key.public_key().public_bytes(
                 encoding=serialization.Encoding.Raw,
-                format=serialization.PublicFormat.Raw
+                format=serialization.PublicFormat.Raw,
             )
             key_id = hashlib.sha256(public_bytes).hexdigest()[:16]
         except Exception:
@@ -312,17 +325,29 @@ class BiscuitService:
             for check in checks:
                 builder.add_check(check.rule)
 
-        return BiscuitToken(token.biscuit.attenuate(builder.build()), root_key_id=token.root_key_id)
+        return BiscuitToken(
+            token.biscuit.attenuate(builder.build()), root_key_id=token.root_key_id
+        )
 
     def verify_token(self, token: BiscuitToken, public_key: str) -> dict:
         """Verify a token."""
         result = {"valid": True, "facts": [], "revoked": False, "error": None}
 
         if self.is_token_revoked(token):
-            return {"valid": False, "facts": [], "revoked": True, "error": "Token revoked"}
+            return {
+                "valid": False,
+                "facts": [],
+                "revoked": True,
+                "error": "Token revoked",
+            }
 
         if token.expires_at and token.expires_at < datetime.now(timezone.utc):
-            return {"valid": False, "facts": [], "revoked": False, "error": "Token expired"}
+            return {
+                "valid": False,
+                "facts": [],
+                "revoked": False,
+                "error": "Token expired",
+            }
 
         for fact in token.biscuit.authority.facts:
             result["facts"].append({"name": fact.name, "terms": fact.terms})
@@ -331,9 +356,19 @@ class BiscuitService:
             public_bytes = base64.b64decode(public_key)
             derived_key_id = hashlib.sha256(public_bytes).hexdigest()[:16]
             if derived_key_id != token.root_key_id:
-                return {"valid": False, "facts": result["facts"], "revoked": False, "error": "Invalid public key"}
+                return {
+                    "valid": False,
+                    "facts": result["facts"],
+                    "revoked": False,
+                    "error": "Invalid public key",
+                }
         except Exception:
-            return {"valid": False, "facts": [], "revoked": False, "error": "Invalid public key format"}
+            return {
+                "valid": False,
+                "facts": [],
+                "revoked": False,
+                "error": "Invalid public key format",
+            }
 
         return result
 
@@ -351,9 +386,13 @@ class BiscuitService:
         for query_fact in query_facts:
             query_key = (query_fact.name, tuple(query_fact.terms))
             if query_key in token_facts:
-                result["matched_facts"].append({"name": query_fact.name, "terms": query_fact.terms})
+                result["matched_facts"].append(
+                    {"name": query_fact.name, "terms": query_fact.terms}
+                )
             else:
-                result["missing_facts"].append({"name": query_fact.name, "terms": query_fact.terms})
+                result["missing_facts"].append(
+                    {"name": query_fact.name, "terms": query_fact.terms}
+                )
 
         # Handle amount check
         max_amount = None
@@ -376,9 +415,11 @@ class BiscuitService:
 
         # Check if token has checks that require facts not present
         for check in token.biscuit.authority.checks:
-            required_facts = re.findall(r'(\w+)\(\$', check.rule)
+            required_facts = re.findall(r"(\w+)\(\$", check.rule)
             for fact_name in required_facts:
-                has_fact = any(f.name == fact_name for f in token.biscuit.authority.facts)
+                has_fact = any(
+                    f.name == fact_name for f in token.biscuit.authority.facts
+                )
                 if not has_fact and fact_name not in ["time", "amount"]:
                     if not any(f.name == fact_name for f in query_facts):
                         result["authorized"] = False
@@ -389,7 +430,9 @@ class BiscuitService:
     def serialize_token(self, token: BiscuitToken) -> str:
         return token.serialize()
 
-    def deserialize_token(self, token_str: str, root_key_id: str = "default") -> BiscuitToken:
+    def deserialize_token(
+        self, token_str: str, root_key_id: str = "default"
+    ) -> BiscuitToken:
         return BiscuitToken.deserialize(token_str, root_key_id=root_key_id)
 
     def revoke_token(self, token_or_id) -> None:
@@ -414,7 +457,12 @@ def get_biscuit_service() -> BiscuitService:
     return _biscuit_service
 
 
-def create_biscuit_token(root_key: str, facts: list[BiscuitFact], checks: list[BiscuitCheck] | None = None, ttl_seconds: int = 3600) -> BiscuitToken:
+def create_biscuit_token(
+    root_key: str,
+    facts: list[BiscuitFact],
+    checks: list[BiscuitCheck] | None = None,
+    ttl_seconds: int = 3600,
+) -> BiscuitToken:
     return get_biscuit_service().create_token(root_key, facts, checks, ttl_seconds)
 
 
@@ -422,5 +470,7 @@ def verify_biscuit_token(token: BiscuitToken, public_key: str) -> dict:
     return get_biscuit_service().verify_token(token, public_key)
 
 
-def authorize_with_biscuit(token: BiscuitToken, public_key: str, query_facts: list[BiscuitFact]) -> dict:
+def authorize_with_biscuit(
+    token: BiscuitToken, public_key: str, query_facts: list[BiscuitFact]
+) -> dict:
     return get_biscuit_service().authorize(token, public_key, query_facts)

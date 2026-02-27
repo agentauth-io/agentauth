@@ -3,6 +3,7 @@ Tests for OPA (Open Policy Agent) service.
 
 Pure Python tests - no external OPA server needed.
 """
+
 import pytest
 
 from app.services.opa_service import (
@@ -181,7 +182,9 @@ class TestOPAService:
         decision = await service.evaluate(
             "agentauth.spending_limits",
             input_data={"amount": 50.0, "daily_spent": 100.0, "monthly_spent": 200.0},
-            data={"limits": {"per_transaction": 200.0, "daily": 1000.0, "monthly": 5000.0}},
+            data={
+                "limits": {"per_transaction": 200.0, "daily": 1000.0, "monthly": 5000.0}
+            },
         )
         assert decision.allowed is True
 
@@ -247,7 +250,9 @@ class TestOPAService:
         decisions = {
             "p1": PolicyDecision(allowed=True, policy_id="p1", decision_id="d1"),
             "p2": PolicyDecision(
-                allowed=False, policy_id="p2", decision_id="d2",
+                allowed=False,
+                policy_id="p2",
+                decision_id="d2",
                 reasons=["limit exceeded"],
             ),
         }
@@ -260,6 +265,7 @@ class TestCheckPolicyConvenience:
     @pytest.mark.asyncio
     async def test_check_policy_allowed(self):
         import app.services.opa_service as omod
+
         omod._opa_service = None
 
         decision = await check_policy(
@@ -272,6 +278,7 @@ class TestCheckPolicyConvenience:
     @pytest.mark.asyncio
     async def test_check_policy_denied(self):
         import app.services.opa_service as omod
+
         omod._opa_service = None
 
         decision = await check_policy(

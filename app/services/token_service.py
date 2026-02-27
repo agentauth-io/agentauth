@@ -4,6 +4,7 @@ Token Service - JWT token generation and verification
 This is the heart of AgentAuth. Tokens encode consent constraints
 and allow offline verification without database lookups.
 """
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
@@ -17,6 +18,7 @@ settings = get_settings()
 @dataclass
 class TokenPayload:
     """Decoded token payload."""
+
     consent_id: str
     user_id: str
     max_amount: float
@@ -32,6 +34,7 @@ class TokenPayload:
 @dataclass
 class TokenVerificationResult:
     """Result of token verification."""
+
     valid: bool
     payload: TokenPayload | None = None
     reason: str | None = None
@@ -81,11 +84,9 @@ class TokenService:
             "exp": expires_at,
             "iss": "agentauth",
             "sub": user_id,
-
             # AgentAuth claims
             "consent_id": consent_id,
             "intent": intent_description,
-
             # Constraints (the key part)
             "constraints": {
                 "max_amount": max_amount,
@@ -93,7 +94,6 @@ class TokenService:
                 "allowed_merchants": allowed_merchants,
                 "allowed_categories": allowed_categories,
             },
-
             # Options
             "single_use": single_use,
         }
@@ -119,22 +119,17 @@ class TokenService:
         try:
             # Decode and verify signature
             decoded = jwt.decode(
-                token,
-                self.secret_key,
-                algorithms=[self.algorithm],
-                issuer="agentauth"
+                token, self.secret_key, algorithms=[self.algorithm], issuer="agentauth"
             )
         except jwt.ExpiredSignatureError:
             return TokenVerificationResult(
                 valid=False,
                 reason="token_expired",
-                message="Delegation token has expired"
+                message="Delegation token has expired",
             )
         except jwt.InvalidTokenError as e:
             return TokenVerificationResult(
-                valid=False,
-                reason="invalid_token",
-                message=f"Invalid token: {str(e)}"
+                valid=False, reason="invalid_token", message=f"Invalid token: {str(e)}"
             )
 
         # Extract constraints
@@ -168,7 +163,7 @@ class TokenService:
                 valid=False,
                 payload=payload,
                 reason="amount_exceeded",
-                message=f"Transaction amount ${request_amount} exceeds consent limit of ${max_amount}"
+                message=f"Transaction amount ${request_amount} exceeds consent limit of ${max_amount}",
             )
 
         # Check currency constraint
@@ -177,7 +172,7 @@ class TokenService:
                 valid=False,
                 payload=payload,
                 reason="currency_mismatch",
-                message=f"Transaction currency {request_currency} does not match consent currency {currency}"
+                message=f"Transaction currency {request_currency} does not match consent currency {currency}",
             )
 
         # Check merchant constraint
@@ -187,7 +182,7 @@ class TokenService:
                     valid=False,
                     payload=payload,
                     reason="merchant_not_allowed",
-                    message=f"Merchant {request_merchant_id} is not in the allowed list"
+                    message=f"Merchant {request_merchant_id} is not in the allowed list",
                 )
 
         # Check category constraint
@@ -197,7 +192,7 @@ class TokenService:
                     valid=False,
                     payload=payload,
                     reason="category_not_allowed",
-                    message=f"Merchant category {request_merchant_category} is not in the allowed list"
+                    message=f"Merchant category {request_merchant_category} is not in the allowed list",
                 )
 
         # All checks passed

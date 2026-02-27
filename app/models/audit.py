@@ -1,6 +1,7 @@
 """
 Audit model for comprehensive security logging.
 """
+
 import uuid
 from datetime import datetime, timezone
 
@@ -16,6 +17,7 @@ class AuditEntry(Base):
     All sensitive operations are logged with cryptographic signatures
     for tamper evidence.
     """
+
     __tablename__ = "audit_entries"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -44,7 +46,12 @@ class AuditEntry(Base):
     signature = Column(String(128), nullable=False)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        index=True,
+    )
 
     __table_args__ = (
         Index("ix_audit_event_type_created", "event_type", "created_at"),

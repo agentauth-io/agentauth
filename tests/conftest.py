@@ -4,6 +4,7 @@ Pytest configuration and fixtures for AgentAuth tests.
 Handles proper async test isolation and database connection management.
 Uses in-memory SQLite for testing so no external PostgreSQL is required.
 """
+
 import os
 
 # MUST set before any app imports to ensure proper JWT algorithm
@@ -87,6 +88,43 @@ async def db_session(test_engine):
         await session.rollback()
 
 
+@pytest.fixture(autouse=True)
+def clear_service_caches():
+    """Clear in-memory caches between tests to ensure test isolation."""
+    try:
+        from app.services.auth_service import _auth_cache, _consent_cache
+
+        _consent_cache.clear()
+        _auth_cache.clear()
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        from app.services.cache_service import memory_cache
+
+        memory_cache.clear()
+    except (ImportError, AttributeError):
+        pass
+
+    yield
+
+    # Clear again after test
+    try:
+        from app.services.auth_service import _auth_cache, _consent_cache
+
+        _consent_cache.clear()
+        _auth_cache.clear()
+    except (ImportError, AttributeError):
+        pass
+
+    try:
+        from app.services.cache_service import memory_cache
+
+        memory_cache.clear()
+    except (ImportError, AttributeError):
+        pass
+
+
 @pytest.fixture
 async def client(test_engine) -> AsyncGenerator[AsyncClient, None]:
     """Create async test client with proper lifecycle management.
@@ -134,9 +172,5 @@ async def client(test_engine) -> AsyncGenerator[AsyncClient, None]:
 # Markers for test categories
 def pytest_configure(config):
     """Register custom markers."""
-    config.addinivalue_line(
-        "markers", "db: marks tests that require database access"
-    )
-    config.addinivalue_line(
-        "markers", "slow: marks tests that are slow"
-    )
+    config.addinivalue_line("markers", "db: marks tests that require database access")
+    config.addinivalue_line("markers", "slow: marks tests that are slow")

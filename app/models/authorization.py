@@ -1,6 +1,7 @@
 """
 Authorization model - stores authorization decisions and codes
 """
+
 import uuid
 from datetime import datetime, timezone
 
@@ -19,38 +20,32 @@ class Authorization(Base):
     record with the decision (ALLOW/DENY) and generate an authorization code
     for approved requests.
     """
+
     __tablename__ = "authorizations"
 
     # Primary key
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
 
     # Authorization code (external facing, for merchants to verify)
     authorization_code: Mapped[str] = mapped_column(
-        String(64),
-        unique=True,
-        index=True,
-        nullable=False
+        String(64), unique=True, index=True, nullable=False
     )
 
     # Link to consent
     consent_id: Mapped[str] = mapped_column(
-        String(64),
-        ForeignKey("consents.consent_id"),
-        nullable=False,
-        index=True
+        String(64), ForeignKey("consents.consent_id"), nullable=False, index=True
     )
 
     # Developer/Tenant identification (for RLS)
-    developer_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    developer_id: Mapped[str | None] = mapped_column(
+        String(64), nullable=True, index=True
+    )
 
     # Decision
     decision: Mapped[str] = mapped_column(
-        String(20),
-        nullable=False
+        String(20), nullable=False
     )  # ALLOW, DENY, STEP_UP
 
     denial_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -72,16 +67,22 @@ class Authorization(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
-        nullable=False
+        nullable=False,
     )
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
     # Usage tracking
-    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     is_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Verification details (filled when merchant verifies)
-    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     verified_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     def __repr__(self) -> str:
@@ -91,11 +92,7 @@ class Authorization(Base):
     def is_valid(self) -> bool:
         """Check if authorization is still valid (not expired, not used)."""
         now = datetime.now(timezone.utc)
-        return (
-            self.decision == "ALLOW"
-            and not self.is_used
-            and self.expires_at > now
-        )
+        return self.decision == "ALLOW" and not self.is_used and self.expires_at > now
 
     @property
     def was_allowed(self) -> bool:

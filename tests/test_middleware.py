@@ -3,6 +3,7 @@ Tests for middleware components.
 
 Mix of unit tests and integration tests.
 """
+
 import time
 
 import pytest
@@ -18,7 +19,9 @@ from app.middleware.rate_limiter import RateLimitStore
 class TestRateLimitStore:
     def test_not_rate_limited_within_limit(self):
         store = RateLimitStore()
-        limited, remaining, reset = store.is_rate_limited("key1", max_requests=10, window_seconds=60)
+        limited, remaining, reset = store.is_rate_limited(
+            "key1", max_requests=10, window_seconds=60
+        )
         assert limited is False
         assert remaining >= 0
 
@@ -27,7 +30,9 @@ class TestRateLimitStore:
         # Exhaust the limit
         for _ in range(10):
             store.is_rate_limited("key2", max_requests=10, window_seconds=60)
-        limited, remaining, reset = store.is_rate_limited("key2", max_requests=10, window_seconds=60)
+        limited, remaining, reset = store.is_rate_limited(
+            "key2", max_requests=10, window_seconds=60
+        )
         assert limited is True
         assert remaining == 0
 
@@ -35,8 +40,12 @@ class TestRateLimitStore:
         store = RateLimitStore()
         for _ in range(10):
             store.is_rate_limited("key_a", max_requests=10, window_seconds=60)
-        limited_a, _, _ = store.is_rate_limited("key_a", max_requests=10, window_seconds=60)
-        limited_b, _, _ = store.is_rate_limited("key_b", max_requests=10, window_seconds=60)
+        limited_a, _, _ = store.is_rate_limited(
+            "key_a", max_requests=10, window_seconds=60
+        )
+        limited_b, _, _ = store.is_rate_limited(
+            "key_b", max_requests=10, window_seconds=60
+        )
         assert limited_a is True
         assert limited_b is False
 

@@ -3,13 +3,11 @@ Dashboard API routes for monitoring and analytics.
 
 Provides aggregate stats, transaction logs, and real-time metrics.
 """
+
 import logging
-
-from fastapi import APIRouter, Depends, HTTPException, Query
-
-logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta, timezone
 
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import Date, cast, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +18,7 @@ from app.models.authorization import Authorization
 from app.models.consent import Consent
 from app.models.database import get_db
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
 
 router = APIRouter(prefix="/v1/dashboard", tags=["Dashboard"])
@@ -86,34 +85,40 @@ async def get_dashboard(
             constraints = c.constraints or {}
             scope = c.scope or {}
             agent_name = scope.get("agent_name", "Agent")
-            transactions.append({
-                "id": c.consent_id,
-                "amount": constraints.get("max_amount", 0),
-                "currency": constraints.get("currency", "USD"),
-                "status": "authorized" if c.is_active else "expired",
-                "merchant": agent_name,
-                "created_at": c.created_at.isoformat() if c.created_at else None,
-                "description": c.intent_description or "Authorization",
-            })
+            transactions.append(
+                {
+                    "id": c.consent_id,
+                    "amount": constraints.get("max_amount", 0),
+                    "currency": constraints.get("currency", "USD"),
+                    "status": "authorized" if c.is_active else "expired",
+                    "merchant": agent_name,
+                    "created_at": c.created_at.isoformat() if c.created_at else None,
+                    "description": c.intent_description or "Authorization",
+                }
+            )
 
         # Get daily counts for chart (last 7 days) - single query instead of N+1
-        seven_days_ago = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=6)
+        seven_days_ago = datetime.now(timezone.utc).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(days=6)
         daily_result = await db.execute(
             select(
                 cast(Consent.created_at, Date).label("day"),
-                func.count(Consent.id).label("count")
-            ).where(
-                owner_filter,
-                Consent.created_at >= seven_days_ago
-            ).group_by(
-                cast(Consent.created_at, Date)
+                func.count(Consent.id).label("count"),
             )
+            .where(owner_filter, Consent.created_at >= seven_days_ago)
+            .group_by(cast(Consent.created_at, Date))
         )
         daily_counts = {row.day: row.count for row in daily_result.all()}
 
         daily_requests = []
         for i in range(6, -1, -1):
-            day = (datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i)).date()
+            day = (
+                datetime.now(timezone.utc).replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                )
+                - timedelta(days=i)
+            ).date()
             daily_requests.append(daily_counts.get(day, 0))
 
         return {
@@ -165,9 +170,13 @@ async def get_dashboard_stats(
         active_consents = active_result.scalar() or 0
 
         # Get today's consents
-        today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today = datetime.now(timezone.utc).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
         today_result = await db.execute(
-            select(func.count(Consent.id)).where(owner_filter, Consent.created_at >= today)
+            select(func.count(Consent.id)).where(
+                owner_filter, Consent.created_at >= today
+            )
         )
         today_consents = today_result.scalar() or 0
 
@@ -242,17 +251,19 @@ async def get_transactions(
             constraints = c.constraints or {}
             scope = c.scope or {}
             scope.get("agent_name", "Agent")
-            transactions.append({
-                "id": c.consent_id,
-                "user_id": c.user_id,
-                "developer_id": c.developer_id,
-                "intent": c.intent_description,
-                "max_amount": constraints.get("max_amount", 0),
-                "currency": constraints.get("currency", "USD"),
-                "is_active": c.is_active,
-                "created_at": c.created_at.isoformat() if c.created_at else None,
-                "expires_at": c.expires_at.isoformat() if c.expires_at else None,
-            })
+            transactions.append(
+                {
+                    "id": c.consent_id,
+                    "user_id": c.user_id,
+                    "developer_id": c.developer_id,
+                    "intent": c.intent_description,
+                    "max_amount": constraints.get("max_amount", 0),
+                    "currency": constraints.get("currency", "USD"),
+                    "is_active": c.is_active,
+                    "created_at": c.created_at.isoformat() if c.created_at else None,
+                    "expires_at": c.expires_at.isoformat() if c.expires_at else None,
+                }
+            )
 
         return {
             "transactions": transactions,
@@ -286,17 +297,16 @@ async def get_analytics(
         owner_filter = _user_consents(user_id)
 
         # Single query for consent counts by day
-        start_day = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days)
+        start_day = datetime.now(timezone.utc).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(days=days)
         consent_daily = await db.execute(
             select(
                 cast(Consent.created_at, Date).label("day"),
-                func.count(Consent.id).label("count")
-            ).where(
-                owner_filter,
-                Consent.created_at >= start_day
-            ).group_by(
-                cast(Consent.created_at, Date)
+                func.count(Consent.id).label("count"),
             )
+            .where(owner_filter, Consent.created_at >= start_day)
+            .group_by(cast(Consent.created_at, Date))
         )
         consent_counts = {row.day: row.count for row in consent_daily.all()}
 
@@ -304,24 +314,31 @@ async def get_analytics(
         auth_daily = await db.execute(
             select(
                 cast(Authorization.created_at, Date).label("day"),
-                func.count(Authorization.id).label("count")
-            ).where(
-                Authorization.developer_id == user_id,
-                Authorization.created_at >= start_day
-            ).group_by(
-                cast(Authorization.created_at, Date)
+                func.count(Authorization.id).label("count"),
             )
+            .where(
+                Authorization.developer_id == user_id,
+                Authorization.created_at >= start_day,
+            )
+            .group_by(cast(Authorization.created_at, Date))
         )
         auth_counts = {row.day: row.count for row in auth_daily.all()}
 
         analytics = []
         for i in range(days, -1, -1):
-            day = (datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=i)).date()
-            analytics.append({
-                "date": day.strftime("%Y-%m-%d"),
-                "consents": consent_counts.get(day, 0),
-                "authorizations": auth_counts.get(day, 0),
-            })
+            day = (
+                datetime.now(timezone.utc).replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                )
+                - timedelta(days=i)
+            ).date()
+            analytics.append(
+                {
+                    "date": day.strftime("%Y-%m-%d"),
+                    "consents": consent_counts.get(day, 0),
+                    "authorizations": auth_counts.get(day, 0),
+                }
+            )
 
         return {
             "analytics": analytics,
@@ -353,6 +370,7 @@ async def debug_authorizations(
 ):
     """Debug endpoint to check authorization records. Only available in development."""
     from app.config import get_settings
+
     if get_settings().environment == "production":
         raise HTTPException(status_code=404, detail="Not found")
 
@@ -373,7 +391,7 @@ async def debug_authorizations(
                     "created_at": a.created_at.isoformat() if a.created_at else None,
                 }
                 for a in auths
-            ]
+            ],
         }
     except Exception as e:
         logger.error(f"Debug authorizations error: {e}", exc_info=True)

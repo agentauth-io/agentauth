@@ -1,6 +1,7 @@
 """
 Consent Service - CRUD operations for user consents
 """
+
 import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -49,9 +50,7 @@ class ConsentService:
         3. We generate a delegation token for the agent
         """
         now = datetime.now(timezone.utc)
-        expires_at = now + timedelta(
-            seconds=consent_data.options.expires_in_seconds
-        )
+        expires_at = now + timedelta(seconds=consent_data.options.expires_in_seconds)
 
         # Make timestamps timezone-naive for DB compatibility
         now.replace(tzinfo=None)
@@ -66,9 +65,13 @@ class ConsentService:
             "currency": consent_data.constraints.currency,
         }
         if consent_data.constraints.allowed_merchants:
-            constraints["allowed_merchants"] = consent_data.constraints.allowed_merchants
+            constraints["allowed_merchants"] = (
+                consent_data.constraints.allowed_merchants
+            )
         if consent_data.constraints.allowed_categories:
-            constraints["allowed_categories"] = consent_data.constraints.allowed_categories
+            constraints["allowed_categories"] = (
+                consent_data.constraints.allowed_categories
+            )
 
         # Build scope dict
         scope = {
@@ -97,6 +100,7 @@ class ConsentService:
         # PRE-WARM the authorization cache so first auth is instant
         try:
             from app.services.auth_service import _consent_cache
+
             cache_data = {
                 "consent_id": consent_id,
                 "user_id": consent_data.user_id,
@@ -106,8 +110,9 @@ class ConsentService:
                 "constraints": constraints,
             }
             _consent_cache[consent_id] = (cache_data, datetime.now(timezone.utc))
-        except Exception:
-            pass  # Cache warming is optional
+        except Exception as e:
+            # Cache warming is optional, log for debugging
+            logger.debug(f"Failed to warm cache for consent {consent_id}: {e}")
 
         # Generate delegation token
         delegation_token = token_service.create_delegation_token(
@@ -131,7 +136,7 @@ class ConsentService:
                 currency=consent_data.constraints.currency,
                 allowed_merchants=consent_data.constraints.allowed_merchants,
                 allowed_categories=consent_data.constraints.allowed_categories,
-            )
+            ),
         )
 
     async def get_consent(
@@ -148,9 +153,7 @@ class ConsentService:
         return result.scalar_one_or_none()
 
     async def get_active_consent(
-        self,
-        db: AsyncSession,
-        consent_id: str
+        self, db: AsyncSession, consent_id: str
     ) -> Consent | None:
         """Get an active (not expired, not revoked) consent."""
         now = datetime.now(timezone.utc)
@@ -159,7 +162,7 @@ class ConsentService:
                 Consent.consent_id == consent_id,
                 Consent.is_active,
                 Consent.revoked_at is None,
-                Consent.expires_at > now
+                Consent.expires_at > now,
             )
         )
         return result.scalar_one_or_none()
@@ -183,9 +186,11 @@ class ConsentService:
         # rejected immediately instead of being served from stale cache.
         try:
             from app.services.auth_service import _consent_cache
+
             _consent_cache.pop(consent_id, None)
-        except Exception:
-            pass  # Cache invalidation is best-effort
+        except Exception as e:
+            # Cache invalidation is best-effort, log for debugging
+            logger.debug(f"Failed to invalidate cache for consent {consent_id}: {e}")
 
         return True
 

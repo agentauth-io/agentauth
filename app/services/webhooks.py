@@ -3,6 +3,7 @@ Webhooks Service
 
 Handles webhook registration, event dispatching, and delivery.
 """
+
 import hashlib
 import hmac
 import json
@@ -40,29 +41,21 @@ class WebhooksService:
     async def list_webhooks(self, user_id: str) -> list[Webhook]:
         """List all webhooks for a user."""
         result = await self.db.execute(
-            select(Webhook).where(
-                Webhook.user_id == user_id,
-                Webhook.is_active
-            ).order_by(Webhook.created_at.desc())
+            select(Webhook)
+            .where(Webhook.user_id == user_id, Webhook.is_active)
+            .order_by(Webhook.created_at.desc())
         )
         return result.scalars().all()
 
     async def get_webhook(self, webhook_id: UUID, user_id: str) -> Webhook | None:
         """Get a specific webhook."""
         result = await self.db.execute(
-            select(Webhook).where(
-                Webhook.id == webhook_id,
-                Webhook.user_id == user_id
-            )
+            select(Webhook).where(Webhook.id == webhook_id, Webhook.user_id == user_id)
         )
         return result.scalar_one_or_none()
 
     async def create_webhook(
-        self,
-        user_id: str,
-        url: str,
-        events: list[str],
-        description: str | None = None
+        self, user_id: str, url: str, events: list[str], description: str | None = None
     ) -> Webhook:
         """Create a new webhook."""
         # Validate events
@@ -70,11 +63,7 @@ class WebhooksService:
         if not valid_events:
             valid_events = ["authorization.approved", "authorization.denied"]
 
-        webhook = Webhook(
-            user_id=user_id,
-            url=url,
-            description=description
-        )
+        webhook = Webhook(user_id=user_id, url=url, description=description)
         webhook.set_events_list(valid_events)
 
         self.db.add(webhook)
@@ -90,7 +79,7 @@ class WebhooksService:
         url: str | None = None,
         events: list[str] | None = None,
         description: str | None = None,
-        is_active: bool | None = None
+        is_active: bool | None = None,
     ) -> Webhook | None:
         """Update a webhook."""
         webhook = await self.get_webhook(webhook_id, user_id)
@@ -129,7 +118,7 @@ class WebhooksService:
         user_id: str,
         event_type: str,
         payload: dict[str, Any],
-        background_tasks: BackgroundTasks | None = None
+        background_tasks: BackgroundTasks | None = None,
     ):
         """
         Dispatch an event to all subscribed webhooks.
@@ -144,7 +133,7 @@ class WebhooksService:
             delivery = WebhookDelivery(
                 webhook_id=webhook.id,
                 event_type=event_type,
-                payload=json.dumps(payload)
+                payload=json.dumps(payload),
             )
             self.db.add(delivery)
             await self.db.flush()
@@ -158,7 +147,7 @@ class WebhooksService:
                     url=webhook.url,
                     secret=webhook.secret,
                     event_type=event_type,
-                    payload=payload
+                    payload=payload,
                 )
             else:
                 # Sync delivery (for testing)
@@ -168,18 +157,17 @@ class WebhooksService:
                     url=webhook.url,
                     secret=webhook.secret,
                     event_type=event_type,
-                    payload=payload
+                    payload=payload,
                 )
 
         await self.db.commit()
 
-    async def _get_subscribed_webhooks(self, user_id: str, event_type: str) -> list[Webhook]:
+    async def _get_subscribed_webhooks(
+        self, user_id: str, event_type: str
+    ) -> list[Webhook]:
         """Get webhooks subscribed to an event."""
         result = await self.db.execute(
-            select(Webhook).where(
-                Webhook.user_id == user_id,
-                Webhook.is_active
-            )
+            select(Webhook).where(Webhook.user_id == user_id, Webhook.is_active)
         )
         webhooks = result.scalars().all()
 
@@ -193,14 +181,14 @@ class WebhooksService:
         url: str,
         secret: str,
         event_type: str,
-        payload: dict[str, Any]
+        payload: dict[str, Any],
     ):
         """Deliver a webhook with signature."""
         # Build full payload
         full_payload = {
             "event": event_type,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "data": payload
+            "data": payload,
         }
         payload_json = json.dumps(full_payload)
 
@@ -216,8 +204,8 @@ class WebhooksService:
                     headers={
                         "Content-Type": "application/json",
                         "X-AgentAuth-Signature": signature,
-                        "X-AgentAuth-Event": event_type
-                    }
+                        "X-AgentAuth-Event": event_type,
+                    },
                 )
 
                 # Update delivery record (need new session since this is async)
@@ -228,11 +216,7 @@ class WebhooksService:
 
     def _generate_signature(self, payload: str, secret: str) -> str:
         """Generate HMAC-SHA256 signature for webhook payload."""
-        return hmac.new(
-            secret.encode(),
-            payload.encode(),
-            hashlib.sha256
-        ).hexdigest()
+        return hmac.new(secret.encode(), payload.encode(), hashlib.sha256).hexdigest()
 
     # Utility Methods
 
@@ -240,14 +224,13 @@ class WebhooksService:
     def verify_signature(payload: str, signature: str, secret: str) -> bool:
         """Verify a webhook signature."""
         expected = hmac.new(
-            secret.encode(),
-            payload.encode(),
-            hashlib.sha256
+            secret.encode(), payload.encode(), hashlib.sha256
         ).hexdigest()
         return hmac.compare_digest(expected, signature)
 
 
 # Event helper functions
+
 
 async def emit_authorization_event(
     db: AsyncSession,
@@ -257,7 +240,7 @@ async def emit_authorization_event(
     merchant: str | None = None,
     agent_id: str | None = None,
     reason: str | None = None,
-    background_tasks: BackgroundTasks | None = None
+    background_tasks: BackgroundTasks | None = None,
 ):
     """
     Emit an authorization event to webhooks.

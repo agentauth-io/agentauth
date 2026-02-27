@@ -3,6 +3,7 @@ Admin authentication API.
 
 Provides secure access to the admin dashboard.
 """
+
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -25,11 +26,13 @@ router = APIRouter(prefix="/v1/admin", tags=["Admin"])
 
 class AdminLoginRequest(BaseModel):
     """Admin login request."""
+
     password: str
 
 
 class AdminLoginResponse(BaseModel):
     """Admin login response with token."""
+
     token: str
     expires_at: str
     message: str
@@ -37,13 +40,16 @@ class AdminLoginResponse(BaseModel):
 
 class AdminVerifyResponse(BaseModel):
     """Token verification response."""
+
     valid: bool
     expires_at: str | None = None
 
 
 def create_admin_token() -> tuple[str, datetime]:
     """Create a JWT token for admin access with a unique JTI for revocation."""
-    expires = datetime.now(timezone.utc) + timedelta(seconds=settings.admin_token_expiry)
+    expires = datetime.now(timezone.utc) + timedelta(
+        seconds=settings.admin_token_expiry
+    )
     payload = {
         "type": "admin",
         "jti": str(uuid.uuid4()),
@@ -57,11 +63,7 @@ def create_admin_token() -> tuple[str, datetime]:
 def verify_admin_token(token: str) -> bool:
     """Verify an admin JWT token, checking revocation."""
     try:
-        payload = jwt.decode(
-            token,
-            settings.admin_jwt_secret,
-            algorithms=["HS256"]
-        )
+        payload = jwt.decode(token, settings.admin_jwt_secret, algorithms=["HS256"])
         if payload.get("type") != "admin":
             return False
         # Check if token has been revoked
@@ -112,10 +114,7 @@ async def admin_login(request: AdminLoginRequest):
     # Bcrypt verification (constant-time, salted, slow by design)
     if not bcrypt.checkpw(request.password.encode(), settings.admin_password_bcrypt):
         logger.warning("Failed admin login attempt")
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid password"
-        )
+        raise HTTPException(status_code=401, detail="Invalid password")
 
     logger.info("Admin login successful")
     token, expires = create_admin_token()
@@ -139,11 +138,7 @@ async def verify_token_endpoint(
         return AdminVerifyResponse(valid=False)
 
     try:
-        payload = jwt.decode(
-            token,
-            settings.admin_jwt_secret,
-            algorithms=["HS256"]
-        )
+        payload = jwt.decode(token, settings.admin_jwt_secret, algorithms=["HS256"])
         if payload.get("type") == "admin":
             jti = payload.get("jti")
             if jti and is_revoked(jti):
@@ -157,9 +152,7 @@ async def verify_token_endpoint(
 
 
 @router.post("/logout")
-async def admin_logout(
-    authorization: str | None = Header(None, alias="Authorization")
-):
+async def admin_logout(authorization: str | None = Header(None, alias="Authorization")):
     """
     Logout admin session.
 
@@ -196,6 +189,7 @@ async def admin_create_api_key(
     Requires valid admin JWT token from POST /v1/admin/login.
     """
     from app.middleware.api_keys import generate_api_key
+
     key_data = await generate_api_key(db, owner)
     return {
         "key": key_data["key"],
@@ -258,7 +252,9 @@ async def admin_rotate_api_key(
     )
     old_key = result.scalar_one_or_none()
     if not old_key:
-        raise HTTPException(status_code=404, detail="API key not found or already inactive")
+        raise HTTPException(
+            status_code=404, detail="API key not found or already inactive"
+        )
 
     # Deactivate old key
     old_key.is_active = False
@@ -266,6 +262,7 @@ async def admin_rotate_api_key(
 
     # Invalidate cache for old key
     from app.middleware.api_keys import _KEY_CACHE
+
     to_remove = [h for h, (d, _) in _KEY_CACHE.items() if d.get("key_id") == key_id]
     for h in to_remove:
         del _KEY_CACHE[h]
@@ -298,13 +295,16 @@ async def admin_revoke_api_key(
     )
     key = result.scalar_one_or_none()
     if not key:
-        raise HTTPException(status_code=404, detail="API key not found or already inactive")
+        raise HTTPException(
+            status_code=404, detail="API key not found or already inactive"
+        )
 
     key.is_active = False
     await db.flush()
 
     # Invalidate cache
     from app.middleware.api_keys import _KEY_CACHE
+
     to_remove = [h for h, (d, _) in _KEY_CACHE.items() if d.get("key_id") == key_id]
     for h in to_remove:
         del _KEY_CACHE[h]

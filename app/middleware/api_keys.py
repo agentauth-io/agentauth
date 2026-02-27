@@ -3,6 +3,7 @@ API Key Authentication
 
 Database-backed API key management with in-memory LRU cache.
 """
+
 import hashlib
 import logging
 import secrets
@@ -37,11 +38,13 @@ def _evict_cache():
     # If still over max, remove oldest
     if len(_KEY_CACHE) > _CACHE_MAX_SIZE:
         sorted_keys = sorted(_KEY_CACHE, key=lambda k: _KEY_CACHE[k][1])
-        for k in sorted_keys[:len(_KEY_CACHE) - _CACHE_MAX_SIZE]:
+        for k in sorted_keys[: len(_KEY_CACHE) - _CACHE_MAX_SIZE]:
             del _KEY_CACHE[k]
 
 
-async def generate_api_key(db: AsyncSession, owner: str = "default", ttl_days: int = 90) -> dict:
+async def generate_api_key(
+    db: AsyncSession, owner: str = "default", ttl_days: int = 90
+) -> dict:
     """
     Generate a new API key and persist to database.
 
@@ -77,7 +80,11 @@ async def generate_api_key(db: AsyncSession, owner: str = "default", ttl_days: i
     key_data = {
         "key_id": key_id,
         "owner": owner,
-        "created_at": api_key.created_at.isoformat() if api_key.created_at else datetime.now(timezone.utc).isoformat(),
+        "created_at": (
+            api_key.created_at.isoformat()
+            if api_key.created_at
+            else datetime.now(timezone.utc).isoformat()
+        ),
         "expires_at": expires_at.isoformat(),
         "permissions": ["read", "write"],
         "rate_limit": 1000,
@@ -139,6 +146,7 @@ async def verify_api_key(api_key: str, db: AsyncSession | None = None) -> dict |
     # Cache miss — check database
     if db is not None:
         from app.models.api_key import ApiKey
+
         result = await db.execute(
             select(ApiKey).where(
                 ApiKey.key_hash == key_hash,
@@ -204,7 +212,7 @@ async def require_api_key(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 "error": "invalid_api_key",
-                "message": "Valid API key required. Get one at /v1/api-keys"
+                "message": "Valid API key required. Get one at /v1/api-keys",
             },
             headers={"WWW-Authenticate": "ApiKey"},
         )

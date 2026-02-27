@@ -13,26 +13,34 @@ import requests
 BASE_URL = "http://localhost:8080"
 BOOTSTRAP_SECRET = "a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456"
 
+
 # Colors for output
 class Colors:
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    BOLD = '\033[1m'
-    END = '\033[0m'
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    BOLD = "\033[1m"
+    END = "\033[0m"
+
 
 def log_test(name, passed, details=""):
-    status = f"{Colors.GREEN}✓ PASS{Colors.END}" if passed else f"{Colors.RED}✗ FAIL{Colors.END}"
+    status = (
+        f"{Colors.GREEN}✓ PASS{Colors.END}"
+        if passed
+        else f"{Colors.RED}✗ FAIL{Colors.END}"
+    )
     print(f"  {status} {name}")
     if details and not passed:
         print(f"       {Colors.YELLOW}{details}{Colors.END}")
     return passed
 
+
 def log_section(name):
     print(f"\n{Colors.BOLD}{Colors.BLUE}{'='*60}{Colors.END}")
     print(f"{Colors.BOLD}{Colors.BLUE}  {name}{Colors.END}")
     print(f"{Colors.BOLD}{Colors.BLUE}{'='*60}{Colors.END}")
+
 
 def _test_health():
     """Test health endpoints"""
@@ -69,6 +77,7 @@ def _test_health():
 
     return passed, total
 
+
 def _test_bootstrap():
     """Test bootstrap and get API key"""
     log_section("2. BOOTSTRAP & API KEY")
@@ -81,12 +90,14 @@ def _test_bootstrap():
     try:
         r = requests.post(
             f"{BASE_URL}/v1/bootstrap",
-            params={"bootstrap_secret": BOOTSTRAP_SECRET, "owner": "test-admin"}
+            params={"bootstrap_secret": BOOTSTRAP_SECRET, "owner": "test-admin"},
         )
         if r.status_code == 200:
             data = r.json()
             api_key = data.get("key")
-            if log_test("Bootstrap API Key", api_key and api_key.startswith("aa_admin_")):
+            if log_test(
+                "Bootstrap API Key", api_key and api_key.startswith("aa_admin_")
+            ):
                 passed += 1
                 print(f"       {Colors.BLUE}Key: {api_key[:20]}...{Colors.END}")
         else:
@@ -95,6 +106,7 @@ def _test_bootstrap():
         log_test("Bootstrap API Key", False, str(e))
 
     return passed, total, api_key
+
 
 def _test_authorization(api_key):
     """Test authorization flows"""
@@ -106,34 +118,44 @@ def _test_authorization(api_key):
     # Test 1: Normal purchase - should be approved
     total += 1
     try:
-        r = requests.post(f"{BASE_URL}/v1/authorize", headers=headers, json={
-            "agent_id": "test-agent-001",
-            "user_id": "user-prod-test",
-            "action": "purchase",
-            "resource": "transaction",
-            "amount": 49.99,
-            "merchant": "Amazon",
-            "context": {"category": "electronics", "test": True}
-        })
+        r = requests.post(
+            f"{BASE_URL}/v1/authorize",
+            headers=headers,
+            json={
+                "agent_id": "test-agent-001",
+                "user_id": "user-prod-test",
+                "action": "purchase",
+                "resource": "transaction",
+                "amount": 49.99,
+                "merchant": "Amazon",
+                "context": {"category": "electronics", "test": True},
+            },
+        )
         data = r.json()
         if log_test("Normal Purchase ($49.99)", data.get("authorized") == True):
             passed += 1
-            print(f"       {Colors.BLUE}Token: {data.get('token_id', 'N/A')}{Colors.END}")
+            print(
+                f"       {Colors.BLUE}Token: {data.get('token_id', 'N/A')}{Colors.END}"
+            )
     except Exception as e:
         log_test("Normal Purchase ($49.99)", False, str(e))
 
     # Test 2: Another purchase to accumulate spending
     total += 1
     try:
-        r = requests.post(f"{BASE_URL}/v1/authorize", headers=headers, json={
-            "agent_id": "test-agent-001",
-            "user_id": "user-prod-test",
-            "action": "purchase",
-            "resource": "transaction",
-            "amount": 150.00,
-            "merchant": "BestBuy",
-            "context": {"category": "electronics"}
-        })
+        r = requests.post(
+            f"{BASE_URL}/v1/authorize",
+            headers=headers,
+            json={
+                "agent_id": "test-agent-001",
+                "user_id": "user-prod-test",
+                "action": "purchase",
+                "resource": "transaction",
+                "amount": 150.00,
+                "merchant": "BestBuy",
+                "context": {"category": "electronics"},
+            },
+        )
         data = r.json()
         if log_test("Larger Purchase ($150)", data.get("authorized") == True):
             passed += 1
@@ -143,15 +165,19 @@ def _test_authorization(api_key):
     # Test 3: High-value transaction (should work within daily limit)
     total += 1
     try:
-        r = requests.post(f"{BASE_URL}/v1/authorize", headers=headers, json={
-            "agent_id": "test-agent-001",
-            "user_id": "user-prod-test",
-            "action": "purchase",
-            "resource": "transaction",
-            "amount": 250.00,
-            "merchant": "Apple Store",
-            "context": {"category": "electronics"}
-        })
+        r = requests.post(
+            f"{BASE_URL}/v1/authorize",
+            headers=headers,
+            json={
+                "agent_id": "test-agent-001",
+                "user_id": "user-prod-test",
+                "action": "purchase",
+                "resource": "transaction",
+                "amount": 250.00,
+                "merchant": "Apple Store",
+                "context": {"category": "electronics"},
+            },
+        )
         data = r.json()
         if log_test("High-Value Purchase ($250)", data.get("authorized") == True):
             passed += 1
@@ -161,24 +187,33 @@ def _test_authorization(api_key):
     # Test 4: Over daily limit (500 total now, next should fail)
     total += 1
     try:
-        r = requests.post(f"{BASE_URL}/v1/authorize", headers=headers, json={
-            "agent_id": "test-agent-001",
-            "user_id": "user-prod-test",
-            "action": "purchase",
-            "resource": "transaction",
-            "amount": 100.00,
-            "merchant": "Target",
-            "context": {"category": "retail"}
-        })
+        r = requests.post(
+            f"{BASE_URL}/v1/authorize",
+            headers=headers,
+            json={
+                "agent_id": "test-agent-001",
+                "user_id": "user-prod-test",
+                "action": "purchase",
+                "resource": "transaction",
+                "amount": 100.00,
+                "merchant": "Target",
+                "context": {"category": "retail"},
+            },
+        )
         data = r.json()
         # This might be approved or denied depending on accumulated spending
         result = data.get("authorized")
-        if log_test("Limit Test ($100 after $450)", True, f"Result: {'approved' if result else 'denied (limit reached)'}"):
+        if log_test(
+            "Limit Test ($100 after $450)",
+            True,
+            f"Result: {'approved' if result else 'denied (limit reached)'}",
+        ):
             passed += 1
     except Exception as e:
         log_test("Limit Test ($100)", False, str(e))
 
     return passed, total
+
 
 def _test_spending_tracking(api_key):
     """Test spending tracking"""
@@ -195,11 +230,14 @@ def _test_spending_tracking(api_key):
         tx_count = data.get("transaction_count", 0)
         if log_test("Spending Retrieved", r.status_code == 200):
             passed += 1
-            print(f"       {Colors.BLUE}Daily Spent: ${daily_spent:.2f} | Transactions: {tx_count}{Colors.END}")
+            print(
+                f"       {Colors.BLUE}Daily Spent: ${daily_spent:.2f} | Transactions: {tx_count}{Colors.END}"
+            )
     except Exception as e:
         log_test("Spending Retrieved", False, str(e))
 
     return passed, total
+
 
 def _test_audit_log(api_key):
     """Test audit logging"""
@@ -214,14 +252,20 @@ def _test_audit_log(api_key):
         data = r.json()
         if log_test("Audit Log Retrieved", isinstance(data, list) and len(data) > 0):
             passed += 1
-            print(f"       {Colors.BLUE}Entries: {len(data)} | Latest: {data[0].get('status', 'N/A')} - ${data[0].get('amount', 0)}{Colors.END}")
+            print(
+                f"       {Colors.BLUE}Entries: {len(data)} | Latest: {data[0].get('status', 'N/A')} - ${data[0].get('amount', 0)}{Colors.END}"
+            )
     except Exception as e:
         log_test("Audit Log Retrieved", False, str(e))
 
     # Filter by user
     total += 1
     try:
-        r = requests.get(f"{BASE_URL}/v1/audit", headers=headers, params={"user_id": "user-prod-test", "limit": 5})
+        r = requests.get(
+            f"{BASE_URL}/v1/audit",
+            headers=headers,
+            params={"user_id": "user-prod-test", "limit": 5},
+        )
         data = r.json()
         if log_test("Audit Filter by User", isinstance(data, list)):
             passed += 1
@@ -229,6 +273,7 @@ def _test_audit_log(api_key):
         log_test("Audit Filter by User", False, str(e))
 
     return passed, total
+
 
 def _test_load_balancing(api_key):
     """Test load balancing across replicas"""
@@ -243,25 +288,32 @@ def _test_load_balancing(api_key):
         response_times = []
         for i in range(10):
             start = time.time()
-            r = requests.post(f"{BASE_URL}/v1/authorize", headers=headers, json={
-                "agent_id": f"load-test-{i}",
-                "user_id": "load-test-user",
-                "action": "purchase",
-                "resource": "transaction",
-                "amount": 1.00,
-                "merchant": "TestMerchant"
-            })
+            r = requests.post(
+                f"{BASE_URL}/v1/authorize",
+                headers=headers,
+                json={
+                    "agent_id": f"load-test-{i}",
+                    "user_id": "load-test-user",
+                    "action": "purchase",
+                    "resource": "transaction",
+                    "amount": 1.00,
+                    "merchant": "TestMerchant",
+                },
+            )
             response_times.append((time.time() - start) * 1000)
 
         avg_time = sum(response_times) / len(response_times)
         max_time = max(response_times)
         if log_test("10 Concurrent Requests", all(t < 500 for t in response_times)):
             passed += 1
-            print(f"       {Colors.BLUE}Avg: {avg_time:.1f}ms | Max: {max_time:.1f}ms{Colors.END}")
+            print(
+                f"       {Colors.BLUE}Avg: {avg_time:.1f}ms | Max: {max_time:.1f}ms{Colors.END}"
+            )
     except Exception as e:
         log_test("10 Concurrent Requests", False, str(e))
 
     return passed, total
+
 
 def _test_rate_limiting(api_key):
     """Test rate limiting (nginx)"""
@@ -288,6 +340,7 @@ def _test_rate_limiting(api_key):
 
     return passed, total
 
+
 def _test_metrics(api_key):
     """Test metrics endpoint"""
     log_section("8. METRICS")
@@ -301,7 +354,9 @@ def _test_metrics(api_key):
         data = r.json()
         if log_test("Metrics Endpoint", r.status_code == 200):
             passed += 1
-            print(f"       {Colors.BLUE}Total Requests: {data.get('total_requests', 'N/A')}{Colors.END}")
+            print(
+                f"       {Colors.BLUE}Total Requests: {data.get('total_requests', 'N/A')}{Colors.END}"
+            )
     except Exception as e:
         log_test("Metrics Endpoint", False, str(e))
 
@@ -317,6 +372,7 @@ def _test_metrics(api_key):
 
     return passed, total
 
+
 def _test_database_persistence(api_key):
     """Test database persistence"""
     log_section("9. DATABASE PERSISTENCE")
@@ -329,14 +385,18 @@ def _test_database_persistence(api_key):
 
     total += 1
     try:
-        r = requests.post(f"{BASE_URL}/v1/authorize", headers=headers, json={
-            "agent_id": unique_id,
-            "user_id": "persist-user",
-            "action": "purchase",
-            "resource": "transaction",
-            "amount": 77.77,
-            "merchant": "PersistenceTest"
-        })
+        r = requests.post(
+            f"{BASE_URL}/v1/authorize",
+            headers=headers,
+            json={
+                "agent_id": unique_id,
+                "user_id": "persist-user",
+                "action": "purchase",
+                "resource": "transaction",
+                "amount": 77.77,
+                "merchant": "PersistenceTest",
+            },
+        )
         if log_test("Create Persistent Record", r.status_code == 200):
             passed += 1
     except Exception as e:
@@ -345,15 +405,20 @@ def _test_database_persistence(api_key):
     # Verify in audit log
     total += 1
     try:
-        r = requests.get(f"{BASE_URL}/v1/audit", headers=headers, params={"agent_id": unique_id})
+        r = requests.get(
+            f"{BASE_URL}/v1/audit", headers=headers, params={"agent_id": unique_id}
+        )
         data = r.json()
-        found = any(entry.get("agent_id") == unique_id for entry in data) if data else False
+        found = (
+            any(entry.get("agent_id") == unique_id for entry in data) if data else False
+        )
         if log_test("Verify in Audit Log", found):
             passed += 1
     except Exception as e:
         log_test("Verify in Audit Log", False, str(e))
 
     return passed, total
+
 
 def main():
     print(f"\n{Colors.BOLD}{'='*60}{Colors.END}")
@@ -413,7 +478,9 @@ def main():
     pct = (total_passed / total_tests) * 100 if total_tests > 0 else 0
     color = Colors.GREEN if pct >= 90 else Colors.YELLOW if pct >= 70 else Colors.RED
 
-    print(f"\n  {color}{Colors.BOLD}Tests Passed: {total_passed}/{total_tests} ({pct:.1f}%){Colors.END}")
+    print(
+        f"\n  {color}{Colors.BOLD}Tests Passed: {total_passed}/{total_tests} ({pct:.1f}%){Colors.END}"
+    )
 
     if pct >= 90:
         print(f"\n  {Colors.GREEN}✓ Production Ready!{Colors.END}")
@@ -424,6 +491,7 @@ def main():
 
     print()
     return 0 if pct >= 90 else 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

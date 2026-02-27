@@ -3,6 +3,7 @@ Billing service for subscription and usage management.
 
 Handles plan limits, usage tracking, and Stripe synchronization.
 """
+
 import logging
 from datetime import datetime, timezone
 
@@ -127,7 +128,7 @@ async def record_api_usage(
     result = await db.execute(
         select(UsageSummary).where(
             UsageSummary.user_id == user_id,
-            UsageSummary.billing_period == billing_period
+            UsageSummary.billing_period == billing_period,
         )
     )
     summary = result.scalar_one_or_none()
@@ -168,7 +169,7 @@ async def get_usage_stats(db: AsyncSession, user_id: str) -> dict:
     result = await db.execute(
         select(UsageSummary).where(
             UsageSummary.user_id == user_id,
-            UsageSummary.billing_period == billing_period
+            UsageSummary.billing_period == billing_period,
         )
     )
     summary = result.scalar_one_or_none()
@@ -180,8 +181,11 @@ async def get_usage_stats(db: AsyncSession, user_id: str) -> dict:
         "api_calls": {
             "used": subscription.api_calls_used,
             "limit": subscription.api_calls_limit,
-            "remaining": max(0, subscription.api_calls_limit - subscription.api_calls_used)
-                        if subscription.api_calls_limit != -1 else -1,
+            "remaining": (
+                max(0, subscription.api_calls_limit - subscription.api_calls_used)
+                if subscription.api_calls_limit != -1
+                else -1
+            ),
         },
         "breakdown": {
             "consents": summary.consents_created if summary else 0,
@@ -189,8 +193,16 @@ async def get_usage_stats(db: AsyncSession, user_id: str) -> dict:
             "verifications": summary.verifications_performed if summary else 0,
             "errors": summary.error_count if summary else 0,
         },
-        "period_start": subscription.current_period_start.isoformat() if subscription.current_period_start else None,
-        "period_end": subscription.current_period_end.isoformat() if subscription.current_period_end else None,
+        "period_start": (
+            subscription.current_period_start.isoformat()
+            if subscription.current_period_start
+            else None
+        ),
+        "period_end": (
+            subscription.current_period_end.isoformat()
+            if subscription.current_period_end
+            else None
+        ),
     }
 
 
@@ -231,7 +243,9 @@ async def cancel_subscription(db: AsyncSession, user_id: str) -> Subscription:
     # Cancel in Stripe if exists
     if subscription.stripe_subscription_id:
         try:
-            await stripe_service.cancel_subscription(subscription.stripe_subscription_id)
+            await stripe_service.cancel_subscription(
+                subscription.stripe_subscription_id
+            )
         except Exception as e:
             logger.error(f"Stripe cancel error: {e}", exc_info=True)
 
@@ -272,9 +286,11 @@ async def sync_stripe_webhook(db: AsyncSession, event: dict) -> None:
                 "incomplete": SubscriptionStatus.INCOMPLETE,
             }
             subscription.status = status_map.get(status, SubscriptionStatus.ACTIVE)
-            subscription.current_period_end = datetime.fromtimestamp(
-                data.get("current_period_end", 0)
-            ) if data.get("current_period_end") else None
+            subscription.current_period_end = (
+                datetime.fromtimestamp(data.get("current_period_end", 0))
+                if data.get("current_period_end")
+                else None
+            )
 
             await db.commit()
 

@@ -3,6 +3,7 @@ Analytics Service
 
 Provides analytics and insights from authorization logs.
 """
+
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
@@ -16,6 +17,7 @@ from app.models.limits import AuthorizationLog
 @dataclass
 class DailyStats:
     """Daily authorization statistics."""
+
     date: date
     total_authorizations: int
     approved: int
@@ -27,6 +29,7 @@ class DailyStats:
 @dataclass
 class AnalyticsSummary:
     """Overall analytics summary for dashboard."""
+
     # Totals
     total_authorizations: int
     total_approved: int
@@ -54,6 +57,7 @@ class AnalyticsSummary:
 @dataclass
 class TrendData:
     """Time-series trend data."""
+
     dates: list[str]
     authorizations: list[int]
     amounts: list[float]
@@ -79,10 +83,14 @@ class AnalyticsService:
         # Total stats (all time)
         total_result = await self.db.execute(
             select(
-                func.count(AuthorizationLog.id).label('total'),
-                func.count().filter(AuthorizationLog.decision == 'approved').label('approved'),
-                func.count().filter(AuthorizationLog.decision == 'denied').label('denied'),
-                func.coalesce(func.sum(AuthorizationLog.amount), 0).label('amount')
+                func.count(AuthorizationLog.id).label("total"),
+                func.count()
+                .filter(AuthorizationLog.decision == "approved")
+                .label("approved"),
+                func.count()
+                .filter(AuthorizationLog.decision == "denied")
+                .label("denied"),
+                func.coalesce(func.sum(AuthorizationLog.amount), 0).label("amount"),
             ).where(AuthorizationLog.user_id == user_id)
         )
         total_row = total_result.fetchone()
@@ -96,13 +104,17 @@ class AnalyticsService:
         # Today's stats
         today_result = await self.db.execute(
             select(
-                func.count(AuthorizationLog.id).label('total'),
-                func.count().filter(AuthorizationLog.decision == 'approved').label('approved'),
-                func.count().filter(AuthorizationLog.decision == 'denied').label('denied'),
-                func.coalesce(func.sum(AuthorizationLog.amount), 0).label('amount')
+                func.count(AuthorizationLog.id).label("total"),
+                func.count()
+                .filter(AuthorizationLog.decision == "approved")
+                .label("approved"),
+                func.count()
+                .filter(AuthorizationLog.decision == "denied")
+                .label("denied"),
+                func.coalesce(func.sum(AuthorizationLog.amount), 0).label("amount"),
             ).where(
                 AuthorizationLog.user_id == user_id,
-                func.date(AuthorizationLog.created_at) == today
+                func.date(AuthorizationLog.created_at) == today,
             )
         )
         today_row = today_result.fetchone()
@@ -110,11 +122,11 @@ class AnalyticsService:
         # This month's stats
         month_result = await self.db.execute(
             select(
-                func.count(AuthorizationLog.id).label('total'),
-                func.coalesce(func.sum(AuthorizationLog.amount), 0).label('amount')
+                func.count(AuthorizationLog.id).label("total"),
+                func.coalesce(func.sum(AuthorizationLog.amount), 0).label("amount"),
             ).where(
                 AuthorizationLog.user_id == user_id,
-                AuthorizationLog.created_at >= month_start
+                AuthorizationLog.created_at >= month_start,
             )
         )
         month_row = month_result.fetchone()
@@ -138,7 +150,7 @@ class AnalyticsService:
             month_authorizations=month_row.total or 0,
             month_amount=Decimal(str(month_row.amount or 0)),
             top_merchants=top_merchants,
-            top_agents=top_agents
+            top_agents=top_agents,
         )
 
     async def get_trends(self, user_id: str, days: int = 30) -> TrendData:
@@ -149,18 +161,19 @@ class AnalyticsService:
         # Get daily aggregates
         result = await self.db.execute(
             select(
-                func.date(AuthorizationLog.created_at).label('date'),
-                func.count(AuthorizationLog.id).label('total'),
-                func.count().filter(AuthorizationLog.decision == 'approved').label('approved'),
-                func.coalesce(func.sum(AuthorizationLog.amount), 0).label('amount')
-            ).where(
-                AuthorizationLog.user_id == user_id,
-                AuthorizationLog.created_at >= start_date
-            ).group_by(
-                func.date(AuthorizationLog.created_at)
-            ).order_by(
-                func.date(AuthorizationLog.created_at)
+                func.date(AuthorizationLog.created_at).label("date"),
+                func.count(AuthorizationLog.id).label("total"),
+                func.count()
+                .filter(AuthorizationLog.decision == "approved")
+                .label("approved"),
+                func.coalesce(func.sum(AuthorizationLog.amount), 0).label("amount"),
             )
+            .where(
+                AuthorizationLog.user_id == user_id,
+                AuthorizationLog.created_at >= start_date,
+            )
+            .group_by(func.date(AuthorizationLog.created_at))
+            .order_by(func.date(AuthorizationLog.created_at))
         )
         rows = result.fetchall()
 
@@ -190,7 +203,7 @@ class AnalyticsService:
             dates=dates,
             authorizations=authorizations,
             amounts=amounts,
-            approval_rates=approval_rates
+            approval_rates=approval_rates,
         )
 
     async def get_authorization_logs(
@@ -198,12 +211,10 @@ class AnalyticsService:
         user_id: str,
         limit: int = 50,
         offset: int = 0,
-        decision: str | None = None
+        decision: str | None = None,
     ) -> list[dict]:
         """Get recent authorization logs."""
-        query = select(AuthorizationLog).where(
-            AuthorizationLog.user_id == user_id
-        )
+        query = select(AuthorizationLog).where(AuthorizationLog.user_id == user_id)
 
         if decision:
             query = query.where(AuthorizationLog.decision == decision)
@@ -224,7 +235,7 @@ class AnalyticsService:
                 "decision": log.decision,
                 "denial_reason": log.denial_reason,
                 "processing_time_ms": log.processing_time_ms,
-                "created_at": log.created_at.isoformat()
+                "created_at": log.created_at.isoformat(),
             }
             for log in logs
         ]
@@ -234,16 +245,16 @@ class AnalyticsService:
         result = await self.db.execute(
             select(
                 AuthorizationLog.merchant,
-                func.count(AuthorizationLog.id).label('count'),
-                func.coalesce(func.sum(AuthorizationLog.amount), 0).label('amount')
-            ).where(
+                func.count(AuthorizationLog.id).label("count"),
+                func.coalesce(func.sum(AuthorizationLog.amount), 0).label("amount"),
+            )
+            .where(
                 AuthorizationLog.user_id == user_id,
-                AuthorizationLog.merchant.isnot(None)
-            ).group_by(
-                AuthorizationLog.merchant
-            ).order_by(
-                func.count(AuthorizationLog.id).desc()
-            ).limit(limit)
+                AuthorizationLog.merchant.isnot(None),
+            )
+            .group_by(AuthorizationLog.merchant)
+            .order_by(func.count(AuthorizationLog.id).desc())
+            .limit(limit)
         )
         rows = result.fetchall()
 
@@ -257,16 +268,16 @@ class AnalyticsService:
         result = await self.db.execute(
             select(
                 AuthorizationLog.agent_id,
-                func.count(AuthorizationLog.id).label('count'),
-                func.coalesce(func.sum(AuthorizationLog.amount), 0).label('amount')
-            ).where(
+                func.count(AuthorizationLog.id).label("count"),
+                func.coalesce(func.sum(AuthorizationLog.amount), 0).label("amount"),
+            )
+            .where(
                 AuthorizationLog.user_id == user_id,
-                AuthorizationLog.agent_id.isnot(None)
-            ).group_by(
-                AuthorizationLog.agent_id
-            ).order_by(
-                func.count(AuthorizationLog.id).desc()
-            ).limit(limit)
+                AuthorizationLog.agent_id.isnot(None),
+            )
+            .group_by(AuthorizationLog.agent_id)
+            .order_by(func.count(AuthorizationLog.id).desc())
+            .limit(limit)
         )
         rows = result.fetchall()
 
@@ -278,13 +289,16 @@ class AnalyticsService:
 
 # Convenience functions
 
+
 async def get_analytics_summary(db: AsyncSession, user_id: str) -> AnalyticsSummary:
     """Get analytics summary for a user."""
     service = AnalyticsService(db)
     return await service.get_summary(user_id)
 
 
-async def get_analytics_trends(db: AsyncSession, user_id: str, days: int = 30) -> TrendData:
+async def get_analytics_trends(
+    db: AsyncSession, user_id: str, days: int = 30
+) -> TrendData:
     """Get trend data for a user."""
     service = AnalyticsService(db)
     return await service.get_trends(user_id, days)

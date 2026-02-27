@@ -39,11 +39,13 @@ def init_tracing(app=None, service_name: str = "agentauth") -> trace.Tracer:
         return _tracer
 
     # Create resource with service name
-    resource = Resource.create({
-        SERVICE_NAME: service_name,
-        "service.version": "0.2.0",
-        "deployment.environment": settings.environment,
-    })
+    resource = Resource.create(
+        {
+            SERVICE_NAME: service_name,
+            "service.version": "0.2.0",
+            "deployment.environment": settings.environment,
+        }
+    )
 
     # Create tracer provider
     provider = TracerProvider(resource=resource)
@@ -57,6 +59,7 @@ def init_tracing(app=None, service_name: str = "agentauth") -> trace.Tracer:
             from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
                 OTLPSpanExporter,
             )
+
             otlp_exporter = OTLPSpanExporter(endpoint=otlp_endpoint)
             provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
             logging.info(f"OpenTelemetry: OTLP exporter configured for {otlp_endpoint}")
@@ -79,15 +82,18 @@ def init_tracing(app=None, service_name: str = "agentauth") -> trace.Tracer:
     try:
         HTTPXClientInstrumentor().instrument()
         logging.info("OpenTelemetry: HTTPX instrumented")
-    except Exception:
-        pass
+    except Exception as e:
+        # HTTPX instrumentation is optional, log for debugging
+        logging.debug(f"OpenTelemetry: Failed to instrument HTTPX: {e}")
 
     try:
         from app.models.database import engine
+
         SQLAlchemyInstrumentor().instrument(engine=engine.sync_engine)
         logging.info("OpenTelemetry: SQLAlchemy instrumented")
-    except Exception:
-        pass
+    except Exception as e:
+        # SQLAlchemy instrumentation is optional, log for debugging
+        logging.debug(f"OpenTelemetry: Failed to instrument SQLAlchemy: {e}")
 
     _tracer = trace.get_tracer(__name__)
     _initialized = True
@@ -105,9 +111,7 @@ def get_tracer() -> trace.Tracer:
 
 @contextmanager
 def trace_span(
-    name: str,
-    attributes: dict | None = None,
-    record_exception: bool = True
+    name: str, attributes: dict | None = None, record_exception: bool = True
 ):
     """
     Context manager for creating traced spans.
@@ -139,6 +143,7 @@ def trace_function(name: str | None = None, attributes: dict | None = None):
         async def validate_consent(consent_id: str):
             ...
     """
+
     def decorator(func):
         import asyncio
         import functools
@@ -188,7 +193,7 @@ def get_trace_id() -> str | None:
     """Get the current trace ID for correlation."""
     span = trace.get_current_span()
     if span and span.get_span_context().is_valid:
-        return format(span.get_span_context().trace_id, '032x')
+        return format(span.get_span_context().trace_id, "032x")
     return None
 
 
@@ -196,15 +201,18 @@ def get_span_id() -> str | None:
     """Get the current span ID."""
     span = trace.get_current_span()
     if span and span.get_span_context().is_valid:
-        return format(span.get_span_context().span_id, '016x')
+        return format(span.get_span_context().span_id, "016x")
     return None
 
 
 # Predefined span names for consistency
 class SpanNames:
     """Standard span names for consistent tracing."""
+
     AUTHORIZE = "authorize_transaction"
-    VALIDATE_TOKEN = "validate_token"
+    VALIDATE_TOKEN = (
+        "validate_token"  # nosec: B105 - This is a span name, not a password
+    )
     CHECK_CONSENT = "check_consent"
     APPLY_RULES = "apply_rules"
     VELOCITY_CHECK = "velocity_check"

@@ -16,7 +16,7 @@ from typing import Any
 
 
 class VelocityRuleResult(str, Enum):
-    PASS = "pass"
+    PASS = "pass"  # nosec: B105 - Enum value, not a password
     WARN = "warn"
     BLOCK = "block"
 
@@ -24,6 +24,7 @@ class VelocityRuleResult(str, Enum):
 @dataclass
 class VelocityCheckResult:
     """Result of velocity check."""
+
     allowed: bool
     rule_triggered: str | None = None
     risk_score: float = 0.0
@@ -54,9 +55,7 @@ class VelocityRules:
 
     @staticmethod
     async def check_amount_spike(
-        amount: float,
-        user_id: str,
-        historical_avg: float | None = None
+        amount: float, user_id: str, historical_avg: float | None = None
     ) -> tuple[VelocityRuleResult, dict]:
         """
         Rule 1: Transaction amount spike detection.
@@ -71,7 +70,7 @@ class VelocityRules:
             if amount > 1000:
                 return VelocityRuleResult.WARN, {
                     "reason": "first_transaction_high_value",
-                    "amount": amount
+                    "amount": amount,
                 }
             return VelocityRuleResult.PASS, {}
 
@@ -81,21 +80,20 @@ class VelocityRules:
             return VelocityRuleResult.BLOCK, {
                 "reason": "extreme_amount_spike",
                 "spike_ratio": round(spike_ratio, 2),
-                "historical_avg": historical_avg
+                "historical_avg": historical_avg,
             }
         elif spike_ratio >= VelocityRules.AMOUNT_SPIKE_MULTIPLIER:
             return VelocityRuleResult.WARN, {
                 "reason": "amount_spike",
                 "spike_ratio": round(spike_ratio, 2),
-                "historical_avg": historical_avg
+                "historical_avg": historical_avg,
             }
 
         return VelocityRuleResult.PASS, {}
 
     @staticmethod
     async def check_frequency(
-        user_id: str,
-        recent_txn_count: int | None = None
+        user_id: str, recent_txn_count: int | None = None
     ) -> tuple[VelocityRuleResult, dict]:
         """
         Rule 2: Transaction frequency limit.
@@ -111,21 +109,19 @@ class VelocityRules:
                 "reason": "frequency_limit_exceeded",
                 "count": recent_txn_count,
                 "limit": VelocityRules.MAX_TRANSACTIONS_PER_MINUTE,
-                "window": "1 minute"
+                "window": "1 minute",
             }
         elif recent_txn_count >= VelocityRules.MAX_TRANSACTIONS_PER_MINUTE * 0.7:
             return VelocityRuleResult.WARN, {
                 "reason": "approaching_frequency_limit",
-                "count": recent_txn_count
+                "count": recent_txn_count,
             }
 
         return VelocityRuleResult.PASS, {}
 
     @staticmethod
     async def check_new_merchant_high_value(
-        user_id: str,
-        merchant_id: str,
-        amount: float
+        user_id: str, merchant_id: str, amount: float
     ) -> tuple[VelocityRuleResult, dict]:
         """
         Rule 3: New merchant + high value = suspicious.
@@ -143,22 +139,20 @@ class VelocityRules:
                 "reason": "new_merchant_extreme_value",
                 "merchant_id": merchant_id,
                 "amount": amount,
-                "threshold": VelocityRules.NEW_MERCHANT_HIGH_VALUE_THRESHOLD
+                "threshold": VelocityRules.NEW_MERCHANT_HIGH_VALUE_THRESHOLD,
             }
         elif amount >= VelocityRules.NEW_MERCHANT_HIGH_VALUE_THRESHOLD:
             return VelocityRuleResult.WARN, {
                 "reason": "new_merchant_high_value",
                 "merchant_id": merchant_id,
-                "amount": amount
+                "amount": amount,
             }
 
         return VelocityRuleResult.PASS, {}
 
     @staticmethod
     async def check_geographic_anomaly(
-        user_id: str,
-        current_location: str | None = None,
-        ip_address: str | None = None
+        user_id: str, current_location: str | None = None, ip_address: str | None = None
     ) -> tuple[VelocityRuleResult, dict]:
         """
         Rule 4: Geographic anomaly detection.
@@ -176,7 +170,9 @@ class VelocityRules:
         # Simple country-level check (production would use precise geolocation)
         if current_location and last_location.get("country"):
             if current_location != last_location.get("country"):
-                time_since_last = await VelocityService.get_time_since_last_transaction(user_id)
+                time_since_last = await VelocityService.get_time_since_last_transaction(
+                    user_id
+                )
 
                 # Impossible travel: different country within 2 hours
                 if time_since_last and time_since_last.total_seconds() < 7200:
@@ -184,21 +180,22 @@ class VelocityRules:
                         "reason": "impossible_travel",
                         "last_location": last_location.get("country"),
                         "current_location": current_location,
-                        "time_since_last_minutes": int(time_since_last.total_seconds() / 60)
+                        "time_since_last_minutes": int(
+                            time_since_last.total_seconds() / 60
+                        ),
                     }
                 else:
                     return VelocityRuleResult.WARN, {
                         "reason": "location_change",
                         "last_location": last_location.get("country"),
-                        "current_location": current_location
+                        "current_location": current_location,
                     }
 
         return VelocityRuleResult.PASS, {}
 
     @staticmethod
     async def check_time_anomaly(
-        user_id: str,
-        transaction_time: datetime | None = None
+        user_id: str, transaction_time: datetime | None = None
     ) -> tuple[VelocityRuleResult, dict]:
         """
         Rule 5: Time-of-day anomaly.
@@ -220,7 +217,7 @@ class VelocityRules:
             return VelocityRuleResult.WARN, {
                 "reason": "unusual_hour",
                 "hour": hour,
-                "typical_hours": list(typical_hours) if typical_hours else []
+                "typical_hours": list(typical_hours) if typical_hours else [],
             }
 
         return VelocityRuleResult.PASS, {}
@@ -249,7 +246,7 @@ class VelocityService:
         merchant_id: str,
         location: str | None = None,
         ip_address: str | None = None,
-        transaction_time: datetime | None = None
+        transaction_time: datetime | None = None,
     ) -> VelocityCheckResult:
         """
         Run all velocity checks and return aggregated result.
@@ -270,10 +267,14 @@ class VelocityService:
         rule2 = await VelocityRules.check_frequency(user_id)
         results.append(("frequency", rule2[0], rule2[1]))
 
-        rule3 = await VelocityRules.check_new_merchant_high_value(user_id, merchant_id, amount)
+        rule3 = await VelocityRules.check_new_merchant_high_value(
+            user_id, merchant_id, amount
+        )
         results.append(("new_merchant", rule3[0], rule3[1]))
 
-        rule4 = await VelocityRules.check_geographic_anomaly(user_id, location, ip_address)
+        rule4 = await VelocityRules.check_geographic_anomaly(
+            user_id, location, ip_address
+        )
         results.append(("geographic", rule4[0], rule4[1]))
 
         rule5 = await VelocityRules.check_time_anomaly(user_id, transaction_time)
@@ -310,7 +311,7 @@ class VelocityService:
             rule_triggered=blocking_rule,
             risk_score=min(100, risk_score),
             details=all_details,
-            recommendation=recommendation
+            recommendation=recommendation,
         )
 
     # ==================== Data Access Methods ====================
@@ -321,6 +322,7 @@ class VelocityService:
         """Get user's historical average transaction amount."""
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             key = f"velocity:user:{user_id}:avg_amount"
             cached = await cache.get(key)
@@ -333,20 +335,22 @@ class VelocityService:
         """Update user's average transaction amount."""
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             key = f"velocity:user:{user_id}:avg_amount"
             await cache.set(key, avg, ttl=86400)  # 24 hours
-        except Exception:
-            pass
+        except Exception as e:
+            # Setting average transaction is non-critical for authorization
+            logger.debug(f"Failed to set average transaction for {user_id}: {e}")
 
     @staticmethod
     async def get_recent_transaction_count(
-        user_id: str,
-        window_minutes: int = 1
+        user_id: str, window_minutes: int = 1
     ) -> int:
         """Get count of recent transactions in time window."""
         try:
             from app.services.cache_service import get_redis
+
             client = await get_redis()
             key = f"velocity:user:{user_id}:txn_count:{window_minutes}m"
             count = await client.get(key)
@@ -359,6 +363,7 @@ class VelocityService:
         """Increment user's transaction count."""
         try:
             from app.services.cache_service import get_redis
+
             client = await get_redis()
             # 1-minute window
             key1 = f"velocity:user:{user_id}:txn_count:1m"
@@ -366,14 +371,16 @@ class VelocityService:
             pipe.incr(key1)
             pipe.expire(key1, 60)
             await pipe.execute()
-        except Exception:
-            pass
+        except Exception as e:
+            # Recording transaction count is non-critical for authorization
+            logger.debug(f"Failed to record transaction count for {user_id}: {e}")
 
     @staticmethod
     async def is_first_merchant_transaction(user_id: str, merchant_id: str) -> bool:
         """Check if this is user's first transaction with merchant."""
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             key = f"velocity:user:{user_id}:merchants"
             merchants = await cache.get(key)
@@ -388,18 +395,21 @@ class VelocityService:
         """Record that user has transacted with merchant."""
         try:
             from app.services.cache_service import get_redis
+
             client = await get_redis()
             key = f"velocity:user:{user_id}:merchants"
             await client.sadd(key, merchant_id)
             await client.expire(key, 86400 * 30)  # 30 days
-        except Exception:
-            pass
+        except Exception as e:
+            # Recording merchant transaction is non-critical for authorization
+            logger.debug(f"Failed to record merchant transaction for {user_id}: {e}")
 
     @staticmethod
     async def get_last_transaction_location(user_id: str) -> dict | None:
         """Get location of user's last transaction."""
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             key = f"velocity:user:{user_id}:last_location"
             return await cache.get(key)
@@ -411,17 +421,20 @@ class VelocityService:
         """Record transaction location."""
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             key = f"velocity:user:{user_id}:last_location"
             await cache.set(key, location, ttl=86400)
-        except Exception:
-            pass
+        except Exception as e:
+            # Recording transaction location is non-critical for authorization
+            logger.debug(f"Failed to record transaction location for {user_id}: {e}")
 
     @staticmethod
     async def get_time_since_last_transaction(user_id: str) -> timedelta | None:
         """Get time since user's last transaction."""
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             key = f"velocity:user:{user_id}:last_txn_time"
             last_time = await cache.get(key)
@@ -437,17 +450,20 @@ class VelocityService:
         """Record transaction timestamp."""
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             key = f"velocity:user:{user_id}:last_txn_time"
             await cache.set(key, datetime.now(timezone.utc).isoformat(), ttl=86400)
-        except Exception:
-            pass
+        except Exception as e:
+            # Recording transaction time is non-critical for authorization
+            logger.debug(f"Failed to record transaction time for {user_id}: {e}")
 
     @staticmethod
     async def get_user_typical_hours(user_id: str) -> set | None:
         """Get hours when user typically transacts."""
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             key = f"velocity:user:{user_id}:typical_hours"
             hours = await cache.get(key)
@@ -458,10 +474,7 @@ class VelocityService:
 
 # Convenience function for quick velocity check
 async def check_transaction_velocity(
-    user_id: str,
-    amount: float,
-    merchant_id: str,
-    **kwargs
+    user_id: str, amount: float, merchant_id: str, **kwargs
 ) -> VelocityCheckResult:
     """
     Quick velocity check for a transaction.
@@ -476,8 +489,5 @@ async def check_transaction_velocity(
             raise HTTPException(403, detail=result.details)
     """
     return await VelocityService.check_velocity(
-        user_id=user_id,
-        amount=amount,
-        merchant_id=merchant_id,
-        **kwargs
+        user_id=user_id, amount=amount, merchant_id=merchant_id, **kwargs
     )

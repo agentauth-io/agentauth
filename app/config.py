@@ -4,6 +4,7 @@ AgentAuth Configuration
 All secrets MUST be provided via environment variables.
 Auto-generates secure defaults if not set (for easier deployment).
 """
+
 import os
 import secrets
 from functools import lru_cache
@@ -40,7 +41,9 @@ class Settings(BaseSettings):
     log_json: bool = False  # True for production
 
     # CORS - comma-separated list of allowed origins
-    allowed_origins: str = "http://localhost:3000,http://localhost:5173,https://agentauth.in,https://www.agentauth.in"
+    allowed_origins: str = (
+        "http://localhost:3000,http://localhost:5173,https://agentauth.in,https://www.agentauth.in"
+    )
 
     # JWT settings
     jwt_algorithm: str = "HS256"
@@ -81,11 +84,15 @@ class Settings(BaseSettings):
         if v and len(v) < 12:
             raise ValueError("ADMIN_PASSWORD must be at least 12 characters long")
         if v and not any(c.isupper() for c in v):
-            raise ValueError("ADMIN_PASSWORD must contain at least one uppercase letter")
+            raise ValueError(
+                "ADMIN_PASSWORD must contain at least one uppercase letter"
+            )
         if v and not any(c.isdigit() for c in v):
             raise ValueError("ADMIN_PASSWORD must contain at least one digit")
         if v and not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in v):
-            raise ValueError("ADMIN_PASSWORD must contain at least one special character")
+            raise ValueError(
+                "ADMIN_PASSWORD must contain at least one special character"
+            )
         return v
 
     @field_validator("secret_key", "admin_password", "admin_jwt_secret")
@@ -95,7 +102,9 @@ class Settings(BaseSettings):
         if not v:
             # In production, require explicit secrets from environment
             # Check if we're in production mode
-            env_is_production = os.getenv("ENVIRONMENT", "development").lower() == "production"
+            env_is_production = (
+                os.getenv("ENVIRONMENT", "development").lower() == "production"
+            )
             if env_is_production:
                 raise ValueError(
                     f"{info.field_name} must be set via environment variable in production. "
@@ -111,11 +120,14 @@ class Settings(BaseSettings):
         """In production, ensure critical env vars are explicitly set."""
         if v == "production":
             import logging
+
             logger = logging.getLogger(__name__)
             data = info.data
             db_url = data.get("database_url", "")
             if "localhost" in db_url or not db_url:
-                raise ValueError("DATABASE_URL must be set to a real database in production")
+                raise ValueError(
+                    "DATABASE_URL must be set to a real database in production"
+                )
             if not data.get("stripe_secret_key"):
                 logger.warning(
                     "STRIPE_SECRET_KEY not set in production — billing features disabled"
@@ -131,8 +143,9 @@ class Settings(BaseSettings):
         """Get bcrypt hash of admin password (computed once, cached)."""
         if not hasattr(self, "_admin_pw_hash"):
             object.__setattr__(
-                self, "_admin_pw_hash",
-                bcrypt.hashpw(self.admin_password.encode(), bcrypt.gensalt())
+                self,
+                "_admin_pw_hash",
+                bcrypt.hashpw(self.admin_password.encode(), bcrypt.gensalt()),
             )
         return self._admin_pw_hash
 

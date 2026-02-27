@@ -3,6 +3,7 @@ Auth validation endpoint.
 
 Provides API key validation for CLI integration tests.
 """
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
@@ -13,6 +14,7 @@ router = APIRouter(prefix="/v1/auth", tags=["auth"])
 
 class AuthValidateResponse(BaseModel):
     """Response for API key validation."""
+
     valid: bool
     key_id: str
     owner: str

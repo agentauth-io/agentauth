@@ -26,8 +26,10 @@ router = APIRouter(
 
 # --- Request/Response Schemas ---
 
+
 class SubscriptionResponse(BaseModel):
     """Subscription details response."""
+
     plan: str
     status: str
     api_calls_used: int
@@ -39,6 +41,7 @@ class SubscriptionResponse(BaseModel):
 
 class UsageResponse(BaseModel):
     """Usage statistics response."""
+
     plan: str
     status: str
     billing_period: str
@@ -50,6 +53,7 @@ class UsageResponse(BaseModel):
 
 class CheckoutRequest(BaseModel):
     """Checkout session request."""
+
     plan: str  # startup, pro, enterprise
     success_url: str = "https://agentauth.in/portal?checkout=success"
     cancel_url: str = "https://agentauth.in/portal?checkout=canceled"
@@ -57,16 +61,19 @@ class CheckoutRequest(BaseModel):
 
 class CheckoutResponse(BaseModel):
     """Checkout session response."""
+
     checkout_url: str
     session_id: str
 
 
 class PlanLimitsResponse(BaseModel):
     """Plan limits for all tiers."""
+
     plans: dict
 
 
 # --- Endpoints ---
+
 
 @router.get("/subscription")
 async def get_subscription(
@@ -83,10 +90,16 @@ async def get_subscription(
         status=subscription.status.value,
         api_calls_used=subscription.api_calls_used,
         api_calls_limit=subscription.api_calls_limit,
-        current_period_start=subscription.current_period_start.isoformat()
-            if subscription.current_period_start else None,
-        current_period_end=subscription.current_period_end.isoformat()
-            if subscription.current_period_end else None,
+        current_period_start=(
+            subscription.current_period_start.isoformat()
+            if subscription.current_period_start
+            else None
+        ),
+        current_period_end=(
+            subscription.current_period_end.isoformat()
+            if subscription.current_period_end
+            else None
+        ),
         stripe_customer_id=subscription.stripe_customer_id,
     )
 
@@ -161,13 +174,16 @@ async def create_checkout_session(
 
     try:
         import stripe
+
         stripe.api_key = settings.stripe_secret_key
 
         # Get or create Stripe customer
         subscription = await billing_service.get_or_create_subscription(db, user_id)
 
         if not subscription.stripe_customer_id:
-            customer_id = await stripe_service.create_customer(email, metadata={"user_id": user_id})
+            customer_id = await stripe_service.create_customer(
+                email, metadata={"user_id": user_id}
+            )
             subscription.stripe_customer_id = customer_id
             await db.commit()
 
@@ -214,6 +230,7 @@ async def create_billing_portal(
 
     try:
         import stripe
+
         stripe.api_key = settings.stripe_secret_key
 
         portal_session = stripe.billing_portal.Session.create(
@@ -239,7 +256,9 @@ async def cancel_subscription(
     subscription = await billing_service.cancel_subscription(db, user_id)
     return {
         "status": "canceled",
-        "canceled_at": subscription.canceled_at.isoformat() if subscription.canceled_at else None,
+        "canceled_at": (
+            subscription.canceled_at.isoformat() if subscription.canceled_at else None
+        ),
         "message": "Subscription canceled. You'll retain access until the end of your billing period.",
     }
 

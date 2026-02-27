@@ -62,10 +62,7 @@ class IsolationForest:
     """
 
     def __init__(
-        self,
-        n_trees: int = 100,
-        sample_size: int = 256,
-        max_depth: int | None = None
+        self, n_trees: int = 100, sample_size: int = 256, max_depth: int | None = None
     ):
         self.n_trees = n_trees
         self.sample_size = sample_size
@@ -91,8 +88,10 @@ class IsolationForest:
             return {"type": "leaf", "depth": depth}
 
         # Random feature and split point
-        feature_idx = random.randint(0, self.n_features - 1)
-        split_value = random.uniform(0, 1)  # Assuming normalized features
+        # Note: Using standard random module for ML model training (isolation forest)
+        # This is NOT for cryptographic purposes - acceptable for ML operations
+        feature_idx = random.randint(0, self.n_features - 1)  # nosec: B311 - ML model training, not cryptographic
+        split_value = random.uniform(0, 1)  # Assuming normalized features  # nosec: B311 - ML model training, not cryptographic
 
         return {
             "type": "split",
@@ -107,7 +106,9 @@ class IsolationForest:
         if tree["type"] == "leaf":
             return depth
 
-        feature_val = features[tree["feature_idx"]] if tree["feature_idx"] < len(features) else 0
+        feature_val = (
+            features[tree["feature_idx"]] if tree["feature_idx"] < len(features) else 0
+        )
 
         if feature_val < tree["split_value"]:
             return self.path_length(features, tree["left"], depth + 1)
@@ -127,10 +128,10 @@ class IsolationForest:
         normalized = [max(0, min(1, f / 100 if abs(f) > 1 else f)) for f in features]
 
         # Average path length across all trees
-        avg_path_length = sum(
-            self.path_length(normalized, tree)
-            for tree in self.trees
-        ) / self.n_trees
+        avg_path_length = (
+            sum(self.path_length(normalized, tree) for tree in self.trees)
+            / self.n_trees
+        )
 
         # Convert to anomaly score using expected path length formula
         # c(n) = 2 * (ln(n-1) + 0.5772) - 2*(n-1)/n for n = sample_size
@@ -175,10 +176,7 @@ class SimpleAutoencoder:
     def _init_weights(self, fan_in: int, fan_out: int) -> list[list[float]]:
         """Xavier initialization."""
         scale = math.sqrt(2.0 / (fan_in + fan_out))
-        return [
-            [random.gauss(0, scale) for _ in range(fan_out)]
-            for _ in range(fan_in)
-        ]
+        return [[random.gauss(0, scale) for _ in range(fan_out)] for _ in range(fan_in)]
 
     @staticmethod
     def relu(x: float) -> float:
@@ -189,7 +187,7 @@ class SimpleAutoencoder:
         inputs: list[float],
         weights: list[list[float]],
         biases: list[float],
-        activation: bool = True
+        activation: bool = True,
     ) -> list[float]:
         """Forward pass through a single layer."""
         outputs = []
@@ -210,7 +208,9 @@ class SimpleAutoencoder:
     def decode(self, latent: list[float]) -> list[float]:
         """Decode latent back to input space."""
         h1 = self._forward_layer(latent, self.dec_w1, self.dec_b1)
-        reconstructed = self._forward_layer(h1, self.dec_w2, self.dec_b2, activation=False)
+        reconstructed = self._forward_layer(
+            h1, self.dec_w2, self.dec_b2, activation=False
+        )
         return reconstructed
 
     def reconstruct(self, features: list[float]) -> list[float]:
@@ -226,10 +226,9 @@ class SimpleAutoencoder:
         reconstructed = self.reconstruct(normalized)
 
         # MSE
-        mse = sum(
-            (x - y) ** 2
-            for x, y in zip(normalized, reconstructed)
-        ) / len(features)
+        mse = sum((x - y) ** 2 for x, y in zip(normalized, reconstructed)) / len(
+            features
+        )
 
         return mse
 
@@ -276,7 +275,9 @@ class StatisticalDetector:
         z_scores = self.compute_z_scores(features)
 
         # Count features with high Z-scores
-        outlier_count = sum(1 for z in z_scores.values() if abs(z) > self.Z_SCORE_THRESHOLD)
+        outlier_count = sum(
+            1 for z in z_scores.values() if abs(z) > self.Z_SCORE_THRESHOLD
+        )
 
         # Anomaly if multiple features are outliers
         is_outlier = outlier_count >= 2 or any(abs(z) > 4 for z in z_scores.values())
@@ -304,14 +305,13 @@ class AnomalyDetectionService:
         self.statistical = StatisticalDetector(feature_names)
 
     def detect(
-        self,
-        features: list[float],
-        feature_dict: dict[str, float]
+        self, features: list[float], feature_dict: dict[str, float]
     ) -> AnomalyResult:
         """
         Run anomaly detection using ensemble of methods.
         """
         import time
+
         start = time.perf_counter()
 
         # 1. Isolation Forest
@@ -327,11 +327,7 @@ class AnomalyDetectionService:
         stat_score = 0.7 if is_statistical_outlier else 0.3
 
         # Ensemble: weighted average
-        ensemble_score = (
-            0.4 * isolation_score +
-            0.35 * ae_score +
-            0.25 * stat_score
-        )
+        ensemble_score = 0.4 * isolation_score + 0.35 * ae_score + 0.25 * stat_score
 
         # Determine primary method
         scores = [
@@ -358,12 +354,15 @@ class AnomalyDetectionService:
 _anomaly_service: AnomalyDetectionService | None = None
 
 
-def get_anomaly_service(feature_names: list[str] | None = None) -> AnomalyDetectionService:
+def get_anomaly_service(
+    feature_names: list[str] | None = None,
+) -> AnomalyDetectionService:
     """Get singleton anomaly detection service."""
     global _anomaly_service
     if _anomaly_service is None:
         if feature_names is None:
             from app.ml.feature_store import get_feature_store
+
             feature_names = get_feature_store().feature_names
         _anomaly_service = AnomalyDetectionService(feature_names)
     return _anomaly_service
@@ -371,8 +370,7 @@ def get_anomaly_service(feature_names: list[str] | None = None) -> AnomalyDetect
 
 # Convenience function
 async def detect_anomaly(
-    features: list[float],
-    feature_dict: dict[str, float]
+    features: list[float], feature_dict: dict[str, float]
 ) -> AnomalyResult:
     """
     Quick anomaly detection.

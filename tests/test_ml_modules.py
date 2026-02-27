@@ -3,6 +3,7 @@ Unit tests for ML modules: fraud_model, anomaly_detection, feature_store.
 
 These tests verify the ML pipeline without external dependencies.
 """
+
 import random
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -37,6 +38,7 @@ from app.ml.fraud_model import (
 # ============================================================================
 # Neural Network Tests
 # ============================================================================
+
 
 class TestNeuralNetwork:
     """Tests for the lightweight neural network implementation."""
@@ -109,6 +111,7 @@ class TestNeuralNetwork:
 # Fraud Detection Model Tests
 # ============================================================================
 
+
 class TestFraudDetectionModel:
     """Tests for the fraud detection model."""
 
@@ -116,8 +119,12 @@ class TestFraudDetectionModel:
     def model(self):
         """Create a fraud detection model for testing."""
         feature_names = [
-            "amount", "amount_normalized", "txn_velocity_1h",
-            "is_night", "is_new_merchant", "declined_count_24h"
+            "amount",
+            "amount_normalized",
+            "txn_velocity_1h",
+            "is_night",
+            "is_new_merchant",
+            "declined_count_24h",
         ]
         return FraudDetectionModel(feature_names)
 
@@ -210,6 +217,7 @@ class TestFraudDetectionModel:
 # Isolation Forest Tests
 # ============================================================================
 
+
 class TestIsolationForest:
     """Tests for Isolation Forest anomaly detection."""
 
@@ -260,6 +268,7 @@ class TestIsolationForest:
 # Autoencoder Tests
 # ============================================================================
 
+
 class TestSimpleAutoencoder:
     """Tests for the simple autoencoder."""
 
@@ -306,6 +315,7 @@ class TestSimpleAutoencoder:
 # Statistical Detector Tests
 # ============================================================================
 
+
 class TestStatisticalDetector:
     """Tests for statistical outlier detection."""
 
@@ -339,6 +349,7 @@ class TestStatisticalDetector:
 # ============================================================================
 # Feature Store Tests
 # ============================================================================
+
 
 class TestFeatureStore:
     """Tests for the feature store."""
@@ -401,6 +412,7 @@ class TestFeatureStore:
 # Integration Tests
 # ============================================================================
 
+
 class TestMLPipeline:
     """Integration tests for the full ML pipeline."""
 
@@ -411,11 +423,13 @@ class TestMLPipeline:
         service = FraudDetectionService()
 
         # Mock the feature store to avoid Redis dependency
-        with patch.object(service, 'feature_store') as mock_store:
-            mock_store.get_inference_features = AsyncMock(return_value=(
-                [0.5, 0.3, 0.1, 0.0, 1.0, 0.0],  # features array
-                {"is_new_merchant": 1.0, "amount": 100.0}  # feature dict
-            ))
+        with patch.object(service, "feature_store") as mock_store:
+            mock_store.get_inference_features = AsyncMock(
+                return_value=(
+                    [0.5, 0.3, 0.1, 0.0, 1.0, 0.0],  # features array
+                    {"is_new_merchant": 1.0, "amount": 100.0},  # feature dict
+                )
+            )
 
             prediction = await service.detect_fraud(
                 user_id="user_123",
@@ -465,6 +479,7 @@ class TestMLPipeline:
 # Performance Tests
 # ============================================================================
 
+
 class TestPerformance:
     """Performance tests for ML components."""
 
@@ -491,7 +506,9 @@ class TestPerformance:
             times.append((time.perf_counter() - start) * 1000)
 
         avg_time = sum(times) / len(times)
-        assert avg_time < 100, f"Average inference time {avg_time:.2f}ms exceeds 100ms target"
+        assert (
+            avg_time < 100
+        ), f"Average inference time {avg_time:.2f}ms exceeds 100ms target"
 
     def test_anomaly_inference_latency(self):
         """Verify anomaly detection meets latency target."""
@@ -515,12 +532,15 @@ class TestPerformance:
             times.append((time.perf_counter() - start) * 1000)
 
         avg_time = sum(times) / len(times)
-        assert avg_time < 50, f"Average inference time {avg_time:.2f}ms exceeds 50ms target"
+        assert (
+            avg_time < 50
+        ), f"Average inference time {avg_time:.2f}ms exceeds 50ms target"
 
 
 # ============================================================================
 # Edge Cases and Error Handling
 # ============================================================================
+
 
 class TestEdgeCases:
     """Tests for edge cases and error conditions."""
@@ -567,6 +587,7 @@ class TestEdgeCases:
 # Convenience Function Tests
 # ============================================================================
 
+
 class TestConvenienceFunctions:
     """Tests for module-level convenience functions."""
 
@@ -591,20 +612,20 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_detect_fraud_convenience(self):
         """Test detect_fraud convenience function."""
-        with patch('app.ml.fraud_model.get_fraud_service') as mock_get:
+        with patch("app.ml.fraud_model.get_fraud_service") as mock_get:
             mock_service = MagicMock()
-            mock_service.detect_fraud = AsyncMock(return_value=FraudPrediction(
-                is_fraud=False,
-                fraud_score=0.1,
-                confidence=0.9,
-                risk_level="low",
-            ))
+            mock_service.detect_fraud = AsyncMock(
+                return_value=FraudPrediction(
+                    is_fraud=False,
+                    fraud_score=0.1,
+                    confidence=0.9,
+                    risk_level="low",
+                )
+            )
             mock_get.return_value = mock_service
 
             result = await detect_fraud(
-                user_id="user_123",
-                amount=100.0,
-                merchant_id="merchant_abc"
+                user_id="user_123", amount=100.0, merchant_id="merchant_abc"
             )
 
             assert isinstance(result, FraudPrediction)
@@ -614,18 +635,19 @@ class TestConvenienceFunctions:
         """Test detect_anomaly convenience function."""
         from app.ml.anomaly_detection import AnomalyResult
 
-        with patch('app.ml.anomaly_detection.get_anomaly_service') as mock_get:
+        with patch("app.ml.anomaly_detection.get_anomaly_service") as mock_get:
             mock_service = MagicMock()
-            mock_service.detect = MagicMock(return_value=AnomalyResult(
-                is_anomaly=False,
-                anomaly_score=0.2,
-                method="isolation_forest",
-            ))
+            mock_service.detect = MagicMock(
+                return_value=AnomalyResult(
+                    is_anomaly=False,
+                    anomaly_score=0.2,
+                    method="isolation_forest",
+                )
+            )
             mock_get.return_value = mock_service
 
             result = await detect_anomaly(
-                features=[0.5, 0.3],
-                feature_dict={"amount": 100.0}
+                features=[0.5, 0.3], feature_dict={"amount": 100.0}
             )
 
             assert isinstance(result, AnomalyResult)

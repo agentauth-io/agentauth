@@ -4,9 +4,10 @@ Phase 3 Integration Test Script
 
 Tests LangChain and CrewAI integrations with the AgentAuth API.
 """
+
 import sys
 
-sys.path.insert(0, '/home/seyominaoto/Videos/AgentAuth/sdk/python/src')
+sys.path.insert(0, "/home/seyominaoto/Videos/AgentAuth/sdk/python/src")
 
 print("=" * 60)
 print("    AgentAuth Phase 3 Integration Tests")
@@ -22,6 +23,7 @@ try:
         CheckSpendingLimitsTool,
         create_agentauth_tools,
     )
+
     print("  ✅ LangChain imports: OK")
     print(f"     HAS_LANGCHAIN: {HAS_LANGCHAIN}")
 except Exception as e:
@@ -33,6 +35,7 @@ try:
         AuthorizedPurchaseCrewTool,
         CheckLimitsCrewTool,
     )
+
     print("  ✅ CrewAI imports: OK")
     print(f"     HAS_CREWAI: {HAS_CREWAI}")
 except Exception as e:
@@ -49,7 +52,7 @@ try:
         user_id="test_user_phase3",
         intent="Test purchase for Phase 3 integration testing",
         max_amount=500,
-        currency="USD"
+        currency="USD",
     )
     token = consent.delegation_token
     print("  ✅ Consent created")
@@ -63,13 +66,12 @@ print("\n💰 TEST 3: Check Spending Limits Tool")
 print("-" * 40)
 try:
     limits_tool = CheckSpendingLimitsTool(
-        base_url="http://localhost:8000",
-        user_id="default"
+        base_url="http://localhost:8000", user_id="default"
     )
     result = limits_tool._run()
     print("  ✅ CheckSpendingLimitsTool executed")
     print("     Result:")
-    for line in result.split('\n')[:8]:
+    for line in result.split("\n")[:8]:
         print(f"       {line}")
 except Exception as e:
     print(f"  ❌ CheckSpendingLimitsTool: FAILED - {e}")
@@ -82,7 +84,7 @@ if token:
         purchase_tool = AuthorizedPurchaseTool(
             delegation_token=token,
             base_url="http://localhost:8000",
-            agent_id="test_agent"
+            agent_id="test_agent",
         )
 
         # Test a valid purchase
@@ -90,7 +92,7 @@ if token:
             item_description="Test Product",
             amount=25.00,
             merchant="Amazon",
-            category="ecommerce"
+            category="ecommerce",
         )
 
         if "AUTHORIZED" in result:
@@ -101,7 +103,7 @@ if token:
             print("  ❓ Unexpected result")
 
         print("     Result snippet:")
-        for line in result.split('\n')[:6]:
+        for line in result.split("\n")[:6]:
             print(f"       {line}")
     except Exception as e:
         print(f"  ❌ AuthorizedPurchaseTool: FAILED - {e}")
@@ -113,13 +115,12 @@ print("\n📊 TEST 5: CrewAI Check Limits Tool")
 print("-" * 40)
 try:
     crew_limits_tool = CheckLimitsCrewTool(
-        base_url="http://localhost:8000",
-        user_id="default"
+        base_url="http://localhost:8000", user_id="default"
     )
     result = crew_limits_tool._run()
     print("  ✅ CheckLimitsCrewTool executed")
     print("     Result:")
-    for line in result.split('\n')[:5]:
+    for line in result.split("\n")[:5]:
         print(f"       {line}")
 except Exception as e:
     print(f"  ❌ CheckLimitsCrewTool: FAILED - {e}")
@@ -132,14 +133,14 @@ if token:
         crew_purchase_tool = AuthorizedPurchaseCrewTool(
             delegation_token=token,
             base_url="http://localhost:8000",
-            agent_id="crewai_test_agent"
+            agent_id="crewai_test_agent",
         )
 
         result = crew_purchase_tool._run(
             item_description="Test Service Subscription",
             amount=9.99,
             merchant="Stripe",
-            category="saas"
+            category="saas",
         )
 
         if "AUTHORIZED" in result:
@@ -148,7 +149,7 @@ if token:
             print("  ⚠️ CrewAI purchase denied")
 
         print("     Result snippet:")
-        for line in result.split('\n')[:5]:
+        for line in result.split("\n")[:5]:
             print(f"       {line}")
     except Exception as e:
         print(f"  ❌ AuthorizedPurchaseCrewTool: FAILED - {e}")
@@ -161,8 +162,7 @@ print("-" * 40)
 if token:
     try:
         tools = create_agentauth_tools(
-            delegation_token=token,
-            base_url="http://localhost:8000"
+            delegation_token=token, base_url="http://localhost:8000"
         )
         print(f"  ✅ Created {len(tools)} tools")
         for tool in tools:

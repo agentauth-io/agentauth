@@ -10,6 +10,7 @@ Features:
 - Event filtering by type
 - Delivery confirmation tracking
 """
+
 import asyncio
 import json
 import logging
@@ -153,6 +154,7 @@ class EventService:
         trace_id = None
         try:
             from app.tracing import get_trace_id
+
             trace_id = get_trace_id()
         except ImportError:
             pass
@@ -176,11 +178,7 @@ class EventService:
 
         return event
 
-    async def _deliver_event(
-        self,
-        event: CloudEvent,
-        developer_id: str | None
-    ) -> None:
+    async def _deliver_event(self, event: CloudEvent, developer_id: str | None) -> None:
         """Deliver event to all subscribers."""
         if not developer_id:
             return
@@ -189,15 +187,10 @@ class EventService:
         webhooks = await self._get_subscriber_webhooks(developer_id)
 
         for webhook_url in webhooks:
-            asyncio.create_task(
-                self._deliver_to_webhook(event, webhook_url)
-            )
+            asyncio.create_task(self._deliver_to_webhook(event, webhook_url))
 
     async def _deliver_to_webhook(
-        self,
-        event: CloudEvent,
-        webhook_url: str,
-        attempt: int = 0
+        self, event: CloudEvent, webhook_url: str, attempt: int = 0
     ) -> bool:
         """Deliver event to a single webhook with retries."""
         headers = {
@@ -215,9 +208,7 @@ class EventService:
         try:
             async with httpx.AsyncClient(timeout=self.TIMEOUT) as client:
                 response = await client.post(
-                    webhook_url,
-                    json=event.to_dict(),
-                    headers=headers
+                    webhook_url, json=event.to_dict(), headers=headers
                 )
 
                 if response.status_code in (200, 201, 202, 204):
@@ -226,10 +217,14 @@ class EventService:
                 # Retry on server errors
                 if response.status_code >= 500 and attempt < self.MAX_RETRIES:
                     await asyncio.sleep(self.RETRY_DELAYS[attempt])
-                    return await self._deliver_to_webhook(event, webhook_url, attempt + 1)
+                    return await self._deliver_to_webhook(
+                        event, webhook_url, attempt + 1
+                    )
 
                 # Log failed delivery
-                await self._log_delivery_failure(event, webhook_url, response.status_code)
+                await self._log_delivery_failure(
+                    event, webhook_url, response.status_code
+                )
                 return False
 
         except Exception as e:
@@ -245,12 +240,14 @@ class EventService:
         # Try cache first
         try:
             from app.services.cache_service import get_cache_service
+
             cache = get_cache_service()
             cached = await cache.get(f"webhooks:{developer_id}")
             if cached:
                 return cached
-        except Exception:
-            pass
+        except Exception as e:
+            # Cache lookup is optional, log for debugging
+            logger.debug(f"Failed to lookup webhooks for {developer_id}: {e}")
 
         # Would query database here
         # For now return empty (webhooks registered via API)
@@ -260,11 +257,14 @@ class EventService:
         """Cache event for replay capability."""
         try:
             from app.services.cache_service import get_redis
+
             client = await get_redis()
 
             # Store in sorted set by timestamp
             key = f"events:{event.developer_id or 'global'}"
-            score = datetime.fromisoformat(event.time.replace("Z", "+00:00")).timestamp()
+            score = datetime.fromisoformat(
+                event.time.replace("Z", "+00:00")
+            ).timestamp()
 
             await client.zadd(key, {event.to_json(): score})
 
@@ -273,18 +273,17 @@ class EventService:
 
             # Expire after 7 days
             await client.expire(key, 86400 * 7)
-        except Exception:
-            pass
+        except Exception as e:
+            # Event caching is optional, log for debugging
+            logger.debug(f"Failed to cache event: {e}")
 
     async def _log_delivery_failure(
-        self,
-        event: CloudEvent,
-        webhook_url: str,
-        error: Any
+        self, event: CloudEvent, webhook_url: str, error: Any
     ) -> None:
         """Log failed webhook delivery to dead letter queue."""
         try:
             from app.services.cache_service import get_redis
+
             client = await get_redis()
 
             failure = {
@@ -297,17 +296,15 @@ class EventService:
 
             await client.lpush("dlq:webhooks", json.dumps(failure))
             await client.ltrim("dlq:webhooks", 0, 9999)  # Keep last 10k failures
-        except Exception:
-            pass
+        except Exception as e:
+            # Dead letter queue logging is optional, log for debugging
+            logger.debug(f"Failed to log delivery failure to DLQ: {e}")
 
-    async def get_recent_events(
-        self,
-        developer_id: str,
-        limit: int = 50
-    ) -> list[dict]:
+    async def get_recent_events(self, developer_id: str, limit: int = 50) -> list[dict]:
         """Get recent events for a developer."""
         try:
             from app.services.cache_service import get_redis
+
             client = await get_redis()
 
             key = f"events:{developer_id}"
@@ -342,7 +339,7 @@ async def emit_event(
     event_type: EventType,
     data: dict[str, Any],
     developer_id: str | None = None,
-    subject: str | None = None
+    subject: str | None = None,
 ) -> CloudEvent:
     """Quick helper to emit an event."""
     return await get_event_service().emit(event_type, data, developer_id, subject)
@@ -354,7 +351,7 @@ async def emit_authorization_approved(
     authorization_code: str,
     amount: float,
     merchant_id: str,
-    developer_id: str | None = None
+    developer_id: str | None = None,
 ) -> CloudEvent:
     """Emit authorization approved event."""
     return await emit_event(
@@ -366,7 +363,7 @@ async def emit_authorization_approved(
             "merchant_id": merchant_id,
         },
         developer_id=developer_id,
-        subject=consent_id
+        subject=consent_id,
     )
 
 
@@ -375,7 +372,7 @@ async def emit_authorization_denied(
     reason: str,
     amount: float,
     merchant_id: str,
-    developer_id: str | None = None
+    developer_id: str | None = None,
 ) -> CloudEvent:
     """Emit authorization denied event."""
     return await emit_event(
@@ -387,7 +384,7 @@ async def emit_authorization_denied(
             "merchant_id": merchant_id,
         },
         developer_id=developer_id,
-        subject=consent_id
+        subject=consent_id,
     )
 
 
@@ -396,7 +393,7 @@ async def emit_consent_created(
     user_id: str,
     max_amount: float,
     expires_at: str,
-    developer_id: str | None = None
+    developer_id: str | None = None,
 ) -> CloudEvent:
     """Emit consent created event."""
     return await emit_event(
@@ -408,5 +405,5 @@ async def emit_consent_created(
             "expires_at": expires_at,
         },
         developer_id=developer_id,
-        subject=consent_id
+        subject=consent_id,
     )

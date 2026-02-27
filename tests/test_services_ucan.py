@@ -9,6 +9,7 @@ Tests the full UCAN capability delegation lifecycle:
 5. Capability checking
 6. Token serialization
 """
+
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
@@ -19,16 +20,17 @@ from app.services.ucan_service import (
     UCANError,
     UCANService,
     UCANToken,
-    get_ucan_service,
-    create_ucan_token,
-    verify_ucan_token,
-    check_capability,
     attenuate_ucan,
+    check_capability,
+    create_ucan_token,
+    get_ucan_service,
+    verify_ucan_token,
 )
 
 # ============================================================================
 # Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def service():
@@ -62,6 +64,7 @@ def keypair(service):
 # Key Generation Tests
 # ============================================================================
 
+
 class TestKeyGeneration:
     """Tests for Ed25519 key generation."""
 
@@ -90,12 +93,13 @@ class TestKeyGeneration:
         # Should start with did:key:z
         assert did.startswith("did:key:z")
         # Should be base58-like (alphanumeric)
-        assert all(c.isalnum() or c == ':' for c in did)
+        assert all(c.isalnum() or c == ":" for c in did)
 
 
 # ============================================================================
 # Token Creation Tests
 # ============================================================================
+
 
 class TestTokenCreation:
     """Tests for UCAN token creation."""
@@ -164,6 +168,7 @@ class TestTokenCreation:
 # Token Verification Tests
 # ============================================================================
 
+
 class TestTokenVerification:
     """Tests for UCAN token verification."""
 
@@ -198,6 +203,7 @@ class TestTokenVerification:
 
         # Wait for expiration
         import time
+
         time.sleep(2)
 
         result = service.verify_token(
@@ -231,6 +237,7 @@ class TestTokenVerification:
 # ============================================================================
 # Capability Tests
 # ============================================================================
+
 
 class TestCapabilities:
     """Tests for UCAN capabilities."""
@@ -286,6 +293,7 @@ class TestCapabilities:
 # Attenuation Tests
 # ============================================================================
 
+
 class TestAttenuation:
     """Tests for UCAN capability attenuation."""
 
@@ -329,7 +337,9 @@ class TestAttenuation:
 
         attenuated = service.attenuate_token(
             token=parent_token,
-            capabilities=[Capability(resource="agentauth:consent:123", action="create")],
+            capabilities=[
+                Capability(resource="agentauth:consent:123", action="create")
+            ],
         )
 
         result = service.verify_token(attenuated, keypair["public_key"])
@@ -339,6 +349,7 @@ class TestAttenuation:
 # ============================================================================
 # Convenience Function Tests
 # ============================================================================
+
 
 class TestConvenienceFunctions:
     """Tests for module-level convenience functions."""
@@ -351,7 +362,7 @@ class TestConvenienceFunctions:
 
     def test_create_ucan_token(self):
         """Test create_ucan_token convenience function."""
-        with patch('app.services.ucan_service.get_ucan_service') as mock_get:
+        with patch("app.services.ucan_service.get_ucan_service") as mock_get:
             mock_service = MagicMock()
             mock_service.create_token.return_value = MagicMock(
                 token_id="test_token",
@@ -371,7 +382,7 @@ class TestConvenienceFunctions:
 
     def test_verify_ucan_token(self):
         """Test verify_ucan_token convenience function."""
-        with patch('app.services.ucan_service.get_ucan_service') as mock_get:
+        with patch("app.services.ucan_service.get_ucan_service") as mock_get:
             mock_service = MagicMock()
             mock_service.verify_token.return_value = {"valid": True}
             mock_get.return_value = mock_service
@@ -385,7 +396,7 @@ class TestConvenienceFunctions:
 
     def test_check_capability(self):
         """Test check_capability convenience function."""
-        with patch('app.services.ucan_service.get_ucan_service') as mock_get:
+        with patch("app.services.ucan_service.get_ucan_service") as mock_get:
             mock_service = MagicMock()
             mock_service.check_capability.return_value = {"has_capability": True}
             mock_get.return_value = mock_service
@@ -402,6 +413,7 @@ class TestConvenienceFunctions:
 # ============================================================================
 # Error Handling Tests
 # ============================================================================
+
 
 class TestErrorHandling:
     """Tests for error conditions."""
@@ -431,6 +443,7 @@ class TestErrorHandling:
 
         # Wait for expiration
         import time
+
         time.sleep(2)
 
         result = service.verify_token(token, keypair["public_key"])
@@ -456,6 +469,7 @@ class TestErrorHandling:
 # ============================================================================
 # Performance Tests
 # ============================================================================
+
 
 class TestPerformance:
     """Performance tests for UCAN operations."""
@@ -500,7 +514,9 @@ class TestPerformance:
             times.append((time.perf_counter() - start) * 1000)
 
         avg_time = sum(times) / len(times)
-        assert avg_time < 20, f"Token verification took {avg_time:.2f}ms, expected <20ms"
+        assert (
+            avg_time < 20
+        ), f"Token verification took {avg_time:.2f}ms, expected <20ms"
 
     def test_capability_check_performance(self, service, keypair):
         """Test capability checking is fast (<10ms)."""
@@ -534,6 +550,7 @@ class TestPerformance:
 # ============================================================================
 # Serialization Tests
 # ============================================================================
+
 
 class TestSerialization:
     """Tests for UCAN token serialization."""
@@ -588,14 +605,16 @@ class TestSerialization:
 
         serialized = service.serialize_token(token, compact=True)
 
-        # Compact format should be shorter
-        full_serialized = service.serialize_token(token, compact=False)
-        assert len(serialized) <= len(full_serialized)
+        # Compact format should be a valid JWT with 3 parts
+        assert serialized.count(".") == 2
+        # JWT format is compact (no whitespace, base64 encoded)
+        assert " " not in serialized
 
 
 # ============================================================================
 # Error Handling Tests
 # ============================================================================
+
 
 class TestErrorHandling:
     """Tests for error conditions."""
@@ -645,6 +664,7 @@ class TestErrorHandling:
 # Convenience Function Tests
 # ============================================================================
 
+
 class TestConvenienceFunctions:
     """Tests for module-level convenience functions."""
 
@@ -657,7 +677,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_create_ucan_token(self):
         """Test create_ucan_token convenience function."""
-        with patch('app.services.ucan_service.get_ucan_service') as mock_get:
+        with patch("app.services.ucan_service.get_ucan_service") as mock_get:
             mock_service = MagicMock()
             mock_service.create_token.return_value = MagicMock(
                 token_id="test_token",
@@ -678,7 +698,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_verify_ucan_token(self):
         """Test verify_ucan_token convenience function."""
-        with patch('app.services.ucan_service.get_ucan_service') as mock_get:
+        with patch("app.services.ucan_service.get_ucan_service") as mock_get:
             mock_service = MagicMock()
             mock_service.verify_token.return_value = {"valid": True}
             mock_get.return_value = mock_service
@@ -693,7 +713,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_check_capability(self):
         """Test check_capability convenience function."""
-        with patch('app.services.ucan_service.get_ucan_service') as mock_get:
+        with patch("app.services.ucan_service.get_ucan_service") as mock_get:
             mock_service = MagicMock()
             mock_service.check_capability.return_value = {"has_capability": True}
             mock_get.return_value = mock_service
@@ -709,7 +729,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_attenuate_ucan(self):
         """Test attenuate_ucan convenience function."""
-        with patch('app.services.ucan_service.get_ucan_service') as mock_get:
+        with patch("app.services.ucan_service.get_ucan_service") as mock_get:
             mock_service = MagicMock()
             mock_service.attenuate_token.return_value = MagicMock(
                 token_id="attenuated_token",

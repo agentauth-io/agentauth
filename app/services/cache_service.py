@@ -21,7 +21,7 @@ from redis.asyncio.connection import ConnectionPool
 
 from app.config import get_settings
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 # Global connection pool
 _pool: ConnectionPool | None = None
@@ -75,7 +75,7 @@ class CacheService:
 
     # Cache key patterns
     CONSENT_KEY = "consent:{consent_id}"
-    CONSENT_TOKEN_KEY = "consent:token:{token}"
+    CONSENT_TOKEN_KEY = "consent:token:{token}"  # nosec: B105 - Cache key template, not a password
     USER_CONSENTS_KEY = "user:{user_id}:consents"
     RULES_KEY = "rules:{developer_id}"
     RATE_LIMIT_KEY = "ratelimit:{api_key}:{window}"
@@ -109,12 +109,7 @@ class CacheService:
             self._misses += 1
             return None
 
-    async def set(
-        self,
-        key: str,
-        value: Any,
-        ttl: int | None = None
-    ) -> bool:
+    async def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """Set value in cache with optional TTL."""
         client = await self._get_client()
         ttl = ttl or self.settings.cache_ttl_seconds
@@ -196,10 +191,7 @@ class CacheService:
     # ==================== Rate Limiting ====================
 
     async def check_rate_limit(
-        self,
-        api_key: str,
-        limit: int = 100,
-        window_seconds: int = 1
+        self, api_key: str, limit: int = 100, window_seconds: int = 1
     ) -> tuple[bool, int, int]:
         """
         Check rate limit using sliding window.
@@ -240,10 +232,7 @@ class CacheService:
         return await self.get(cache_key)
 
     async def set_idempotency(
-        self,
-        key: str,
-        response: dict,
-        ttl_hours: int = 24
+        self, key: str, response: dict, ttl_hours: int = 24
     ) -> bool:
         """Store idempotency response with 24-hour TTL."""
         cache_key = self._make_key(self.IDEMPOTENCY_KEY, key=key)
@@ -293,10 +282,11 @@ def get_cache_service() -> CacheService:
 
 # ==================== Decorator for caching ====================
 
+
 def cached(
     key_pattern: str,
     ttl: int | None = None,
-    key_builder: Callable[..., dict] | None = None
+    key_builder: Callable[..., dict] | None = None,
 ):
     """
     Decorator for caching function results.
@@ -306,6 +296,7 @@ def cached(
         async def get_user_profile(user_id: str):
             ...
     """
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -332,5 +323,7 @@ def cached(
                 await cache.set(cache_key, result, ttl)
 
             return result
+
         return wrapper
+
     return decorator

@@ -3,6 +3,7 @@ Stripe Connect API routes for connected accounts management.
 
 Handles account linking, onboarding, and transaction tracking.
 """
+
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -21,20 +22,24 @@ router = APIRouter(prefix="/v1/connect", tags=["Stripe Connect"])
 
 # --- Request/Response Schemas ---
 
+
 class CreateConnectAccountRequest(BaseModel):
     """Request to create a Stripe Connect account."""
+
     email: str
     country: str = "US"
 
 
 class CreateConnectAccountResponse(BaseModel):
     """Response with Connect account details."""
+
     account_id: str
     onboarding_url: str
 
 
 class ConnectAccountStatus(BaseModel):
     """Status of a connected account."""
+
     account_id: str
     details_submitted: bool
     charges_enabled: bool
@@ -44,6 +49,7 @@ class ConnectAccountStatus(BaseModel):
 
 class ConnectedAccountTransaction(BaseModel):
     """A transaction from a connected account."""
+
     id: str
     amount: float
     currency: str
@@ -55,11 +61,13 @@ class ConnectedAccountTransaction(BaseModel):
 
 class ConnectBalanceResponse(BaseModel):
     """Balance for a connected account."""
+
     available: list[dict]
     pending: list[dict]
 
 
 # --- Endpoints ---
+
 
 @router.post("/accounts", response_model=CreateConnectAccountResponse)
 async def create_connect_account(
@@ -159,7 +167,9 @@ async def refresh_onboarding_link(
 
     except Exception as e:
         logger.error(f"Onboarding link creation failed: {e}", exc_info=True)
-        raise HTTPException(status_code=502, detail="Failed to generate onboarding link")
+        raise HTTPException(
+            status_code=502, detail="Failed to generate onboarding link"
+        )
 
 
 @router.get("/accounts/{account_id}/dashboard-link")
@@ -182,7 +192,10 @@ async def get_dashboard_link(
         raise HTTPException(status_code=502, detail="Failed to generate dashboard link")
 
 
-@router.get("/accounts/{account_id}/transactions", response_model=list[ConnectedAccountTransaction])
+@router.get(
+    "/accounts/{account_id}/transactions",
+    response_model=list[ConnectedAccountTransaction],
+)
 async def list_connect_transactions(
     account_id: str,
     limit: int = Query(20, ge=1, le=100),

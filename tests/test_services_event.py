@@ -3,6 +3,7 @@ Tests for CloudEvents event streaming service.
 
 Pure Python tests with httpx mocking.
 """
+
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -29,10 +30,19 @@ class TestEventType:
         assert EventType.AUTHORIZATION_USED == "agentauth.authorization.used"
         assert EventType.TRANSACTION_COMPLETED == "agentauth.transaction.completed"
         assert EventType.TRANSACTION_FAILED == "agentauth.transaction.failed"
-        assert EventType.VELOCITY_CHECK_FAILED == "agentauth.security.velocity_check_failed"
+        assert (
+            EventType.VELOCITY_CHECK_FAILED
+            == "agentauth.security.velocity_check_failed"
+        )
         assert EventType.RATE_LIMIT_EXCEEDED == "agentauth.security.rate_limit_exceeded"
-        assert EventType.SPENDING_LIMIT_REACHED == "agentauth.limits.spending_limit_reached"
-        assert EventType.SPENDING_LIMIT_WARNING == "agentauth.limits.spending_limit_warning"
+        assert (
+            EventType.SPENDING_LIMIT_REACHED
+            == "agentauth.limits.spending_limit_reached"
+        )
+        assert (
+            EventType.SPENDING_LIMIT_WARNING
+            == "agentauth.limits.spending_limit_warning"
+        )
 
     def test_event_type_count(self):
         assert len(EventType) == 12
@@ -158,8 +168,12 @@ class TestEventService:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
 
-        with patch("app.services.event_service.httpx.AsyncClient", return_value=mock_client):
-            result = await service._deliver_to_webhook(event, "https://example.com/hook")
+        with patch(
+            "app.services.event_service.httpx.AsyncClient", return_value=mock_client
+        ):
+            result = await service._deliver_to_webhook(
+                event, "https://example.com/hook"
+            )
         assert result is True
 
     @pytest.mark.asyncio
@@ -174,6 +188,7 @@ class TestEventService:
         mock_response_200.status_code = 200
 
         call_count = 0
+
         async def mock_post(*args, **kwargs):
             nonlocal call_count
             call_count += 1
@@ -186,8 +201,12 @@ class TestEventService:
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
 
-        with patch("app.services.event_service.httpx.AsyncClient", return_value=mock_client):
-            result = await service._deliver_to_webhook(event, "https://example.com/hook")
+        with patch(
+            "app.services.event_service.httpx.AsyncClient", return_value=mock_client
+        ):
+            result = await service._deliver_to_webhook(
+                event, "https://example.com/hook"
+            )
         assert result is True
 
     @pytest.mark.asyncio
@@ -200,6 +219,7 @@ class TestEventService:
 class TestGetEventService:
     def test_singleton(self):
         import app.services.event_service as emod
+
         emod._event_service = None
         s1 = get_event_service()
         s2 = get_event_service()
@@ -211,6 +231,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_emit_authorization_approved(self):
         import app.services.event_service as emod
+
         emod._event_service = None
 
         service = get_event_service()
@@ -228,6 +249,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_emit_authorization_denied(self):
         import app.services.event_service as emod
+
         emod._event_service = None
 
         service = get_event_service()
@@ -245,6 +267,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_emit_consent_created(self):
         import app.services.event_service as emod
+
         emod._event_service = None
 
         service = get_event_service()

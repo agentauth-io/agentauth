@@ -3,6 +3,7 @@ Subscription model for user billing and plan management.
 
 Tracks Stripe subscription data, plan limits, and usage quotas.
 """
+
 import enum
 import uuid
 from datetime import datetime, timezone
@@ -16,6 +17,7 @@ from app.models.database import Base
 
 class PlanType(str, enum.Enum):
     """Available subscription plans."""
+
     FREE = "free"
     STARTUP = "startup"
     PRO = "pro"
@@ -24,6 +26,7 @@ class PlanType(str, enum.Enum):
 
 class SubscriptionStatus(str, enum.Enum):
     """Subscription status values."""
+
     ACTIVE = "active"
     CANCELED = "canceled"
     PAST_DUE = "past_due"
@@ -67,6 +70,7 @@ class Subscription(Base):
 
     Tracks Stripe subscription data and usage limits for billing.
     """
+
     __tablename__ = "subscriptions"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -79,7 +83,9 @@ class Subscription(Base):
 
     # Plan info
     plan = Column(SQLEnum(PlanType), default=PlanType.FREE, nullable=False)
-    status = Column(SQLEnum(SubscriptionStatus), default=SubscriptionStatus.ACTIVE, nullable=False)
+    status = Column(
+        SQLEnum(SubscriptionStatus), default=SubscriptionStatus.ACTIVE, nullable=False
+    )
 
     # Billing period
     current_period_start = Column(DateTime, nullable=True)
@@ -91,7 +97,9 @@ class Subscription(Base):
 
     # Timestamps
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
+    updated_at = Column(
+        DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
+    )
     canceled_at = Column(DateTime, nullable=True)
     trial_end = Column(DateTime, nullable=True)
 

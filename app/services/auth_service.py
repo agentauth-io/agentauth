@@ -7,6 +7,7 @@ OPTIMIZED for <10ms latency:
 3. Authorization record write uses FastAPI BackgroundTasks
 4. Risk assessment via ML models (fraud, anomaly detection)
 """
+
 import asyncio
 import logging
 import secrets
@@ -18,7 +19,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.models.authorization import Authorization
 from app.models.database import async_session_maker
-from app.schemas.authorize import AuthorizeRequest, AuthorizeResponse, RiskAssessmentSchema
+from app.schemas.authorize import (
+    AuthorizeRequest,
+    AuthorizeResponse,
+    RiskAssessmentSchema,
+)
 from app.services.audit_service import create_audit_entry
 from app.services.consent_service import consent_service
 from app.services.risk_service import RiskDecision, get_risk_service
@@ -62,7 +67,9 @@ class AuthService:
         """Get consent from in-memory cache if not expired."""
         if consent_id in _consent_cache:
             data, cached_at = _consent_cache[consent_id]
-            if (datetime.now(timezone.utc) - cached_at).total_seconds() < CACHE_TTL_SECONDS:
+            if (
+                datetime.now(timezone.utc) - cached_at
+            ).total_seconds() < CACHE_TTL_SECONDS:
                 return data
             else:
                 del _consent_cache[consent_id]
@@ -77,9 +84,7 @@ class AuthService:
             del _consent_cache[oldest]
 
     async def _check_consent_cached(
-        self,
-        db: AsyncSession,
-        consent_id: str
+        self, db: AsyncSession, consent_id: str
     ) -> dict | None:
         """
         Check consent with in-memory cache first, DB fallback.
@@ -130,7 +135,7 @@ class AuthService:
         Make an authorization decision.
 
         OPTIMIZED for <50ms latency on cache hits.
-        
+
         Args:
             db: Database session
             request: Authorization request
@@ -153,7 +158,9 @@ class AuthService:
             await create_audit_entry(
                 db=db,
                 event_type="authorization_denied",
-                actor_id=verification.payload.user_id if verification.payload else "unknown",
+                actor_id=(
+                    verification.payload.user_id if verification.payload else "unknown"
+                ),
                 actor_type="agent",
                 action="authorize",
                 outcome="denied",
@@ -171,20 +178,20 @@ class AuthService:
             return AuthorizeResponse(
                 decision="DENY",
                 reason=verification.reason,
-                message=verification.message
+                message=verification.message,
             )
 
         # Step 2: Check consent (cache-first, ~5ms cached, ~300ms uncached)
-        consent = await self._check_consent_cached(
-            db, verification.payload.consent_id
-        )
+        consent = await self._check_consent_cached(db, verification.payload.consent_id)
 
         if consent is None:
             # Log the denial
             await create_audit_entry(
                 db=db,
                 event_type="authorization_denied",
-                actor_id=verification.payload.user_id if verification.payload else "unknown",
+                actor_id=(
+                    verification.payload.user_id if verification.payload else "unknown"
+                ),
                 actor_type="agent",
                 action="authorize",
                 outcome="denied",
@@ -192,7 +199,11 @@ class AuthService:
                 resource_type="authorization",
                 reason="consent_invalid",
                 metadata={
-                    "consent_id": verification.payload.consent_id if verification.payload else None,
+                    "consent_id": (
+                        verification.payload.consent_id
+                        if verification.payload
+                        else None
+                    ),
                     "transaction_amount": request.transaction.amount,
                 },
                 ip_address=client_ip,
@@ -202,7 +213,7 @@ class AuthService:
             return AuthorizeResponse(
                 decision="DENY",
                 reason="consent_invalid",
-                message="Consent has been revoked or does not exist"
+                message="Consent has been revoked or does not exist",
             )
 
         # Step 3: Risk Assessment (ML-based fraud & anomaly detection)
@@ -217,26 +228,54 @@ class AuthService:
                     category_code=request.transaction.merchant_category or "",
                     consent_max_amount=verification.payload.max_amount,
                 )
-                
+
                 # Build risk assessment schema for response
                 risk_assessment = RiskAssessmentSchema(
                     risk_level=risk.risk_level.value,
                     risk_score=risk.risk_score,
                     decision=risk.decision.value,
                     assessment_time_ms=risk.assessment_time_ms,
-                    fraud_detection={
-                        "is_fraud": risk.fraud_prediction.is_fraud if risk.fraud_prediction else False,
-                        "fraud_score": risk.fraud_prediction.fraud_score if risk.fraud_prediction else 0.0,
-                        "risk_level": risk.fraud_prediction.risk_level if risk.fraud_prediction else "low",
-                    } if risk.fraud_prediction else None,
-                    anomaly_detection={
-                        "is_anomaly": risk.anomaly_result.is_anomaly if risk.anomaly_result else False,
-                        "anomaly_score": risk.anomaly_result.anomaly_score if risk.anomaly_result else 0.0,
-                    } if risk.anomaly_result else None,
+                    fraud_detection=(
+                        {
+                            "is_fraud": (
+                                risk.fraud_prediction.is_fraud
+                                if risk.fraud_prediction
+                                else False
+                            ),
+                            "fraud_score": (
+                                risk.fraud_prediction.fraud_score
+                                if risk.fraud_prediction
+                                else 0.0
+                            ),
+                            "risk_level": (
+                                risk.fraud_prediction.risk_level
+                                if risk.fraud_prediction
+                                else "low"
+                            ),
+                        }
+                        if risk.fraud_prediction
+                        else None
+                    ),
+                    anomaly_detection=(
+                        {
+                            "is_anomaly": (
+                                risk.anomaly_result.is_anomaly
+                                if risk.anomaly_result
+                                else False
+                            ),
+                            "anomaly_score": (
+                                risk.anomaly_result.anomaly_score
+                                if risk.anomaly_result
+                                else 0.0
+                            ),
+                        }
+                        if risk.anomaly_result
+                        else None
+                    ),
                     factors=risk.factors,
                     recommendations=risk.recommendations,
                 )
-                
+
                 # Handle risk-based decisions
                 if risk.decision == RiskDecision.BLOCK:
                     await create_audit_entry(
@@ -258,14 +297,14 @@ class AuthService:
                         ip_address=client_ip,
                         user_agent=user_agent,
                     )
-                    
+
                     return AuthorizeResponse(
                         decision="DENY",
                         reason="risk_blocked",
                         message=f"Transaction blocked due to high risk (score: {risk.risk_score:.2f})",
                         risk_assessment=risk_assessment,
                     )
-                
+
                 # STEP_UP for review cases
                 if risk.decision == RiskDecision.REVIEW:
                     # Log for review but still allow with warning
@@ -273,7 +312,7 @@ class AuthService:
                         f"Transaction flagged for review: user={verification.payload.user_id}, "
                         f"amount={request.transaction.amount}, risk={risk.risk_score:.2f}"
                     )
-                    
+
             except Exception as e:
                 logger.error(f"Risk assessment failed: {e}")
                 # Continue without risk assessment if it fails
@@ -287,13 +326,20 @@ class AuthService:
         # Evict expired entries if cache is getting large
         if len(_auth_cache) > _AUTH_CACHE_MAX_SIZE:
             cutoff = datetime.now(timezone.utc)
-            expired_keys = [k for k, v in _auth_cache.items() if v.get("expires_at", cutoff) < cutoff]
+            expired_keys = [
+                k
+                for k, v in _auth_cache.items()
+                if v.get("expires_at", cutoff) < cutoff
+            ]
             for k in expired_keys:
                 del _auth_cache[k]
             # If still too large, remove oldest entries
             if len(_auth_cache) > _AUTH_CACHE_MAX_SIZE:
-                oldest = sorted(_auth_cache.keys(), key=lambda k: _auth_cache[k].get("created_at", cutoff))
-                for k in oldest[:len(_auth_cache) - _AUTH_CACHE_MAX_SIZE + 1000]:
+                oldest = sorted(
+                    _auth_cache.keys(),
+                    key=lambda k: _auth_cache[k].get("created_at", cutoff),
+                )
+                for k in oldest[: len(_auth_cache) - _AUTH_CACHE_MAX_SIZE + 1000]:
                     del _auth_cache[k]
 
         _auth_cache[authorization_code] = {
@@ -356,14 +402,11 @@ class AuthService:
             authorization_code=authorization_code,
             expires_at=expires_at,
             consent_id=verification.payload.consent_id,
-            risk_assessment=risk_assessment
+            risk_assessment=risk_assessment,
         )
 
     async def check_step_up_required(
-        self,
-        consent_id: str,
-        amount: float,
-        consent_max_amount: float | None = None
+        self, consent_id: str, amount: float, consent_max_amount: float | None = None
     ) -> bool:
         """
         Check if step-up authentication is required.
@@ -379,13 +422,17 @@ class AuthService:
         if consent_max_amount and amount > 0:
             usage_ratio = amount / consent_max_amount
             if usage_ratio >= 0.80:
-                logger.info(f"Step-up required: amount ${amount} is {usage_ratio:.0%} of limit ${consent_max_amount}")
+                logger.info(
+                    f"Step-up required: amount ${amount} is {usage_ratio:.0%} of limit ${consent_max_amount}"
+                )
                 return True
 
         # Absolute threshold: transactions over $500 require step-up
         STEP_UP_THRESHOLD = 500.0
         if amount >= STEP_UP_THRESHOLD:
-            logger.info(f"Step-up required: amount ${amount} exceeds ${STEP_UP_THRESHOLD} threshold")
+            logger.info(
+                f"Step-up required: amount ${amount} exceeds ${STEP_UP_THRESHOLD} threshold"
+            )
             return True
 
         return False
@@ -414,7 +461,9 @@ async def write_authorization_to_db(auth_data: dict):
             )
             session.add(authorization)
             await session.commit()
-            logger.debug(f"Authorization {auth_data['authorization_code']} written to DB")
+            logger.debug(
+                f"Authorization {auth_data['authorization_code']} written to DB"
+            )
     except Exception as e:
         logger.error(f"Failed to write authorization to DB: {e}")
 
@@ -452,7 +501,9 @@ async def flush_auth_queue():
                         merchant_name=auth_data.get("merchant_name"),
                         merchant_category=auth_data.get("merchant_category"),
                         action=auth_data["action"],
-                        transaction_metadata={"description": auth_data.get("description")},
+                        transaction_metadata={
+                            "description": auth_data.get("description")
+                        },
                         expires_at=auth_data["expires_at"],
                     )
                     session.add(authorization)

@@ -1,6 +1,7 @@
 """
 AgentAuth Schemas Package
 """
+
 from app.schemas.authorize import (
     AuthorizeRequest,
     AuthorizeResponse,

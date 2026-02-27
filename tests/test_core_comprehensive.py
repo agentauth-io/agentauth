@@ -4,6 +4,7 @@ AgentAuth Core Module Tests
 Comprehensive tests for crypto, engine, and policy modules
 to improve coverage from 37-38% → 65%+.
 """
+
 import time
 
 import pytest
@@ -45,6 +46,7 @@ from core.tokens import (
 # ============================================================================
 # Crypto Tests
 # ============================================================================
+
 
 class TestMasterSecret:
     """Tests for MasterSecret key derivation."""
@@ -223,6 +225,7 @@ class TestKeyManager:
 # Engine Tests
 # ============================================================================
 
+
 class TestAuthorizationRequest:
     """Tests for AuthorizationRequest."""
 
@@ -267,8 +270,10 @@ class TestAuthorizationRequest:
         """hash() uses to_context() which includes all fields.
         With identical fields, hash should match."""
         req1 = AuthorizationRequest(
-            agent_id="agent-1", user_id="user-1",
-            action="purchase", resource="item",
+            agent_id="agent-1",
+            user_id="user-1",
+            action="purchase",
+            resource="item",
         )
         # hash() is deterministic for same to_context() output
         h1 = req1.hash()
@@ -319,10 +324,12 @@ class TestRateLimiter:
         assert allowed is True
 
     def test_denies_over_limit(self):
-        limiter = RateLimiter(RateLimitConfig(
-            requests_per_minute=2,
-            burst_limit=2,
-        ))
+        limiter = RateLimiter(
+            RateLimitConfig(
+                requests_per_minute=2,
+                burst_limit=2,
+            )
+        )
         limiter.check("user-1")
         limiter.check("user-1")
         allowed, reason = limiter.check("user-1")
@@ -386,6 +393,7 @@ class TestSpendingTracker:
 # ============================================================================
 # Policy Tests
 # ============================================================================
+
 
 class TestCondition:
     """Tests for policy conditions."""
@@ -595,7 +603,9 @@ class TestPolicy:
             id="pol-3",
             name="Disabled",
             effect=PolicyEffect.DENY,
-            rules=[PolicyRule(conditions=[Condition("amount", ConditionOperator.GT, 0)])],
+            rules=[
+                PolicyRule(conditions=[Condition("amount", ConditionOperator.GT, 0)])
+            ],
             enabled=False,
         )
         applies, effect = policy.evaluate({"amount": 50.0})
@@ -603,7 +613,9 @@ class TestPolicy:
 
     def test_policy_hash_deterministic(self):
         policy = Policy(
-            id="pol-1", name="Test", effect=PolicyEffect.ALLOW,
+            id="pol-1",
+            name="Test",
+            effect=PolicyEffect.ALLOW,
             rules=[PolicyRule(conditions=[Condition("a", ConditionOperator.EQ, 1)])],
         )
         h1 = policy.hash()
@@ -612,7 +624,9 @@ class TestPolicy:
 
     def test_serialization(self):
         policy = Policy(
-            id="pol-1", name="Test", effect=PolicyEffect.ALLOW,
+            id="pol-1",
+            name="Test",
+            effect=PolicyEffect.ALLOW,
             rules=[PolicyRule(conditions=[Condition("a", ConditionOperator.EQ, 1)])],
             priority=10,
         )
@@ -654,66 +668,120 @@ class TestPolicyEngine:
 
     def test_add_and_evaluate(self):
         engine = PolicyEngine()
-        engine.add_policy(Policy(
-            id="allow-small",
-            name="Allow < $100",
-            effect=PolicyEffect.ALLOW,
-            rules=[PolicyRule(conditions=[
-                Condition("amount", ConditionOperator.LTE, 100.0),
-            ])],
-        ))
+        engine.add_policy(
+            Policy(
+                id="allow-small",
+                name="Allow < $100",
+                effect=PolicyEffect.ALLOW,
+                rules=[
+                    PolicyRule(
+                        conditions=[
+                            Condition("amount", ConditionOperator.LTE, 100.0),
+                        ]
+                    )
+                ],
+            )
+        )
         decision = engine.evaluate({"amount": 50.0, "agent_id": "a1"})
         assert decision.allowed is True
 
     def test_deny_overrides(self):
         engine = PolicyEngine(combine_algorithm=PolicyCombineAlgorithm.DENY_OVERRIDES)
-        engine.add_policy(Policy(
-            id="allow-all", name="Allow All",
-            effect=PolicyEffect.ALLOW,
-            rules=[PolicyRule(conditions=[Condition("amount", ConditionOperator.GT, 0)])],
-        ))
-        engine.add_policy(Policy(
-            id="deny-gambling", name="Block Gambling",
-            effect=PolicyEffect.DENY,
-            rules=[PolicyRule(conditions=[Condition("category", ConditionOperator.EQ, "gambling")])],
-        ))
-        decision = engine.evaluate({"amount": 50.0, "category": "gambling", "agent_id": "a1"})
+        engine.add_policy(
+            Policy(
+                id="allow-all",
+                name="Allow All",
+                effect=PolicyEffect.ALLOW,
+                rules=[
+                    PolicyRule(
+                        conditions=[Condition("amount", ConditionOperator.GT, 0)]
+                    )
+                ],
+            )
+        )
+        engine.add_policy(
+            Policy(
+                id="deny-gambling",
+                name="Block Gambling",
+                effect=PolicyEffect.DENY,
+                rules=[
+                    PolicyRule(
+                        conditions=[
+                            Condition("category", ConditionOperator.EQ, "gambling")
+                        ]
+                    )
+                ],
+            )
+        )
+        decision = engine.evaluate(
+            {"amount": 50.0, "category": "gambling", "agent_id": "a1"}
+        )
         assert decision.allowed is False
 
     def test_remove_policy(self):
         engine = PolicyEngine()
-        engine.add_policy(Policy(
-            id="pol-1", name="Test",
-            effect=PolicyEffect.DENY,
-            rules=[PolicyRule(conditions=[Condition("amount", ConditionOperator.GT, 0)])],
-        ))
+        engine.add_policy(
+            Policy(
+                id="pol-1",
+                name="Test",
+                effect=PolicyEffect.DENY,
+                rules=[
+                    PolicyRule(
+                        conditions=[Condition("amount", ConditionOperator.GT, 0)]
+                    )
+                ],
+            )
+        )
         engine.remove_policy("pol-1")
         decision = engine.evaluate({"amount": 50.0, "agent_id": "a1"})
         # No policies = default allow or deny depending on engine config
 
     def test_stats(self):
         engine = PolicyEngine()
-        engine.add_policy(Policy(
-            id="pol-1", name="Test",
-            effect=PolicyEffect.ALLOW,
-            rules=[PolicyRule(conditions=[Condition("amount", ConditionOperator.GT, 0)])],
-        ))
+        engine.add_policy(
+            Policy(
+                id="pol-1",
+                name="Test",
+                effect=PolicyEffect.ALLOW,
+                rules=[
+                    PolicyRule(
+                        conditions=[Condition("amount", ConditionOperator.GT, 0)]
+                    )
+                ],
+            )
+        )
         engine.evaluate({"amount": 50.0, "agent_id": "a1"})
         s = engine.stats
         assert "evaluation_count" in s and s["evaluation_count"] >= 1
 
     def test_multiple_policies_priority(self):
         engine = PolicyEngine()
-        engine.add_policy(Policy(
-            id="high-priority", name="Block Large",
-            effect=PolicyEffect.DENY, priority=100,
-            rules=[PolicyRule(conditions=[Condition("amount", ConditionOperator.GT, 1000.0)])],
-        ))
-        engine.add_policy(Policy(
-            id="low-priority", name="Allow All",
-            effect=PolicyEffect.ALLOW, priority=1,
-            rules=[PolicyRule(conditions=[Condition("amount", ConditionOperator.GT, 0)])],
-        ))
+        engine.add_policy(
+            Policy(
+                id="high-priority",
+                name="Block Large",
+                effect=PolicyEffect.DENY,
+                priority=100,
+                rules=[
+                    PolicyRule(
+                        conditions=[Condition("amount", ConditionOperator.GT, 1000.0)]
+                    )
+                ],
+            )
+        )
+        engine.add_policy(
+            Policy(
+                id="low-priority",
+                name="Allow All",
+                effect=PolicyEffect.ALLOW,
+                priority=1,
+                rules=[
+                    PolicyRule(
+                        conditions=[Condition("amount", ConditionOperator.GT, 0)]
+                    )
+                ],
+            )
+        )
         # Small amount should be allowed
         decision = engine.evaluate({"amount": 50.0, "agent_id": "a1"})
         assert decision.allowed is True
@@ -725,6 +793,7 @@ class TestPolicyEngine:
 # ============================================================================
 # Token Tests
 # ============================================================================
+
 
 class TestTokens:
     """Tests for token generation and verification."""
@@ -779,5 +848,6 @@ class TestTokens:
         token_bytes = token.serialize(km)
         # Should raise TokenExpiredError
         from core.tokens import TokenExpiredError
+
         with pytest.raises(TokenExpiredError):
             ver.verify(token_bytes)
