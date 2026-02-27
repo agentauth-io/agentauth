@@ -6,8 +6,6 @@ Based on the UCAN specification: https://ucan.xyz/
 """
 
 import base64
-import hashlib
-import json
 import secrets
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -73,10 +71,7 @@ class UCANPayload:
     prf: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
-        result = {
-            "iss": self.iss, "aud": self.aud, "exp": self.exp,
-            "att": [c.to_dict() for c in self.att],
-        }
+        result = {"iss": self.iss, "aud": self.aud, "exp": self.exp, "att": [c.to_dict() for c in self.att]}
         if self.nbf: result["nbf"] = self.nbf
         if self.nnc: result["nnc"] = self.nnc
         if self.fct: result["fct"] = self.fct
@@ -98,6 +93,7 @@ class UCAN:
             raise UCANError("Payload is required")
 
     def to_jwt(self) -> str:
+        import json
         header = {"alg": self.alg, "typ": self.typ, "ucv": self.ucv}
         header_b64 = base64.urlsafe_b64encode(json.dumps(header).encode()).decode().rstrip("=")
         payload_b64 = base64.urlsafe_b64encode(json.dumps(self.payload.to_dict()).encode()).decode().rstrip("=")
@@ -106,6 +102,7 @@ class UCAN:
 
     @classmethod
     def from_jwt(cls, token: str) -> "UCAN":
+        import json
         try:
             parts = token.split(".")
             if len(parts) != 3:
@@ -251,10 +248,8 @@ class UCANService:
         except Exception:
             raise UCANError("Invalid public key format")
 
-    def create_token(
-        self, issuer_did: str, audience_did: str, capabilities: list[Capability],
-        private_key: str, ttl_seconds: int = 3600,
-    ) -> UCANToken:
+    def create_token(self, issuer_did: str, audience_did: str, capabilities: list[Capability],
+                     private_key: str, ttl_seconds: int = 3600) -> UCANToken:
         """Create a UCAN token."""
         builder = UCANBuilder(issuer_did, audience_did)
         builder.with_lifetime(ttl_seconds)
@@ -301,7 +296,7 @@ class UCANService:
     def attenuate_token(self, token: UCANToken, capabilities: list[Capability]) -> UCANToken:
         """Attenuate a token with stricter capabilities."""
         builder = UCANBuilder(issuer_did=token.ucan.payload.aud, audience_did=token.ucan.payload.iss)
-        builder.with_lifetime(token.ucan.payload.exp - int(datetime.now(timezone.utc).timestamp()))
+        builder.with_lifetime(max(1, token.ucan.payload.exp - int(datetime.now(timezone.utc).timestamp())))
         builder.with_nonce()
         builder.with_proof(token.ucan.to_jwt())
 
@@ -322,10 +317,12 @@ class UCANService:
 
     def serialize_token(self, token: UCANToken, compact: bool = False) -> str:
         """Serialize a token to string."""
+        import json
         return token.ucan.to_jwt() if compact else json.dumps(token.to_dict())
 
     def deserialize_token(self, token_str: str) -> UCANToken:
         """Deserialize a token from string."""
+        import json
         try:
             if token_str.count(".") == 2:
                 return UCANToken(UCAN.from_jwt(token_str))
@@ -439,5 +436,4 @@ def attenuate_ucan(token: UCANToken, capabilities: list[Capability]) -> UCANToke
 
 def create_agent_ucan(user_did: str, agent_did: str, consent_id: str,
                       max_amount: float, allowed_actions: list[str] = None) -> str:
-    """Create a UCAN for an agent to act on behalf of a user."""
-    service = get
+    """Create a UCAN for an agent to act on behalf of a user
