@@ -5,6 +5,7 @@ OPTIMIZED for <10ms latency:
 1. Token verification is in-memory (JWT decode) - ~1ms
 2. Consent lookup uses pre-warmed in-memory cache - ~0ms
 3. Authorization record write uses FastAPI BackgroundTasks
+4. Risk assessment via ML models (fraud, anomaly detection)
 """
 import asyncio
 import logging
@@ -17,9 +18,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.models.authorization import Authorization
 from app.models.database import async_session_maker
-from app.schemas.authorize import AuthorizeRequest, AuthorizeResponse
+from app.schemas.authorize import AuthorizeRequest, AuthorizeResponse, RiskAssessmentSchema
 from app.services.audit_service import create_audit_entry
 from app.services.consent_service import consent_service
+from app.services.risk_service import RiskDecision, get_risk_service
 from app.services.token_service import token_service
 
 logger = logging.getLogger(__name__)
@@ -122,11 +124,19 @@ class AuthService:
         request: AuthorizeRequest,
         client_ip: str | None = None,
         user_agent: str | None = None,
+        skip_risk_assessment: bool = False,
     ) -> AuthorizeResponse:
         """
         Make an authorization decision.
 
         OPTIMIZED for <50ms latency on cache hits.
+        
+        Args:
+            db: Database session
+            request: Authorization request
+            client_ip: Client IP for audit logging
+            user_agent: User agent for audit logging
+            skip_risk_assessment: Skip ML risk assessment (for testing/low-latency needs)
         """
         # Step 1: Verify the delegation token (in-memory, ~1ms)
         verification = token_service.verify_token(
@@ -195,7 +205,80 @@ class AuthService:
                 message="Consent has been revoked or does not exist"
             )
 
-        # Step 3: All checks passed - generate authorization code
+        # Step 3: Risk Assessment (ML-based fraud & anomaly detection)
+        risk_assessment = None
+        if not skip_risk_assessment:
+            try:
+                risk_service = get_risk_service()
+                risk = await risk_service.assess(
+                    user_id=verification.payload.user_id,
+                    amount=request.transaction.amount,
+                    merchant_id=request.transaction.merchant_id or "unknown",
+                    category_code=request.transaction.merchant_category or "",
+                    consent_max_amount=verification.payload.max_amount,
+                )
+                
+                # Build risk assessment schema for response
+                risk_assessment = RiskAssessmentSchema(
+                    risk_level=risk.risk_level.value,
+                    risk_score=risk.risk_score,
+                    decision=risk.decision.value,
+                    assessment_time_ms=risk.assessment_time_ms,
+                    fraud_detection={
+                        "is_fraud": risk.fraud_prediction.is_fraud if risk.fraud_prediction else False,
+                        "fraud_score": risk.fraud_prediction.fraud_score if risk.fraud_prediction else 0.0,
+                        "risk_level": risk.fraud_prediction.risk_level if risk.fraud_prediction else "low",
+                    } if risk.fraud_prediction else None,
+                    anomaly_detection={
+                        "is_anomaly": risk.anomaly_result.is_anomaly if risk.anomaly_result else False,
+                        "anomaly_score": risk.anomaly_result.anomaly_score if risk.anomaly_result else 0.0,
+                    } if risk.anomaly_result else None,
+                    factors=risk.factors,
+                    recommendations=risk.recommendations,
+                )
+                
+                # Handle risk-based decisions
+                if risk.decision == RiskDecision.BLOCK:
+                    await create_audit_entry(
+                        db=db,
+                        event_type="authorization_denied",
+                        actor_id=verification.payload.user_id,
+                        actor_type="agent",
+                        action="authorize",
+                        outcome="denied",
+                        resource_id=None,
+                        resource_type="authorization",
+                        reason="risk_blocked",
+                        metadata={
+                            "consent_id": verification.payload.consent_id,
+                            "transaction_amount": request.transaction.amount,
+                            "risk_score": risk.risk_score,
+                            "risk_level": risk.risk_level.value,
+                        },
+                        ip_address=client_ip,
+                        user_agent=user_agent,
+                    )
+                    
+                    return AuthorizeResponse(
+                        decision="DENY",
+                        reason="risk_blocked",
+                        message=f"Transaction blocked due to high risk (score: {risk.risk_score:.2f})",
+                        risk_assessment=risk_assessment,
+                    )
+                
+                # STEP_UP for review cases
+                if risk.decision == RiskDecision.REVIEW:
+                    # Log for review but still allow with warning
+                    logger.warning(
+                        f"Transaction flagged for review: user={verification.payload.user_id}, "
+                        f"amount={request.transaction.amount}, risk={risk.risk_score:.2f}"
+                    )
+                    
+            except Exception as e:
+                logger.error(f"Risk assessment failed: {e}")
+                # Continue without risk assessment if it fails
+
+        # Step 4: All checks passed - generate authorization code
         now = datetime.now(timezone.utc)
         expires_at = now + timedelta(seconds=settings.auth_code_expiry_seconds)
         authorization_code = generate_authorization_code()
@@ -272,7 +355,8 @@ class AuthService:
             decision="ALLOW",
             authorization_code=authorization_code,
             expires_at=expires_at,
-            consent_id=verification.payload.consent_id
+            consent_id=verification.payload.consent_id,
+            risk_assessment=risk_assessment
         )
 
     async def check_step_up_required(

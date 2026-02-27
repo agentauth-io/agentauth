@@ -1,0 +1,2253 @@
+
+
++===========================================================================================================================================================================================+
+
+
+DEPRECATED: this command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.
+
+
+We highly encourage switching to the new `scan` command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.
+
+
++===========================================================================================================================================================================================+
+
+
+{
+    "report_meta": {
+        "scan_target": "environment",
+        "scanned": [
+            "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages",
+            "/home/seyominaoto/Videos/AgentAuth/sdk/python/src"
+        ],
+        "scanned_full_path": [
+            "/home/seyominaoto/Videos/AgentAuth/sdk/python/src",
+            "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages"
+        ],
+        "target_languages": [
+            "python"
+        ],
+        "policy_file": null,
+        "policy_file_source": "local",
+        "audit_and_monitor": false,
+        "api_key": false,
+        "account": "",
+        "local_database_path": null,
+        "safety_version": "3.7.0",
+        "timestamp": "2026-02-27 13:14:53",
+        "packages_found": 127,
+        "vulnerabilities_found": 2,
+        "vulnerabilities_ignored": 0,
+        "remediations_recommended": 0,
+        "telemetry": {
+            "safety_options": {
+                "json": {
+                    "--json": 1
+                }
+            },
+            "safety_version": "3.7.0",
+            "safety_source": "cli",
+            "os_type": "Linux",
+            "os_release": "6.17.0-14-generic",
+            "os_description": "Linux-6.17.0-14-generic-x86_64-with-glibc2.39",
+            "python_version": "3.12.3",
+            "safety_command": "check"
+        },
+        "git": {
+            "branch": "main",
+            "tag": "",
+            "commit": "dcaf8c1bd81c69fc764470d30568a1f58bd88d00",
+            "dirty": "True",
+            "origin": "https://github.com/agentauth-io/agentauth.git"
+        },
+        "project": null,
+        "json_version": "1.1",
+        "remediations_attempted": 0,
+        "remediations_completed": 0,
+        "remediation_mode": "NON_INTERACTIVE"
+    },
+    "scanned_packages": {
+        "typing-inspection": {
+            "name": "typing-inspection",
+            "version": "0.4.2",
+            "requirements": [
+                {
+                    "raw": "typing-inspection==0.4.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "typing-inspection",
+                    "specifier": "==0.4.2",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/typing_inspection-0.4.2.dist-info"
+                }
+            ]
+        },
+        "SQLAlchemy": {
+            "name": "SQLAlchemy",
+            "version": "2.0.45",
+            "requirements": [
+                {
+                    "raw": "SQLAlchemy==2.0.45",
+                    "extras": [],
+                    "marker": null,
+                    "name": "SQLAlchemy",
+                    "specifier": "==2.0.45",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/sqlalchemy-2.0.45.dist-info"
+                }
+            ]
+        },
+        "idna": {
+            "name": "idna",
+            "version": "3.11",
+            "requirements": [
+                {
+                    "raw": "idna==3.11",
+                    "extras": [],
+                    "marker": null,
+                    "name": "idna",
+                    "specifier": "==3.11",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/idna-3.11.dist-info"
+                }
+            ]
+        },
+        "pytest-asyncio": {
+            "name": "pytest-asyncio",
+            "version": "1.3.0",
+            "requirements": [
+                {
+                    "raw": "pytest-asyncio==1.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytest-asyncio",
+                    "specifier": "==1.3.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pytest_asyncio-1.3.0.dist-info"
+                }
+            ]
+        },
+        "agentauth": {
+            "name": "agentauth",
+            "version": "0.3.0",
+            "requirements": [
+                {
+                    "raw": "agentauth==0.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "agentauth",
+                    "specifier": "==0.3.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/agentauth-0.3.0.dist-info"
+                }
+            ]
+        },
+        "isort": {
+            "name": "isort",
+            "version": "8.0.0",
+            "requirements": [
+                {
+                    "raw": "isort==8.0.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "isort",
+                    "specifier": "==8.0.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/isort-8.0.0.dist-info"
+                }
+            ]
+        },
+        "pytest-cov": {
+            "name": "pytest-cov",
+            "version": "7.0.0",
+            "requirements": [
+                {
+                    "raw": "pytest-cov==7.0.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytest-cov",
+                    "specifier": "==7.0.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pytest_cov-7.0.0.dist-info"
+                }
+            ]
+        },
+        "platformdirs": {
+            "name": "platformdirs",
+            "version": "4.9.2",
+            "requirements": [
+                {
+                    "raw": "platformdirs==4.9.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "platformdirs",
+                    "specifier": "==4.9.2",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/platformdirs-4.9.2.dist-info"
+                }
+            ]
+        },
+        "pydantic": {
+            "name": "pydantic",
+            "version": "2.12.5",
+            "requirements": [
+                {
+                    "raw": "pydantic==2.12.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pydantic",
+                    "specifier": "==2.12.5",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pydantic-2.12.5.dist-info"
+                }
+            ]
+        },
+        "stevedore": {
+            "name": "stevedore",
+            "version": "5.7.0",
+            "requirements": [
+                {
+                    "raw": "stevedore==5.7.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "stevedore",
+                    "specifier": "==5.7.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/stevedore-5.7.0.dist-info"
+                }
+            ]
+        },
+        "httptools": {
+            "name": "httptools",
+            "version": "0.7.1",
+            "requirements": [
+                {
+                    "raw": "httptools==0.7.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "httptools",
+                    "specifier": "==0.7.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/httptools-0.7.1.dist-info"
+                }
+            ]
+        },
+        "msgpack": {
+            "name": "msgpack",
+            "version": "1.1.2",
+            "requirements": [
+                {
+                    "raw": "msgpack==1.1.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "msgpack",
+                    "specifier": "==1.1.2",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/msgpack-1.1.2.dist-info"
+                }
+            ]
+        },
+        "py-serializable": {
+            "name": "py-serializable",
+            "version": "2.1.0",
+            "requirements": [
+                {
+                    "raw": "py-serializable==2.1.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "py-serializable",
+                    "specifier": "==2.1.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/py_serializable-2.1.0.dist-info"
+                }
+            ]
+        },
+        "black": {
+            "name": "black",
+            "version": "26.1.0",
+            "requirements": [
+                {
+                    "raw": "black==26.1.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "black",
+                    "specifier": "==26.1.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/black-26.1.0.dist-info"
+                }
+            ]
+        },
+        "bcrypt": {
+            "name": "bcrypt",
+            "version": "5.0.0",
+            "requirements": [
+                {
+                    "raw": "bcrypt==5.0.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "bcrypt",
+                    "specifier": "==5.0.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/bcrypt-5.0.0.dist-info"
+                }
+            ]
+        },
+        "pip": {
+            "name": "pip",
+            "version": "24.0",
+            "requirements": [
+                {
+                    "raw": "pip==24.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pip",
+                    "specifier": "==24.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pip-24.0.dist-info"
+                }
+            ]
+        },
+        "multidict": {
+            "name": "multidict",
+            "version": "6.7.1",
+            "requirements": [
+                {
+                    "raw": "multidict==6.7.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "multidict",
+                    "specifier": "==6.7.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/multidict-6.7.1.dist-info"
+                }
+            ]
+        },
+        "cffi": {
+            "name": "cffi",
+            "version": "2.0.0",
+            "requirements": [
+                {
+                    "raw": "cffi==2.0.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "cffi",
+                    "specifier": "==2.0.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/cffi-2.0.0.dist-info"
+                }
+            ]
+        },
+        "pylint": {
+            "name": "pylint",
+            "version": "4.0.5",
+            "requirements": [
+                {
+                    "raw": "pylint==4.0.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pylint",
+                    "specifier": "==4.0.5",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pylint-4.0.5.dist-info"
+                }
+            ]
+        },
+        "pip-requirements-parser": {
+            "name": "pip-requirements-parser",
+            "version": "32.0.1",
+            "requirements": [
+                {
+                    "raw": "pip-requirements-parser==32.0.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pip-requirements-parser",
+                    "specifier": "==32.0.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pip_requirements_parser-32.0.1.dist-info"
+                }
+            ]
+        },
+        "opentelemetry-instrumentation-asgi": {
+            "name": "opentelemetry-instrumentation-asgi",
+            "version": "0.60b1",
+            "requirements": [
+                {
+                    "raw": "opentelemetry-instrumentation-asgi==0.60b1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "opentelemetry-instrumentation-asgi",
+                    "specifier": "==0.60b1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/opentelemetry_instrumentation_asgi-0.60b1.dist-info"
+                }
+            ]
+        },
+        "opentelemetry-api": {
+            "name": "opentelemetry-api",
+            "version": "1.39.1",
+            "requirements": [
+                {
+                    "raw": "opentelemetry-api==1.39.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "opentelemetry-api",
+                    "specifier": "==1.39.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/opentelemetry_api-1.39.1.dist-info"
+                }
+            ]
+        },
+        "marshmallow": {
+            "name": "marshmallow",
+            "version": "4.2.2",
+            "requirements": [
+                {
+                    "raw": "marshmallow==4.2.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "marshmallow",
+                    "specifier": "==4.2.2",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/marshmallow-4.2.2.dist-info"
+                }
+            ]
+        },
+        "packageurl-python": {
+            "name": "packageurl-python",
+            "version": "0.17.6",
+            "requirements": [
+                {
+                    "raw": "packageurl-python==0.17.6",
+                    "extras": [],
+                    "marker": null,
+                    "name": "packageurl-python",
+                    "specifier": "==0.17.6",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/packageurl_python-0.17.6.dist-info"
+                }
+            ]
+        },
+        "greenlet": {
+            "name": "greenlet",
+            "version": "3.3.0",
+            "requirements": [
+                {
+                    "raw": "greenlet==3.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "greenlet",
+                    "specifier": "==3.3.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/greenlet-3.3.0.dist-info"
+                }
+            ]
+        },
+        "importlib_metadata": {
+            "name": "importlib_metadata",
+            "version": "8.7.1",
+            "requirements": [
+                {
+                    "raw": "importlib_metadata==8.7.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "importlib_metadata",
+                    "specifier": "==8.7.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/importlib_metadata-8.7.1.dist-info"
+                }
+            ]
+        },
+        "sentry-sdk": {
+            "name": "sentry-sdk",
+            "version": "2.53.0",
+            "requirements": [
+                {
+                    "raw": "sentry-sdk==2.53.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "sentry-sdk",
+                    "specifier": "==2.53.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/sentry_sdk-2.53.0.dist-info"
+                }
+            ]
+        },
+        "Pygments": {
+            "name": "Pygments",
+            "version": "2.19.2",
+            "requirements": [
+                {
+                    "raw": "Pygments==2.19.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "Pygments",
+                    "specifier": "==2.19.2",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pygments-2.19.2.dist-info"
+                }
+            ]
+        },
+        "rich": {
+            "name": "rich",
+            "version": "14.2.0",
+            "requirements": [
+                {
+                    "raw": "rich==14.2.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "rich",
+                    "specifier": "==14.2.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/rich-14.2.0.dist-info"
+                }
+            ]
+        },
+        "coverage": {
+            "name": "coverage",
+            "version": "7.13.4",
+            "requirements": [
+                {
+                    "raw": "coverage==7.13.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "coverage",
+                    "specifier": "==7.13.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/coverage-7.13.4.dist-info"
+                }
+            ]
+        },
+        "aiosignal": {
+            "name": "aiosignal",
+            "version": "1.4.0",
+            "requirements": [
+                {
+                    "raw": "aiosignal==1.4.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "aiosignal",
+                    "specifier": "==1.4.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/aiosignal-1.4.0.dist-info"
+                }
+            ]
+        },
+        "Jinja2": {
+            "name": "Jinja2",
+            "version": "3.1.6",
+            "requirements": [
+                {
+                    "raw": "Jinja2==3.1.6",
+                    "extras": [],
+                    "marker": null,
+                    "name": "Jinja2",
+                    "specifier": "==3.1.6",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/jinja2-3.1.6.dist-info"
+                }
+            ]
+        },
+        "Mako": {
+            "name": "Mako",
+            "version": "1.3.10",
+            "requirements": [
+                {
+                    "raw": "Mako==1.3.10",
+                    "extras": [],
+                    "marker": null,
+                    "name": "Mako",
+                    "specifier": "==1.3.10",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/mako-1.3.10.dist-info"
+                }
+            ]
+        },
+        "annotated-doc": {
+            "name": "annotated-doc",
+            "version": "0.0.4",
+            "requirements": [
+                {
+                    "raw": "annotated-doc==0.0.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "annotated-doc",
+                    "specifier": "==0.0.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/annotated_doc-0.0.4.dist-info"
+                }
+            ]
+        },
+        "cyclonedx-python-lib": {
+            "name": "cyclonedx-python-lib",
+            "version": "11.6.0",
+            "requirements": [
+                {
+                    "raw": "cyclonedx-python-lib==11.6.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "cyclonedx-python-lib",
+                    "specifier": "==11.6.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/cyclonedx_python_lib-11.6.0.dist-info"
+                }
+            ]
+        },
+        "opentelemetry-util-http": {
+            "name": "opentelemetry-util-http",
+            "version": "0.60b1",
+            "requirements": [
+                {
+                    "raw": "opentelemetry-util-http==0.60b1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "opentelemetry-util-http",
+                    "specifier": "==0.60b1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/opentelemetry_util_http-0.60b1.dist-info"
+                }
+            ]
+        },
+        "alembic": {
+            "name": "alembic",
+            "version": "1.18.0",
+            "requirements": [
+                {
+                    "raw": "alembic==1.18.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "alembic",
+                    "specifier": "==1.18.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/alembic-1.18.0.dist-info"
+                }
+            ]
+        },
+        "safety-schemas": {
+            "name": "safety-schemas",
+            "version": "0.0.16",
+            "requirements": [
+                {
+                    "raw": "safety-schemas==0.0.16",
+                    "extras": [],
+                    "marker": null,
+                    "name": "safety-schemas",
+                    "specifier": "==0.0.16",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/safety_schemas-0.0.16.dist-info"
+                }
+            ]
+        },
+        "httpx": {
+            "name": "httpx",
+            "version": "0.28.1",
+            "requirements": [
+                {
+                    "raw": "httpx==0.28.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "httpx",
+                    "specifier": "==0.28.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/httpx-0.28.1.dist-info"
+                }
+            ]
+        },
+        "opentelemetry-instrumentation-httpx": {
+            "name": "opentelemetry-instrumentation-httpx",
+            "version": "0.60b1",
+            "requirements": [
+                {
+                    "raw": "opentelemetry-instrumentation-httpx==0.60b1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "opentelemetry-instrumentation-httpx",
+                    "specifier": "==0.60b1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/opentelemetry_instrumentation_httpx-0.60b1.dist-info"
+                }
+            ]
+        },
+        "mccabe": {
+            "name": "mccabe",
+            "version": "0.7.0",
+            "requirements": [
+                {
+                    "raw": "mccabe==0.7.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "mccabe",
+                    "specifier": "==0.7.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/mccabe-0.7.0.dist-info"
+                }
+            ]
+        },
+        "aiosqlite": {
+            "name": "aiosqlite",
+            "version": "0.22.1",
+            "requirements": [
+                {
+                    "raw": "aiosqlite==0.22.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "aiosqlite",
+                    "specifier": "==0.22.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/aiosqlite-0.22.1.dist-info"
+                }
+            ]
+        },
+        "tomli": {
+            "name": "tomli",
+            "version": "2.4.0",
+            "requirements": [
+                {
+                    "raw": "tomli==2.4.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "tomli",
+                    "specifier": "==2.4.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/tomli-2.4.0.dist-info"
+                }
+            ]
+        },
+        "h11": {
+            "name": "h11",
+            "version": "0.16.0",
+            "requirements": [
+                {
+                    "raw": "h11==0.16.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "h11",
+                    "specifier": "==0.16.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/h11-0.16.0.dist-info"
+                }
+            ]
+        },
+        "Authlib": {
+            "name": "Authlib",
+            "version": "1.6.8",
+            "requirements": [
+                {
+                    "raw": "Authlib==1.6.8",
+                    "extras": [],
+                    "marker": null,
+                    "name": "Authlib",
+                    "specifier": "==1.6.8",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/authlib-1.6.8.dist-info"
+                }
+            ]
+        },
+        "pytokens": {
+            "name": "pytokens",
+            "version": "0.4.1",
+            "requirements": [
+                {
+                    "raw": "pytokens==0.4.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytokens",
+                    "specifier": "==0.4.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pytokens-0.4.1.dist-info"
+                }
+            ]
+        },
+        "astroid": {
+            "name": "astroid",
+            "version": "4.0.4",
+            "requirements": [
+                {
+                    "raw": "astroid==4.0.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "astroid",
+                    "specifier": "==4.0.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/astroid-4.0.4.dist-info"
+                }
+            ]
+        },
+        "opentelemetry-sdk": {
+            "name": "opentelemetry-sdk",
+            "version": "1.39.1",
+            "requirements": [
+                {
+                    "raw": "opentelemetry-sdk==1.39.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "opentelemetry-sdk",
+                    "specifier": "==1.39.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/opentelemetry_sdk-1.39.1.dist-info"
+                }
+            ]
+        },
+        "wrapt": {
+            "name": "wrapt",
+            "version": "1.17.3",
+            "requirements": [
+                {
+                    "raw": "wrapt==1.17.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "wrapt",
+                    "specifier": "==1.17.3",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/wrapt-1.17.3.dist-info"
+                }
+            ]
+        },
+        "markdown-it-py": {
+            "name": "markdown-it-py",
+            "version": "4.0.0",
+            "requirements": [
+                {
+                    "raw": "markdown-it-py==4.0.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "markdown-it-py",
+                    "specifier": "==4.0.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/markdown_it_py-4.0.0.dist-info"
+                }
+            ]
+        },
+        "charset-normalizer": {
+            "name": "charset-normalizer",
+            "version": "3.4.4",
+            "requirements": [
+                {
+                    "raw": "charset-normalizer==3.4.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "charset-normalizer",
+                    "specifier": "==3.4.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/charset_normalizer-3.4.4.dist-info"
+                }
+            ]
+        },
+        "pytest-anyio": {
+            "name": "pytest-anyio",
+            "version": "0.0.0",
+            "requirements": [
+                {
+                    "raw": "pytest-anyio==0.0.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytest-anyio",
+                    "specifier": "==0.0.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pytest_anyio-0.0.0.dist-info"
+                }
+            ]
+        },
+        "iniconfig": {
+            "name": "iniconfig",
+            "version": "2.3.0",
+            "requirements": [
+                {
+                    "raw": "iniconfig==2.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "iniconfig",
+                    "specifier": "==2.3.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/iniconfig-2.3.0.dist-info"
+                }
+            ]
+        },
+        "uvicorn": {
+            "name": "uvicorn",
+            "version": "0.40.0",
+            "requirements": [
+                {
+                    "raw": "uvicorn==0.40.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "uvicorn",
+                    "specifier": "==0.40.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/uvicorn-0.40.0.dist-info"
+                }
+            ]
+        },
+        "annotated-types": {
+            "name": "annotated-types",
+            "version": "0.7.0",
+            "requirements": [
+                {
+                    "raw": "annotated-types==0.7.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "annotated-types",
+                    "specifier": "==0.7.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/annotated_types-0.7.0.dist-info"
+                }
+            ]
+        },
+        "redis": {
+            "name": "redis",
+            "version": "7.1.0",
+            "requirements": [
+                {
+                    "raw": "redis==7.1.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "redis",
+                    "specifier": "==7.1.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/redis-7.1.0.dist-info"
+                }
+            ]
+        },
+        "typer": {
+            "name": "typer",
+            "version": "0.24.1",
+            "requirements": [
+                {
+                    "raw": "typer==0.24.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "typer",
+                    "specifier": "==0.24.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/typer-0.24.1.dist-info"
+                }
+            ]
+        },
+        "python-dotenv": {
+            "name": "python-dotenv",
+            "version": "1.2.1",
+            "requirements": [
+                {
+                    "raw": "python-dotenv==1.2.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "python-dotenv",
+                    "specifier": "==1.2.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/python_dotenv-1.2.1.dist-info"
+                }
+            ]
+        },
+        "pathspec": {
+            "name": "pathspec",
+            "version": "1.0.4",
+            "requirements": [
+                {
+                    "raw": "pathspec==1.0.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pathspec",
+                    "specifier": "==1.0.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pathspec-1.0.4.dist-info"
+                }
+            ]
+        },
+        "ruff": {
+            "name": "ruff",
+            "version": "0.15.4",
+            "requirements": [
+                {
+                    "raw": "ruff==0.15.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "ruff",
+                    "specifier": "==0.15.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/ruff-0.15.4.dist-info"
+                }
+            ]
+        },
+        "mdurl": {
+            "name": "mdurl",
+            "version": "0.1.2",
+            "requirements": [
+                {
+                    "raw": "mdurl==0.1.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "mdurl",
+                    "specifier": "==0.1.2",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/mdurl-0.1.2.dist-info"
+                }
+            ]
+        },
+        "httpcore": {
+            "name": "httpcore",
+            "version": "1.0.9",
+            "requirements": [
+                {
+                    "raw": "httpcore==1.0.9",
+                    "extras": [],
+                    "marker": null,
+                    "name": "httpcore",
+                    "specifier": "==1.0.9",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/httpcore-1.0.9.dist-info"
+                }
+            ]
+        },
+        "tqdm": {
+            "name": "tqdm",
+            "version": "4.67.3",
+            "requirements": [
+                {
+                    "raw": "tqdm==4.67.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "tqdm",
+                    "specifier": "==4.67.3",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/tqdm-4.67.3.dist-info"
+                }
+            ]
+        },
+        "MarkupSafe": {
+            "name": "MarkupSafe",
+            "version": "3.0.3",
+            "requirements": [
+                {
+                    "raw": "MarkupSafe==3.0.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "MarkupSafe",
+                    "specifier": "==3.0.3",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/markupsafe-3.0.3.dist-info"
+                }
+            ]
+        },
+        "urllib3": {
+            "name": "urllib3",
+            "version": "2.6.3",
+            "requirements": [
+                {
+                    "raw": "urllib3==2.6.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "urllib3",
+                    "specifier": "==2.6.3",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/urllib3-2.6.3.dist-info"
+                }
+            ]
+        },
+        "bandit": {
+            "name": "bandit",
+            "version": "1.9.4",
+            "requirements": [
+                {
+                    "raw": "bandit==1.9.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "bandit",
+                    "specifier": "==1.9.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/bandit-1.9.4.dist-info"
+                }
+            ]
+        },
+        "starlette": {
+            "name": "starlette",
+            "version": "0.50.0",
+            "requirements": [
+                {
+                    "raw": "starlette==0.50.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "starlette",
+                    "specifier": "==0.50.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/starlette-0.50.0.dist-info"
+                }
+            ]
+        },
+        "pydantic_core": {
+            "name": "pydantic_core",
+            "version": "2.41.5",
+            "requirements": [
+                {
+                    "raw": "pydantic_core==2.41.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pydantic_core",
+                    "specifier": "==2.41.5",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pydantic_core-2.41.5.dist-info"
+                }
+            ]
+        },
+        "CacheControl": {
+            "name": "CacheControl",
+            "version": "0.14.4",
+            "requirements": [
+                {
+                    "raw": "CacheControl==0.14.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "CacheControl",
+                    "specifier": "==0.14.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/cachecontrol-0.14.4.dist-info"
+                }
+            ]
+        },
+        "anyio": {
+            "name": "anyio",
+            "version": "4.12.1",
+            "requirements": [
+                {
+                    "raw": "anyio==4.12.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "anyio",
+                    "specifier": "==4.12.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/anyio-4.12.1.dist-info"
+                }
+            ]
+        },
+        "pyparsing": {
+            "name": "pyparsing",
+            "version": "3.3.2",
+            "requirements": [
+                {
+                    "raw": "pyparsing==3.3.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pyparsing",
+                    "specifier": "==3.3.2",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pyparsing-3.3.2.dist-info"
+                }
+            ]
+        },
+        "pip-api": {
+            "name": "pip-api",
+            "version": "0.0.34",
+            "requirements": [
+                {
+                    "raw": "pip-api==0.0.34",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pip-api",
+                    "specifier": "==0.0.34",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pip_api-0.0.34.dist-info"
+                }
+            ]
+        },
+        "pydantic-settings": {
+            "name": "pydantic-settings",
+            "version": "2.12.0",
+            "requirements": [
+                {
+                    "raw": "pydantic-settings==2.12.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pydantic-settings",
+                    "specifier": "==2.12.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pydantic_settings-2.12.0.dist-info"
+                }
+            ]
+        },
+        "ruamel.yaml": {
+            "name": "ruamel.yaml",
+            "version": "0.19.1",
+            "requirements": [
+                {
+                    "raw": "ruamel.yaml==0.19.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "ruamel.yaml",
+                    "specifier": "==0.19.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/ruamel_yaml-0.19.1.dist-info"
+                }
+            ]
+        },
+        "frozenlist": {
+            "name": "frozenlist",
+            "version": "1.8.0",
+            "requirements": [
+                {
+                    "raw": "frozenlist==1.8.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "frozenlist",
+                    "specifier": "==1.8.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/frozenlist-1.8.0.dist-info"
+                }
+            ]
+        },
+        "hiredis": {
+            "name": "hiredis",
+            "version": "3.3.0",
+            "requirements": [
+                {
+                    "raw": "hiredis==3.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "hiredis",
+                    "specifier": "==3.3.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/hiredis-3.3.0.dist-info"
+                }
+            ]
+        },
+        "typing_extensions": {
+            "name": "typing_extensions",
+            "version": "4.15.0",
+            "requirements": [
+                {
+                    "raw": "typing_extensions==4.15.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "typing_extensions",
+                    "specifier": "==4.15.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/typing_extensions-4.15.0.dist-info"
+                }
+            ]
+        },
+        "dill": {
+            "name": "dill",
+            "version": "0.4.1",
+            "requirements": [
+                {
+                    "raw": "dill==0.4.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "dill",
+                    "specifier": "==0.4.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/dill-0.4.1.dist-info"
+                }
+            ]
+        },
+        "pip_audit": {
+            "name": "pip_audit",
+            "version": "2.10.0",
+            "requirements": [
+                {
+                    "raw": "pip_audit==2.10.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pip_audit",
+                    "specifier": "==2.10.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pip_audit-2.10.0.dist-info"
+                }
+            ]
+        },
+        "pycparser": {
+            "name": "pycparser",
+            "version": "3.0",
+            "requirements": [
+                {
+                    "raw": "pycparser==3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pycparser",
+                    "specifier": "==3.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pycparser-3.0.dist-info"
+                }
+            ]
+        },
+        "zipp": {
+            "name": "zipp",
+            "version": "3.23.0",
+            "requirements": [
+                {
+                    "raw": "zipp==3.23.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "zipp",
+                    "specifier": "==3.23.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/zipp-3.23.0.dist-info"
+                }
+            ]
+        },
+        "opentelemetry-instrumentation": {
+            "name": "opentelemetry-instrumentation",
+            "version": "0.60b1",
+            "requirements": [
+                {
+                    "raw": "opentelemetry-instrumentation==0.60b1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "opentelemetry-instrumentation",
+                    "specifier": "==0.60b1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/opentelemetry_instrumentation-0.60b1.dist-info"
+                }
+            ]
+        },
+        "yarl": {
+            "name": "yarl",
+            "version": "1.22.0",
+            "requirements": [
+                {
+                    "raw": "yarl==1.22.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "yarl",
+                    "specifier": "==1.22.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/yarl-1.22.0.dist-info"
+                }
+            ]
+        },
+        "mypy": {
+            "name": "mypy",
+            "version": "1.19.1",
+            "requirements": [
+                {
+                    "raw": "mypy==1.19.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "mypy",
+                    "specifier": "==1.19.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/mypy-1.19.1.dist-info"
+                }
+            ]
+        },
+        "librt": {
+            "name": "librt",
+            "version": "0.8.1",
+            "requirements": [
+                {
+                    "raw": "librt==0.8.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "librt",
+                    "specifier": "==0.8.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/librt-0.8.1.dist-info"
+                }
+            ]
+        },
+        "safety": {
+            "name": "safety",
+            "version": "3.7.0",
+            "requirements": [
+                {
+                    "raw": "safety==3.7.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "safety",
+                    "specifier": "==3.7.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/safety-3.7.0.dist-info"
+                }
+            ]
+        },
+        "PyYAML": {
+            "name": "PyYAML",
+            "version": "6.0.3",
+            "requirements": [
+                {
+                    "raw": "PyYAML==6.0.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "PyYAML",
+                    "specifier": "==6.0.3",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pyyaml-6.0.3.dist-info"
+                }
+            ]
+        },
+        "packaging": {
+            "name": "packaging",
+            "version": "25.0",
+            "requirements": [
+                {
+                    "raw": "packaging==25.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "packaging",
+                    "specifier": "==25.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/packaging-25.0.dist-info"
+                }
+            ]
+        },
+        "aiohappyeyeballs": {
+            "name": "aiohappyeyeballs",
+            "version": "2.6.1",
+            "requirements": [
+                {
+                    "raw": "aiohappyeyeballs==2.6.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "aiohappyeyeballs",
+                    "specifier": "==2.6.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/aiohappyeyeballs-2.6.1.dist-info"
+                }
+            ]
+        },
+        "fastapi": {
+            "name": "fastapi",
+            "version": "0.128.0",
+            "requirements": [
+                {
+                    "raw": "fastapi==0.128.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "fastapi",
+                    "specifier": "==0.128.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/fastapi-0.128.0.dist-info"
+                }
+            ]
+        },
+        "certifi": {
+            "name": "certifi",
+            "version": "2026.1.4",
+            "requirements": [
+                {
+                    "raw": "certifi==2026.1.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "certifi",
+                    "specifier": "==2026.1.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/certifi-2026.1.4.dist-info"
+                }
+            ]
+        },
+        "dparse": {
+            "name": "dparse",
+            "version": "0.6.4",
+            "requirements": [
+                {
+                    "raw": "dparse==0.6.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "dparse",
+                    "specifier": "==0.6.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/dparse-0.6.4.dist-info"
+                }
+            ]
+        },
+        "boolean.py": {
+            "name": "boolean.py",
+            "version": "5.0",
+            "requirements": [
+                {
+                    "raw": "boolean.py==5.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "boolean.py",
+                    "specifier": "==5.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/boolean_py-5.0.dist-info"
+                }
+            ]
+        },
+        "pluggy": {
+            "name": "pluggy",
+            "version": "1.6.0",
+            "requirements": [
+                {
+                    "raw": "pluggy==1.6.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pluggy",
+                    "specifier": "==1.6.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pluggy-1.6.0.dist-info"
+                }
+            ]
+        },
+        "pytest": {
+            "name": "pytest",
+            "version": "9.0.2",
+            "requirements": [
+                {
+                    "raw": "pytest==9.0.2",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pytest",
+                    "specifier": "==9.0.2",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pytest-9.0.2.dist-info"
+                }
+            ]
+        },
+        "dnspython": {
+            "name": "dnspython",
+            "version": "2.8.0",
+            "requirements": [
+                {
+                    "raw": "dnspython==2.8.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "dnspython",
+                    "specifier": "==2.8.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/dnspython-2.8.0.dist-info"
+                }
+            ]
+        },
+        "tomli_w": {
+            "name": "tomli_w",
+            "version": "1.2.0",
+            "requirements": [
+                {
+                    "raw": "tomli_w==1.2.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "tomli_w",
+                    "specifier": "==1.2.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/tomli_w-1.2.0.dist-info"
+                }
+            ]
+        },
+        "regex": {
+            "name": "regex",
+            "version": "2026.2.19",
+            "requirements": [
+                {
+                    "raw": "regex==2026.2.19",
+                    "extras": [],
+                    "marker": null,
+                    "name": "regex",
+                    "specifier": "==2026.2.19",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/regex-2026.2.19.dist-info"
+                }
+            ]
+        },
+        "cryptography": {
+            "name": "cryptography",
+            "version": "46.0.5",
+            "requirements": [
+                {
+                    "raw": "cryptography==46.0.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "cryptography",
+                    "specifier": "==46.0.5",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/cryptography-46.0.5.dist-info"
+                }
+            ]
+        },
+        "opentelemetry-instrumentation-sqlalchemy": {
+            "name": "opentelemetry-instrumentation-sqlalchemy",
+            "version": "0.60b1",
+            "requirements": [
+                {
+                    "raw": "opentelemetry-instrumentation-sqlalchemy==0.60b1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "opentelemetry-instrumentation-sqlalchemy",
+                    "specifier": "==0.60b1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/opentelemetry_instrumentation_sqlalchemy-0.60b1.dist-info"
+                }
+            ]
+        },
+        "click": {
+            "name": "click",
+            "version": "8.3.1",
+            "requirements": [
+                {
+                    "raw": "click==8.3.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "click",
+                    "specifier": "==8.3.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/click-8.3.1.dist-info"
+                }
+            ]
+        },
+        "tenacity": {
+            "name": "tenacity",
+            "version": "9.1.4",
+            "requirements": [
+                {
+                    "raw": "tenacity==9.1.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "tenacity",
+                    "specifier": "==9.1.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/tenacity-9.1.4.dist-info"
+                }
+            ]
+        },
+        "asgiref": {
+            "name": "asgiref",
+            "version": "3.11.1",
+            "requirements": [
+                {
+                    "raw": "asgiref==3.11.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "asgiref",
+                    "specifier": "==3.11.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/asgiref-3.11.1.dist-info"
+                }
+            ]
+        },
+        "mypy_extensions": {
+            "name": "mypy_extensions",
+            "version": "1.1.0",
+            "requirements": [
+                {
+                    "raw": "mypy_extensions==1.1.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "mypy_extensions",
+                    "specifier": "==1.1.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/mypy_extensions-1.1.0.dist-info"
+                }
+            ]
+        },
+        "aiohttp": {
+            "name": "aiohttp",
+            "version": "3.13.3",
+            "requirements": [
+                {
+                    "raw": "aiohttp==3.13.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "aiohttp",
+                    "specifier": "==3.13.3",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/aiohttp-3.13.3.dist-info"
+                }
+            ]
+        },
+        "nltk": {
+            "name": "nltk",
+            "version": "3.9.3",
+            "requirements": [
+                {
+                    "raw": "nltk==3.9.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "nltk",
+                    "specifier": "==3.9.3",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/nltk-3.9.3.dist-info"
+                }
+            ]
+        },
+        "PyJWT": {
+            "name": "PyJWT",
+            "version": "2.10.1",
+            "requirements": [
+                {
+                    "raw": "PyJWT==2.10.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "PyJWT",
+                    "specifier": "==2.10.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/PyJWT-2.10.1.dist-info"
+                }
+            ]
+        },
+        "asyncpg": {
+            "name": "asyncpg",
+            "version": "0.31.0",
+            "requirements": [
+                {
+                    "raw": "asyncpg==0.31.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "asyncpg",
+                    "specifier": "==0.31.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/asyncpg-0.31.0.dist-info"
+                }
+            ]
+        },
+        "opentelemetry-instrumentation-fastapi": {
+            "name": "opentelemetry-instrumentation-fastapi",
+            "version": "0.60b1",
+            "requirements": [
+                {
+                    "raw": "opentelemetry-instrumentation-fastapi==0.60b1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "opentelemetry-instrumentation-fastapi",
+                    "specifier": "==0.60b1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/opentelemetry_instrumentation_fastapi-0.60b1.dist-info"
+                }
+            ]
+        },
+        "joblib": {
+            "name": "joblib",
+            "version": "1.5.3",
+            "requirements": [
+                {
+                    "raw": "joblib==1.5.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "joblib",
+                    "specifier": "==1.5.3",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/joblib-1.5.3.dist-info"
+                }
+            ]
+        },
+        "sortedcontainers": {
+            "name": "sortedcontainers",
+            "version": "2.4.0",
+            "requirements": [
+                {
+                    "raw": "sortedcontainers==2.4.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "sortedcontainers",
+                    "specifier": "==2.4.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/sortedcontainers-2.4.0.dist-info"
+                }
+            ]
+        },
+        "attrs": {
+            "name": "attrs",
+            "version": "25.4.0",
+            "requirements": [
+                {
+                    "raw": "attrs==25.4.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "attrs",
+                    "specifier": "==25.4.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/attrs-25.4.0.dist-info"
+                }
+            ]
+        },
+        "watchfiles": {
+            "name": "watchfiles",
+            "version": "1.1.1",
+            "requirements": [
+                {
+                    "raw": "watchfiles==1.1.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "watchfiles",
+                    "specifier": "==1.1.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/watchfiles-1.1.1.dist-info"
+                }
+            ]
+        },
+        "tomlkit": {
+            "name": "tomlkit",
+            "version": "0.14.0",
+            "requirements": [
+                {
+                    "raw": "tomlkit==0.14.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "tomlkit",
+                    "specifier": "==0.14.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/tomlkit-0.14.0.dist-info"
+                }
+            ]
+        },
+        "stripe": {
+            "name": "stripe",
+            "version": "14.1.0",
+            "requirements": [
+                {
+                    "raw": "stripe==14.1.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "stripe",
+                    "specifier": "==14.1.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/stripe-14.1.0.dist-info"
+                }
+            ]
+        },
+        "requests": {
+            "name": "requests",
+            "version": "2.32.5",
+            "requirements": [
+                {
+                    "raw": "requests==2.32.5",
+                    "extras": [],
+                    "marker": null,
+                    "name": "requests",
+                    "specifier": "==2.32.5",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/requests-2.32.5.dist-info"
+                }
+            ]
+        },
+        "defusedxml": {
+            "name": "defusedxml",
+            "version": "0.7.1",
+            "requirements": [
+                {
+                    "raw": "defusedxml==0.7.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "defusedxml",
+                    "specifier": "==0.7.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/defusedxml-0.7.1.dist-info"
+                }
+            ]
+        },
+        "uvloop": {
+            "name": "uvloop",
+            "version": "0.22.1",
+            "requirements": [
+                {
+                    "raw": "uvloop==0.22.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "uvloop",
+                    "specifier": "==0.22.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/uvloop-0.22.1.dist-info"
+                }
+            ]
+        },
+        "filelock": {
+            "name": "filelock",
+            "version": "3.24.3",
+            "requirements": [
+                {
+                    "raw": "filelock==3.24.3",
+                    "extras": [],
+                    "marker": null,
+                    "name": "filelock",
+                    "specifier": "==3.24.3",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/filelock-3.24.3.dist-info"
+                }
+            ]
+        },
+        "agentauth-client": {
+            "name": "agentauth-client",
+            "version": "0.2.0",
+            "requirements": [
+                {
+                    "raw": "agentauth-client==0.2.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "agentauth-client",
+                    "specifier": "==0.2.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/sdk/python/src/agentauth_client.egg-info"
+                }
+            ]
+        },
+        "shellingham": {
+            "name": "shellingham",
+            "version": "1.5.4",
+            "requirements": [
+                {
+                    "raw": "shellingham==1.5.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "shellingham",
+                    "specifier": "==1.5.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/shellingham-1.5.4.dist-info"
+                }
+            ]
+        },
+        "email-validator": {
+            "name": "email-validator",
+            "version": "2.3.0",
+            "requirements": [
+                {
+                    "raw": "email-validator==2.3.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "email-validator",
+                    "specifier": "==2.3.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/email_validator-2.3.0.dist-info"
+                }
+            ]
+        },
+        "license-expression": {
+            "name": "license-expression",
+            "version": "30.4.4",
+            "requirements": [
+                {
+                    "raw": "license-expression==30.4.4",
+                    "extras": [],
+                    "marker": null,
+                    "name": "license-expression",
+                    "specifier": "==30.4.4",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/license_expression-30.4.4.dist-info"
+                }
+            ]
+        },
+        "opentelemetry-semantic-conventions": {
+            "name": "opentelemetry-semantic-conventions",
+            "version": "0.60b1",
+            "requirements": [
+                {
+                    "raw": "opentelemetry-semantic-conventions==0.60b1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "opentelemetry-semantic-conventions",
+                    "specifier": "==0.60b1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/opentelemetry_semantic_conventions-0.60b1.dist-info"
+                }
+            ]
+        },
+        "websockets": {
+            "name": "websockets",
+            "version": "16.0",
+            "requirements": [
+                {
+                    "raw": "websockets==16.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "websockets",
+                    "specifier": "==16.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/websockets-16.0.dist-info"
+                }
+            ]
+        },
+        "propcache": {
+            "name": "propcache",
+            "version": "0.4.1",
+            "requirements": [
+                {
+                    "raw": "propcache==0.4.1",
+                    "extras": [],
+                    "marker": null,
+                    "name": "propcache",
+                    "specifier": "==0.4.1",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/propcache-0.4.1.dist-info"
+                }
+            ]
+        }
+    },
+    "affected_packages": {
+        "pip": {
+            "name": "pip",
+            "version": "24.0",
+            "requirements": [
+                {
+                    "raw": "pip==24.0",
+                    "extras": [],
+                    "marker": null,
+                    "name": "pip",
+                    "specifier": "==24.0",
+                    "url": null,
+                    "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pip-24.0.dist-info"
+                }
+            ],
+            "found": null,
+            "insecure_versions": [
+                "0.2",
+                "0.2.1",
+                "0.3",
+                "0.3.1",
+                "0.4",
+                "0.5",
+                "0.5.1",
+                "0.6",
+                "0.6.1",
+                "0.6.2",
+                "0.6.3",
+                "0.7",
+                "0.7.1",
+                "0.7.2",
+                "0.8",
+                "0.8.1",
+                "0.8.2",
+                "0.8.3",
+                "1.0",
+                "10.0.0",
+                "10.0.0b1",
+                "10.0.0b2",
+                "10.0.1",
+                "1.0.1",
+                "1.0.2",
+                "1.1",
+                "1.2",
+                "1.2.1",
+                "1.3",
+                "1.3.1",
+                "1.4",
+                "1.4.1",
+                "1.5",
+                "1.5.1",
+                "1.5.2",
+                "1.5.3",
+                "1.5.4",
+                "1.5.5",
+                "1.5.6",
+                "18.0",
+                "18.1",
+                "19.0",
+                "19.0.1",
+                "19.0.2",
+                "19.0.3",
+                "19.1",
+                "19.1.1",
+                "19.2",
+                "19.2.1",
+                "19.2.2",
+                "19.2.3",
+                "19.3",
+                "19.3.1",
+                "20.0",
+                "20.0.1",
+                "20.0.2",
+                "20.1",
+                "20.1.1",
+                "20.1b1",
+                "20.2",
+                "20.2.1",
+                "20.2.2",
+                "20.2.3",
+                "20.2.4",
+                "20.2b1",
+                "20.3",
+                "20.3.1",
+                "20.3.2",
+                "20.3.3",
+                "20.3.4",
+                "20.3b1",
+                "21.0",
+                "21.0.1",
+                "21.1",
+                "21.1.1",
+                "21.1.2",
+                "21.1.3",
+                "21.2",
+                "21.2.1",
+                "21.2.2",
+                "21.2.3",
+                "21.2.4",
+                "21.3",
+                "21.3.1",
+                "22.0",
+                "22.0.1",
+                "22.0.2",
+                "22.0.3",
+                "22.0.4",
+                "22.1",
+                "22.1.1",
+                "22.1.2",
+                "22.1b1",
+                "22.2",
+                "22.2.1",
+                "22.2.2",
+                "22.3",
+                "22.3.1",
+                "23.0",
+                "23.0.1",
+                "23.1",
+                "23.1.1",
+                "23.1.2",
+                "23.2",
+                "23.2.1",
+                "23.3",
+                "23.3.1",
+                "23.3.2",
+                "24.0",
+                "24.1",
+                "24.1.1",
+                "24.1.2",
+                "24.1b1",
+                "24.1b2",
+                "24.2",
+                "24.3",
+                "24.3.1",
+                "25.0",
+                "25.0.1",
+                "25.1",
+                "25.1.1",
+                "25.2",
+                "25.3",
+                "6.0",
+                "6.0.1",
+                "6.0.2",
+                "6.0.3",
+                "6.0.4",
+                "6.0.5",
+                "6.0.6",
+                "6.0.7",
+                "6.0.8",
+                "6.1.0",
+                "6.1.1",
+                "7.0.0",
+                "7.0.1",
+                "7.0.2",
+                "7.0.3",
+                "7.1.0",
+                "7.1.1",
+                "7.1.2",
+                "8.0.0",
+                "8.0.1",
+                "8.0.2",
+                "8.0.3",
+                "8.1.0",
+                "8.1.1",
+                "8.1.2",
+                "9.0.0",
+                "9.0.1",
+                "9.0.2",
+                "9.0.3"
+            ],
+            "secure_versions": [
+                "26.0.1",
+                "26.0"
+            ],
+            "latest_version_without_known_vulnerabilities": "26.0.1",
+            "latest_version": "26.0.1",
+            "more_info_url": "https://data.safetycli.com/p/pypi/pip/97c/"
+        }
+    },
+    "announcements": [],
+    "vulnerabilities": [
+        {
+            "vulnerability_id": "79883",
+            "package_name": "pip",
+            "ignored": {},
+            "ignored_reason": null,
+            "ignored_expires": null,
+            "vulnerable_spec": [
+                "<25.2"
+            ],
+            "all_vulnerable_specs": [
+                "<25.2"
+            ],
+            "analyzed_version": "24.0",
+            "analyzed_requirement": {
+                "raw": "pip==24.0",
+                "extras": [],
+                "marker": null,
+                "name": "pip",
+                "specifier": "==24.0",
+                "url": null,
+                "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pip-24.0.dist-info"
+            },
+            "advisory": "Affected versions of the pip package are vulnerable to Arbitrary File Overwrite due to improper validation of symbolic link targets in the fallback tar extraction code. In src/pip/_internal/utils/unpacking.py, the _untar_without_filter routine used when the Python tarfile module lacks PEP 706 (no tarfile.data_filter) extracted symlink members with tar._extract_member without verifying that link destinations resolve under the extraction root, a check later added via the is_symlink_target_in_tar helper.",
+            "is_transitive": false,
+            "published_date": null,
+            "fixed_versions": [],
+            "closest_versions_without_known_vulnerabilities": [],
+            "resources": [],
+            "CVE": "CVE-2025-8869",
+            "severity": null,
+            "affected_versions": [],
+            "more_info_url": "https://data.safetycli.com/v/79883/97c"
+        },
+        {
+            "vulnerability_id": "75180",
+            "package_name": "pip",
+            "ignored": {},
+            "ignored_reason": null,
+            "ignored_expires": null,
+            "vulnerable_spec": [
+                "<25.0"
+            ],
+            "all_vulnerable_specs": [
+                "<25.0"
+            ],
+            "analyzed_version": "24.0",
+            "analyzed_requirement": {
+                "raw": "pip==24.0",
+                "extras": [],
+                "marker": null,
+                "name": "pip",
+                "specifier": "==24.0",
+                "url": null,
+                "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pip-24.0.dist-info"
+            },
+            "advisory": "Pip solves a security vulnerability that previously allowed maliciously crafted wheel files to execute unauthorized code during installation.",
+            "is_transitive": false,
+            "published_date": null,
+            "fixed_versions": [],
+            "closest_versions_without_known_vulnerabilities": [],
+            "resources": [],
+            "CVE": null,
+            "severity": null,
+            "affected_versions": [],
+            "more_info_url": "https://data.safetycli.com/v/75180/97c"
+        }
+    ],
+    "ignored_vulnerabilities": [],
+    "remediations": {
+        "pip": {
+            "requirements": {
+                "==24.0": {
+                    "vulnerabilities_found": 2,
+                    "version": "24.0",
+                    "requirement": {
+                        "raw": "pip==24.0",
+                        "extras": [],
+                        "marker": null,
+                        "name": "pip",
+                        "specifier": "==24.0",
+                        "url": null,
+                        "found": "/home/seyominaoto/Videos/AgentAuth/venv/lib/python3.12/site-packages/pip-24.0.dist-info"
+                    },
+                    "more_info_url": "https://data.safetycli.com/p/pypi/pip/97c/"
+                }
+            },
+            "current_version": null,
+            "vulnerabilities_found": null,
+            "recommended_version": null,
+            "other_recommended_versions": [],
+            "more_info_url": null
+        }
+    },
+    "remediations_results": {
+        "vulnerabilities_fixed": [],
+        "remediations_applied": {},
+        "remediations_skipped": {}
+    }
+}
+
+
++===========================================================================================================================================================================================+
+
+
+DEPRECATED: this command (`check`) has been DEPRECATED, and will be unsupported beyond 01 June 2024.
+
+
+We highly encourage switching to the new `scan` command which is easier to use, more powerful, and can be set up to mimic the deprecated command if required.
+
+
++===========================================================================================================================================================================================+
+
+

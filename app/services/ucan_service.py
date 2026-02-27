@@ -6,6 +6,7 @@ Based on the UCAN specification: https://ucan.xyz/
 """
 
 import base64
+import json
 import secrets
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -93,7 +94,6 @@ class UCAN:
             raise UCANError("Payload is required")
 
     def to_jwt(self) -> str:
-        import json
         header = {"alg": self.alg, "typ": self.typ, "ucv": self.ucv}
         header_b64 = base64.urlsafe_b64encode(json.dumps(header).encode()).decode().rstrip("=")
         payload_b64 = base64.urlsafe_b64encode(json.dumps(self.payload.to_dict()).encode()).decode().rstrip("=")
@@ -102,7 +102,6 @@ class UCAN:
 
     @classmethod
     def from_jwt(cls, token: str) -> "UCAN":
-        import json
         try:
             parts = token.split(".")
             if len(parts) != 3:
@@ -224,7 +223,11 @@ class UCANService:
 
         public_bytes = public_key.public_bytes(
             encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw)
-        did = f"did:key:z{base64.urlsafe_b64encode(public_bytes).decode().rstrip('=')}"
+        # Use standard base64 (not urlsafe) and replace +/ with alphanumeric-safe chars
+        encoded = base64.b64encode(public_bytes).decode().rstrip('=')
+        # Replace non-alphanumeric chars to make it base58-like
+        encoded = encoded.replace('+', 'X').replace('/', 'Y')
+        did = f"did:key:z{encoded}"
         self._did_cache[name] = did
 
         private_bytes = private_key.private_bytes(
@@ -244,7 +247,9 @@ class UCANService:
         """Convert base64-encoded public key to DID."""
         try:
             public_bytes = base64.b64decode(public_key)
-            return f"did:key:z{base64.urlsafe_b64encode(public_bytes).decode().rstrip('=')}"
+            # Use urlsafe base64 encoding (no padding) to match generate_keypair
+            encoded = base64.urlsafe_b64encode(public_bytes).decode().rstrip('=')
+            return f"did:key:z{encoded}"
         except Exception:
             raise UCANError("Invalid public key format")
 
@@ -287,7 +292,11 @@ class UCANService:
         try:
             public_bytes = base64.b64decode(public_key)
             from cryptography.hazmat.primitives.asymmetric import ed25519
-            ed25519.Ed25519PublicKey.from_public_bytes(public_bytes)
+            pub_key = ed25519.Ed25519PublicKey.from_public_bytes(public_bytes)
+            # Verify that the public key matches the issuer DID
+            derived_did = self._public_key_to_did(public_key)
+            if derived_did != token.ucan.payload.iss:
+                return {"valid": False, "issuer": result["issuer"], "capabilities": [], "error": "Invalid public key"}
         except Exception:
             return {"valid": False, "issuer": result["issuer"], "capabilities": [], "error": "Invalid public key"}
 
@@ -296,7 +305,8 @@ class UCANService:
     def attenuate_token(self, token: UCANToken, capabilities: list[Capability]) -> UCANToken:
         """Attenuate a token with stricter capabilities."""
         builder = UCANBuilder(issuer_did=token.ucan.payload.aud, audience_did=token.ucan.payload.iss)
-        builder.with_lifetime(max(1, token.ucan.payload.exp - int(datetime.now(timezone.utc).timestamp())))
+        remaining_time = max(1, token.ucan.payload.exp - int(datetime.now(timezone.utc).timestamp()))
+        builder.with_lifetime(remaining_time)
         builder.with_nonce()
         builder.with_proof(token.ucan.to_jwt())
 
@@ -317,12 +327,10 @@ class UCANService:
 
     def serialize_token(self, token: UCANToken, compact: bool = False) -> str:
         """Serialize a token to string."""
-        import json
         return token.ucan.to_jwt() if compact else json.dumps(token.to_dict())
 
     def deserialize_token(self, token_str: str) -> UCANToken:
         """Deserialize a token from string."""
-        import json
         try:
             if token_str.count(".") == 2:
                 return UCANToken(UCAN.from_jwt(token_str))
@@ -436,4 +444,4 @@ def attenuate_ucan(token: UCANToken, capabilities: list[Capability]) -> UCANToke
 
 def create_agent_ucan(user_did: str, agent_did: str, consent_id: str,
                       max_amount: float, allowed_actions: list[str] = None) -> str:
-    """Create a UCAN for an agent to act on behalf of a user
+    """Create a UCAN for an agent to act on behalf of a user."""

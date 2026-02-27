@@ -18,7 +18,12 @@ from app.services.ucan_service import (
     Capability,
     UCANError,
     UCANService,
+    UCANToken,
     get_ucan_service,
+    create_ucan_token,
+    verify_ucan_token,
+    check_capability,
+    attenuate_ucan,
 )
 
 # ============================================================================
