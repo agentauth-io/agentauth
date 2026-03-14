@@ -10,6 +10,7 @@ import { TerminalDemo } from "./components/landing/TerminalDemo";
 import { CTASection } from "./components/landing/CTASection";
 import { DemoPage } from "./components/DemoPage";
 import { NotFound } from "./components/NotFound";
+import { LandingV2 } from "./components/landing-v2/LandingV2";
 
 // Landing page — sequence design
 function HomePage() {
@@ -60,6 +61,7 @@ export default function App() {
         <Route path="/docs" element={<DocsPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/demo" element={<DemoPage />} />
+        <Route path="/v2" element={<LandingV2 />} />
         {/* 404 for unknown routes */}
         <Route path="*" element={<NotFound />} />
       </Routes>
