@@ -49,15 +49,16 @@ jobs:
       - name: Build image
         run: docker build -f Dockerfile.prod -t agentauth:scan .
 
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: 'agentauth:scan'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-          ignore-unfixed: true
-          exit-code: '0'
+        run: |
+          trivy image --severity CRITICAL,HIGH --ignore-unfixed \
+            --format sarif --output trivy-results.sarif \
+            agentauth:scan
+        continue-on-error: true
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
