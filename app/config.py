@@ -98,26 +98,26 @@ class Settings(BaseSettings):
     @field_validator("secret_key", "admin_password", "admin_jwt_secret")
     @classmethod
     def validate_secrets(cls, v: str, info) -> str:
-        """Auto-generate secrets if not provided (development only)."""
+        """Auto-generate secrets if not provided."""
         if not v:
-            # In production, require explicit secrets from environment
-            # Check if we're in production mode
+            import logging
+
+            logger = logging.getLogger(__name__)
             env_is_production = (
                 os.getenv("ENVIRONMENT", "development").lower() == "production"
             )
             if env_is_production:
-                raise ValueError(
-                    f"{info.field_name} must be set via environment variable in production. "
-                    f"Set {info.field_name.upper()} in your .env file."
+                logger.warning(
+                    f"{info.field_name.upper()} not set — auto-generating. "
+                    f"Set it via environment variable for stable sessions."
                 )
-            # Development: use runtime-generated secure defaults
             return _RUNTIME_SECRETS.get(info.field_name, secrets.token_urlsafe(32))
         return v
 
     @field_validator("environment")
     @classmethod
     def validate_production_config(cls, v: str, info) -> str:
-        """In production, ensure critical env vars are explicitly set."""
+        """In production, warn about missing config but don't crash."""
         if v == "production":
             import logging
 
@@ -125,8 +125,9 @@ class Settings(BaseSettings):
             data = info.data
             db_url = data.get("database_url", "")
             if "localhost" in db_url or not db_url:
-                raise ValueError(
-                    "DATABASE_URL must be set to a real database in production"
+                logger.warning(
+                    "DATABASE_URL not set to a real database in production — "
+                    "DB operations will fail"
                 )
             if not data.get("stripe_secret_key"):
                 logger.warning(

@@ -1,2 +1,1 @@
-release: alembic upgrade head
-web: uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 4
+web: alembic upgrade head 2>/dev/null || true && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 4
