@@ -14,6 +14,13 @@
     --seq-font-mono: 'Space Mono', monospace;
 }
 
+/* ── Global overflow fix ── */
+html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+    background: var(--seq-bg) !important;
+}
+
 /* ── Grain Overlay ── */
 .grain-overlay {
     position: fixed;
@@ -526,7 +533,7 @@
 
 .seq-phase-label {
     position: absolute;
-    right: 20px;
+    right: 22px;
     top: 50%;
     transform: translateY(-50%);
     font-family: var(--seq-font-mono);
