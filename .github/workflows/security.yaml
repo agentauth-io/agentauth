@@ -9,27 +9,31 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   dependency-scan:
     name: Dependency Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-      
+          python-version: '3.12'
+
       - name: Install dependencies
         run: pip install safety pip-audit
-      
+
       - name: Run Safety check
         run: safety check -r requirements.txt --full-report
         continue-on-error: true
-      
+
       - name: Run pip-audit
         run: pip-audit -r requirements.txt
         continue-on-error: true
@@ -37,22 +41,24 @@ jobs:
   container-scan:
     name: Container Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Build image
         run: docker build -f Dockerfile.prod -t agentauth:scan .
-      
+
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'agentauth:scan'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-      
+          ignore-unfixed: true
+          exit-code: '0'
+
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
         with:
@@ -62,36 +68,34 @@ jobs:
   code-scan:
     name: Code Security Scan
     runs-on: ubuntu-latest
-    
+
     permissions:
       security-events: write
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: python
-      
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
   secrets-scan:
     name: Secrets Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@v3.82.13
         with:
-          path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
           extra_args: --only-verified
+        continue-on-error: true

@@ -5,25 +5,19 @@ name: agentauth-api
 
 service:
   type: web
-  
-  # Build configuration
-  git:
-    branch: main
-    build_command: pip install -r requirements.txt
-    run_command: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 4
-  
-  # Or use Docker
-  # docker:
-  #   dockerfile: Dockerfile
-  
+
+  # Build configuration — use Docker for consistent builds
+  docker:
+    dockerfile: Dockerfile.prod
+
   # Instance configuration
-  instance_type: nano  # nano, micro, small, medium, large, xlarge
-  
+  instance_type: nano
+
   # Scaling
   scaling:
     min: 1
     max: 3
-  
+
   # Health check
   health_checks:
     - type: http
@@ -33,8 +27,8 @@ service:
       timeout: 30
       healthy_threshold: 2
       unhealthy_threshold: 5
-      initial_delay: 15
-  
+      initial_delay: 30
+
   # Environment variables (set these in Koyeb dashboard for secrets)
   env:
     - key: PORT

@@ -31,6 +31,11 @@ env/
 .env
 .env.local
 .env.*.local
+cli/.env
+
+# Private keys — NEVER commit
+*.pem
+!*-public.pem
 
 # IDE
 .idea/

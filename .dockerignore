@@ -1,0 +1,32 @@
+# Secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+cli/.env
+
+# Git
+.git
+.github
+
+# Frontend (built separately)
+frontend/node_modules
+
+# Python
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.coverage
+htmlcov
+venv
+.venv
+
+# IDE
+.idea
+.vscode
+
+# Docs
+*.md
+LICENSE

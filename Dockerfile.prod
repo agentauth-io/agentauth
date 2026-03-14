@@ -1,19 +1,28 @@
 # AgentAuth Production Dockerfile
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+
+# Install Python dependencies in builder stage
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# --- Production stage ---
 FROM python:3.12-slim
 
 # Security: Run as non-root
 RUN useradd -m -u 1000 agentauth
 
+# Install minimal runtime deps and apply security patches
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
 
 # Copy application code
 COPY app/ ./app/
@@ -23,7 +32,7 @@ COPY alembic/ ./alembic/
 COPY alembic.ini .
 COPY production_server.py .
 
-# Security: Remove write permissions
+# Security: Set ownership
 RUN chown -R agentauth:agentauth /app
 
 USER agentauth
@@ -32,7 +41,6 @@ USER agentauth
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Expose port
 EXPOSE 8000
 
 # Run Alembic migrations then start the server
