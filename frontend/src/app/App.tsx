@@ -11,6 +11,7 @@ import { APISection } from "./components/landing/APISection";
 import { TerminalDemo } from "./components/landing/TerminalDemo";
 import { CTASection } from "./components/landing/CTASection";
 import { DemoPage } from "./components/DemoPage";
+import { NotFound } from "./components/NotFound";
 
 // Landing page — sequence design
 function HomePage() {
@@ -69,8 +70,8 @@ export default function App() {
         <Route path="/docs" element={<DocsPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/demo" element={<DemoPage />} />
-        {/* All other routes go to home */}
-        <Route path="*" element={<HomePage />} />
+        {/* 404 for unknown routes */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
