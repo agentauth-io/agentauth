@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const TOTAL_FRAMES = 300;
 const CANVAS_W = 1000;
@@ -394,51 +394,18 @@ interface SequenceSectionProps {
 export function SequenceSection({ onProgress, onReady }: SequenceSectionProps) {
     const sectionRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const framesRef = useRef<HTMLImageElement[]>([]);
-    const [ready, setReady] = useState(false);
     const [visiblePanels, setVisiblePanels] = useState<Set<number>>(new Set());
     const currentFrameRef = useRef(-1);
 
-    // Generate frames on mount
     useEffect(() => {
-        const offscreen = document.createElement("canvas");
-        offscreen.width = CANVAS_W;
-        offscreen.height = CANVAS_H;
-        const offCtx = offscreen.getContext("2d");
-        if (!offCtx) return;
-
-        const frames: HTMLImageElement[] = [];
-        let frameIdx = 0;
-
-        function generateBatch() {
-            const batch = 12;
-            const end = Math.min(frameIdx + batch, TOTAL_FRAMES);
-            for (; frameIdx < end; frameIdx++) {
-                renderFrame(offCtx!, frameIdx, CANVAS_W, CANVAS_H);
-                const img = new Image();
-                img.src = offscreen.toDataURL("image/jpeg", 0.82);
-                frames.push(img);
-            }
-            onProgress((frameIdx / TOTAL_FRAMES) * 100);
-            if (frameIdx < TOTAL_FRAMES) {
-                requestAnimationFrame(generateBatch);
-            } else {
-                framesRef.current = frames;
-                setReady(true);
-                onReady();
-            }
-        }
-        requestAnimationFrame(generateBatch);
-    }, [onProgress, onReady]);
-
-    // Scroll engine
-    useEffect(() => {
-        if (!ready) return;
         const canvas = canvasRef.current;
         const section = sectionRef.current;
         if (!canvas || !section) return;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
+
+        onProgress(100);
+        onReady();
 
         function resize() {
             if (!canvas) return;
@@ -448,11 +415,10 @@ export function SequenceSection({ onProgress, onReady }: SequenceSectionProps) {
             canvas.style.width = innerWidth + "px";
             canvas.style.height = innerHeight + "px";
             ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+            currentFrameRef.current = -1;
+            update();
         }
-        resize();
-        window.addEventListener("resize", resize);
 
-        let ticking = false;
         function update() {
             ticking = false;
             if (!section || !canvas) return;
@@ -462,17 +428,9 @@ export function SequenceSection({ onProgress, onReady }: SequenceSectionProps) {
             const frac = Math.max(0, Math.min(1, scrolled / sH));
             const idx = Math.min(TOTAL_FRAMES - 1, Math.floor(frac * TOTAL_FRAMES));
 
-            if (idx !== currentFrameRef.current && framesRef.current[idx]) {
+            if (idx !== currentFrameRef.current) {
                 currentFrameRef.current = idx;
-                const w2 = innerWidth, h2 = innerHeight;
-                ctx!.clearRect(0, 0, w2, h2);
-                const img = framesRef.current[idx];
-                const ia = img.naturalWidth / img.naturalHeight;
-                const va = w2 / h2;
-                let dw: number, dh: number, dx: number, dy: number;
-                if (va > ia) { dw = w2; dh = w2 / ia; dx = 0; dy = (h2 - dh) / 2; }
-                else { dh = h2; dw = h2 * ia; dy = 0; dx = (w2 - dw) / 2; }
-                ctx!.drawImage(img, dx, dy, dw, dh);
+                renderFrame(ctx, idx, innerWidth, innerHeight);
             }
 
             // Update visible panels
@@ -483,6 +441,10 @@ export function SequenceSection({ onProgress, onReady }: SequenceSectionProps) {
             setVisiblePanels(newVisible);
         }
 
+        resize();
+        window.addEventListener("resize", resize);
+
+        let ticking = false;
         function onScroll() {
             if (!ticking) { requestAnimationFrame(update); ticking = true; }
         }
@@ -493,7 +455,7 @@ export function SequenceSection({ onProgress, onReady }: SequenceSectionProps) {
             window.removeEventListener("resize", resize);
             window.removeEventListener("scroll", onScroll);
         };
-    }, [ready]);
+    }, [onProgress, onReady]);
 
     return (
         <section className="seq-sequence-section" id="sequence" ref={sectionRef}>
