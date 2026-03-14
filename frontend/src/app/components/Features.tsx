@@ -4,7 +4,7 @@ const features = [
   {
     num: "01",
     title: "Biscuit Tokens",
-    desc: "Cryptographic bearer credentials. Capability attenuation — permissions only decrease.",
+    desc: "Cryptographic bearer credentials. Capability attenuation \u2014 permissions only decrease.",
   },
   {
     num: "02",
@@ -34,34 +34,49 @@ const features = [
 ];
 
 export function Features() {
+  const headerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
+    const headerObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) e.target.classList.add("in-view");
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (headerRef.current) headerObserver.observe(headerRef.current);
+
+    const cardObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting) {
-            e.target.classList.add("in-view");
             const parent = e.target.parentElement;
             if (parent) {
               const idx = Array.from(parent.children).indexOf(e.target);
-              (e.target as HTMLElement).style.transitionDelay = `${idx * 0.06}s`;
+              (e.target as HTMLElement).style.transitionDelay = `${idx * 0.08}s`;
             }
+            e.target.classList.add("in-view");
           }
         });
       },
-      { threshold: 0.15 }
+      { threshold: 0.1 }
     );
 
     const cards = gridRef.current?.querySelectorAll(".seq-feat");
-    cards?.forEach((el) => observer.observe(el));
+    cards?.forEach((el) => cardObserver.observe(el));
 
-    return () => observer.disconnect();
+    return () => {
+      headerObserver.disconnect();
+      cardObserver.disconnect();
+    };
   }, []);
 
   return (
     <section className="seq-feat-sec" id="features">
-      <div className="seq-api-header">
+      <div className="seq-api-header seq-section-reveal" ref={headerRef}>
         <div className="seq-panel-tag" style={{ marginBottom: 14 }}>
           Infrastructure
         </div>

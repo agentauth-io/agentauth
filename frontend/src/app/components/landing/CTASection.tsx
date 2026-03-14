@@ -1,9 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export function CTASection() {
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [message, setMessage] = useState("");
+    const innerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const el = innerRef.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    el.classList.add("in-view");
+                }
+            },
+            { threshold: 0.15 }
+        );
+        obs.observe(el);
+        return () => obs.disconnect();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,43 +53,45 @@ export function CTASection() {
 
     return (
         <section className="seq-cta-sec" id="waitlist">
-            <h2>
-                The auth layer <span>for agents</span>
-            </h2>
-            <p>
-                Auth0 was $6.5B for human auth. AgentAuth does it for AI agents. One
-                API. Cryptographic proof.
-            </p>
+            <div className="seq-cta-inner" ref={innerRef}>
+                <h2>
+                    The auth layer <span>for agents</span>
+                </h2>
+                <p>
+                    Auth0 was $6.5B for human auth. AgentAuth does it for AI agents. One
+                    API. Cryptographic proof.
+                </p>
 
-            {status === "success" ? (
-                <div className="seq-waitlist-done">
-                    <span>✅</span> {message}
-                </div>
-            ) : (
-                <form className="seq-waitlist-form" onSubmit={handleSubmit}>
-                    <input
-                        type="email"
-                        placeholder="you@company.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="seq-waitlist-input"
-                    />
-                    <button
-                        type="submit"
-                        className="seq-btn seq-btn-g"
-                        disabled={status === "loading"}
-                    >
-                        {status === "loading" ? "Joining..." : "Join Waitlist"}
-                    </button>
-                </form>
-            )}
-            {status === "error" && (
-                <div className="seq-waitlist-err">{message}</div>
-            )}
-            <a className="seq-btn seq-btn-o" href="/demo" style={{ marginTop: 12 }}>
-                Try the Interactive Demo →
-            </a>
+                {status === "success" ? (
+                    <div className="seq-waitlist-done">
+                        <span>OK</span> {message}
+                    </div>
+                ) : (
+                    <form className="seq-waitlist-form" onSubmit={handleSubmit}>
+                        <input
+                            type="email"
+                            placeholder="you@company.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            className="seq-waitlist-input"
+                        />
+                        <button
+                            type="submit"
+                            className="seq-btn seq-btn-g"
+                            disabled={status === "loading"}
+                        >
+                            {status === "loading" ? "Joining..." : "Join Waitlist"}
+                        </button>
+                    </form>
+                )}
+                {status === "error" && (
+                    <div className="seq-waitlist-err">{message}</div>
+                )}
+                <a className="seq-btn seq-btn-o" href="/demo" style={{ marginTop: 12 }}>
+                    Try the Interactive Demo →
+                </a>
+            </div>
         </section>
     );
 }

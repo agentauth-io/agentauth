@@ -16,7 +16,10 @@ const sdks = [
 ];
 
 export function APISection() {
+    const sectionRef = useRef<HTMLDivElement>(null);
+    const headerRef = useRef<HTMLDivElement>(null);
     const gridRef = useRef<HTMLDivElement>(null);
+    const sdkRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -24,26 +27,45 @@ export function APISection() {
                 entries.forEach((e) => {
                     if (e.isIntersecting) {
                         e.target.classList.add("in-view");
-                        const parent = e.target.parentElement;
-                        if (parent) {
-                            const idx = Array.from(parent.children).indexOf(e.target);
-                            (e.target as HTMLElement).style.transitionDelay = `${idx * 0.06}s`;
-                        }
                     }
                 });
             },
-            { threshold: 0.15 }
+            { threshold: 0.1 }
+        );
+
+        // Observe header
+        if (headerRef.current) observer.observe(headerRef.current);
+        if (sdkRef.current) observer.observe(sdkRef.current);
+
+        // Observe cards with stagger
+        const cardObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((e) => {
+                    if (e.isIntersecting) {
+                        const parent = e.target.parentElement;
+                        if (parent) {
+                            const idx = Array.from(parent.children).indexOf(e.target);
+                            (e.target as HTMLElement).style.transitionDelay = `${idx * 0.08}s`;
+                        }
+                        e.target.classList.add("in-view");
+                    }
+                });
+            },
+            { threshold: 0.1 }
         );
 
         const cards = gridRef.current?.querySelectorAll(".seq-api-c");
-        cards?.forEach((el) => observer.observe(el));
+        cards?.forEach((el) => cardObserver.observe(el));
 
-        return () => observer.disconnect();
+        return () => {
+            observer.disconnect();
+            cardObserver.disconnect();
+        };
     }, []);
 
     return (
-        <section className="seq-api-sec" id="api">
-            <div className="seq-api-header">
+        <section className="seq-api-sec" id="api" ref={sectionRef}>
+            <div className="seq-api-header seq-section-reveal" ref={headerRef}>
                 <div className="seq-panel-tag" style={{ marginBottom: 14 }}>
                     API Reference
                 </div>
@@ -62,7 +84,7 @@ export function APISection() {
                 ))}
             </div>
 
-            <div className="seq-sdk-row">
+            <div className="seq-sdk-row seq-section-reveal" ref={sdkRef}>
                 {sdks.map((s) => (
                     <div className="seq-sdk" key={s.lang}>
                         <span className={`seq-dot ${s.lang}`} />

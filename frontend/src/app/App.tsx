@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import { useCallback } from "react";
 import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
 import { Contact } from "./components/Contact";
@@ -14,14 +13,11 @@ import { NotFound } from "./components/NotFound";
 
 // Landing page — sequence design
 function HomePage() {
-  const handleProgress = useCallback((pct: number) => {}, []);
-  const handleReady = useCallback(() => {}, []);
-
   return (
     <div style={{ background: "#08080a", minHeight: "100vh" }}>
       <GrainOverlay />
       <Hero />
-      <SequenceSection onProgress={handleProgress} onReady={handleReady} />
+      <SequenceSection />
       <APISection />
       <Features />
       <TerminalDemo />

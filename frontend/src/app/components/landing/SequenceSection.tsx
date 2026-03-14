@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const TOTAL_FRAMES = 300;
-const CANVAS_W = 1000;
-const CANVAS_H = 1000;
 const TAU = Math.PI * 2;
 
 // ── Shield path points (normalized) ──
@@ -89,13 +87,13 @@ function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
 function renderFrame(ctx: CanvasRenderingContext2D, frameIndex: number, w: number, h: number) {
     const t = frameIndex / TOTAL_FRAMES;
     const cx = w / 2, cy = h / 2;
-    const sz = w * 0.35;
+    const sz = Math.min(w, h) * 0.35;
 
     ctx.fillStyle = "#08080a";
     ctx.fillRect(0, 0, w, h);
 
     // Radial glow
-    const glowR = w * 0.5;
+    const glowR = Math.min(w, h) * 0.5;
     const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
     grd.addColorStop(0, "rgba(255,255,255,.025)");
     grd.addColorStop(0.4, "rgba(255,255,255,.01)");
@@ -191,8 +189,8 @@ function renderFrame(ctx: CanvasRenderingContext2D, frameIndex: number, w: numbe
                 ctx.fillText("BISCUIT TOKEN", cx, cy - 8);
                 ctx.font = '400 10px "Space Mono",monospace';
                 ctx.fillStyle = `rgba(255,255,255,${0.3 * lp})`;
-                ctx.fillText("scope: purchase ≤ $500", cx, cy + 12);
-                ctx.fillText("sign: ed25519 · attenuable", cx, cy + 28);
+                ctx.fillText("scope: purchase \u2264 $500", cx, cy + 12);
+                ctx.fillText("sign: ed25519 \u00b7 attenuable", cx, cy + 28);
             }
         }
     }
@@ -206,7 +204,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, frameIndex: number, w: numbe
             { bx: -0.45, by: -0.25, l: "USER", s: "$500" },
             { bx: -0.1, by: 0.15, l: "AGENT A", s: "$500" },
             { bx: 0.25, by: -0.1, l: "AGENT B", s: "$347" },
-            { bx: 0.5, by: 0.18, l: "MERCHANT", s: "✓" },
+            { bx: 0.5, by: 0.18, l: "MERCHANT", s: "\u2713" },
         ];
 
         nodes.forEach((n, i) => {
@@ -260,7 +258,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, frameIndex: number, w: numbe
             ctx.fillStyle = `rgba(255,255,255,${0.08 * abP})`; ctx.fillRect(bx, by, bw * 0.694 * abP, 3);
             ctx.font = '400 9px "Space Mono",monospace'; ctx.textAlign = "center";
             ctx.fillStyle = `rgba(255,255,255,${0.25 * abP})`;
-            ctx.fillText("$500 → $500 → $347   ATTENUATION →", cx, by + 18);
+            ctx.fillText("$500 \u2192 $500 \u2192 $347   ATTENUATION \u2192", cx, by + 18);
         }
     }
 
@@ -302,7 +300,7 @@ function renderFrame(ctx: CanvasRenderingContext2D, frameIndex: number, w: numbe
                 ctx.fillText("V E R I F I E D", cx, cy + ss2 * 1.05 + 32);
                 ctx.font = '400 10px "Space Mono",monospace';
                 ctx.fillStyle = `rgba(255,255,255,${0.3 * lp})`;
-                ctx.fillText("receipt on file · court-admissible", cx, cy + ss2 * 1.05 + 54);
+                ctx.fillText("receipt on file \u00b7 court-admissible", cx, cy + ss2 * 1.05 + 54);
             }
 
             if (p > 0.5) {
@@ -347,31 +345,31 @@ interface PanelData {
 const panels: PanelData[] = [
     {
         start: 0.02, end: 0.17, top: "5vh", align: "left", tagClass: "blue",
-        tag: "01 — User Consent",
+        tag: "01 \u2014 User Consent",
         title: "The user defines ", titleSpan: "what the agent can do",
-        desc: "\"Buy me a flight under $500.\" AgentAuth captures this intent as a cryptographically signed consent — scoped by amount, merchant, time, and action.",
+        desc: "\"Buy me a flight under $500.\" AgentAuth captures this intent as a cryptographically signed consent \u2014 scoped by amount, merchant, time, and action.",
         code: `<span class="mth">POST</span> <span class="url">/v1/consents</span><br><br>{ <span class="w">"intent"</span>: <span class="g">"Buy flight NYC"</span>,<br>&nbsp;&nbsp;<span class="w">"max_amount"</span>: <span class="a">500</span>,<br>&nbsp;&nbsp;<span class="w">"currency"</span>: <span class="g">"USD"</span>,<br>&nbsp;&nbsp;<span class="w">"expires_in"</span>: <span class="a">86400</span> }`,
     },
     {
         start: 0.20, end: 0.37, top: "120vh", align: "right",
-        tag: "02 — Token Minting",
+        tag: "02 \u2014 Token Minting",
         title: "A Biscuit token ", titleSpan: "is minted",
-        desc: "Cryptographic bearer credential with embedded constraints. Biscuit tokens support capability attenuation — permissions can only decrease through delegation chains. ED25519 signed.",
-        code: `<span class="d">// delegation_token</span><br>{ <span class="w">"token"</span>: <span class="g">"bsc_eyJ..."</span>,<br>&nbsp;&nbsp;<span class="w">"type"</span>: <span class="g">"biscuit_v2"</span>,<br>&nbsp;&nbsp;<span class="w">"signing"</span>: <span class="g">"ed25519"</span>,<br>&nbsp;&nbsp;<span class="w">"attenuable"</span>: <span class="b">true</span>,<br>&nbsp;&nbsp;<span class="w">"scope"</span>: <span class="g">"purchase ≤ $500"</span> }`,
+        desc: "Cryptographic bearer credential with embedded constraints. Biscuit tokens support capability attenuation \u2014 permissions can only decrease through delegation chains. ED25519 signed.",
+        code: `<span class="d">// delegation_token</span><br>{ <span class="w">"token"</span>: <span class="g">"bsc_eyJ..."</span>,<br>&nbsp;&nbsp;<span class="w">"type"</span>: <span class="g">"biscuit_v2"</span>,<br>&nbsp;&nbsp;<span class="w">"signing"</span>: <span class="g">"ed25519"</span>,<br>&nbsp;&nbsp;<span class="w">"attenuable"</span>: <span class="b">true</span>,<br>&nbsp;&nbsp;<span class="w">"scope"</span>: <span class="g">"purchase \u2264 $500"</span> }`,
     },
     {
         start: 0.40, end: 0.58, top: "240vh", align: "left", tagClass: "amber",
-        tag: "03 — Delegation Chain",
+        tag: "03 \u2014 Delegation Chain",
         title: "Permissions ", titleSpan: "attenuate at each hop",
-        desc: "Agent A delegates to Agent B. At each hop, the token's scope mathematically shrinks. $500 → $347. A payment agent can never exceed the original spending limit.",
-        code: `<span class="mth">POST</span> <span class="url">/v1/authorize</span><br><br>{ <span class="w">"action"</span>: <span class="g">"purchase"</span>,<br>&nbsp;&nbsp;<span class="w">"amount"</span>: <span class="a">347</span>,<br>&nbsp;&nbsp;<span class="w">"merchant_id"</span>: <span class="g">"merch_united"</span> }<br><br><span class="d">→</span> { <span class="w">"decision"</span>: <span class="g">"ALLOW"</span>, <span class="w">"latency"</span>: <span class="g">"0.4ms"</span> }`,
+        desc: "Agent A delegates to Agent B. At each hop, the token's scope mathematically shrinks. $500 \u2192 $347. A payment agent can never exceed the original spending limit.",
+        code: `<span class="mth">POST</span> <span class="url">/v1/authorize</span><br><br>{ <span class="w">"action"</span>: <span class="g">"purchase"</span>,<br>&nbsp;&nbsp;<span class="w">"amount"</span>: <span class="a">347</span>,<br>&nbsp;&nbsp;<span class="w">"merchant_id"</span>: <span class="g">"merch_united"</span> }<br><br><span class="d">\u2192</span> { <span class="w">"decision"</span>: <span class="g">"ALLOW"</span>, <span class="w">"latency"</span>: <span class="g">"0.4ms"</span> }`,
     },
     {
         start: 0.62, end: 0.80, top: "370vh", align: "right",
-        tag: "04 — Merchant Verification",
+        tag: "04 \u2014 Merchant Verification",
         title: "Cryptographic proof ", titleSpan: "on file",
         desc: "Merchant verifies offline in under 1ms. Zero network round-trips. The receipt is court-admissible evidence. Chargebacks become mathematically impossible.",
-        code: `<span class="mth">POST</span> <span class="url">/v1/verify</span><br><br>{ <span class="w">"auth_code"</span>: <span class="g">"auth_7k9..."</span> }<br><br><span class="d">→</span> { <span class="w">"valid"</span>: <span class="b">true</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="w">"receipt"</span>: <span class="g">"rcp_x8m..."</span> }`,
+        code: `<span class="mth">POST</span> <span class="url">/v1/verify</span><br><br>{ <span class="w">"auth_code"</span>: <span class="g">"auth_7k9..."</span> }<br><br><span class="d">\u2192</span> { <span class="w">"valid"</span>: <span class="b">true</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="w">"receipt"</span>: <span class="g">"rcp_x8m..."</span> }`,
         stats: [
             { num: "<1ms", label: "Verify" },
             { num: "0", label: "API Calls" },
@@ -381,59 +379,30 @@ const panels: PanelData[] = [
     {
         start: 0.84, end: 0.97, top: "500vh", align: "center",
         tag: "The Complete Authorization Flow",
-        title: "Consent → Token → Delegation → Proof", titleSpan: "",
+        title: "Consent \u2192 Token \u2192 Delegation \u2192 Proof", titleSpan: "",
         desc: "Four API calls. One delegation chain. Irrefutable cryptographic evidence that the human authorized every AI agent purchase. Auth0 sold for $6.5B building this for humans. We're building it for agents.",
     },
 ];
 
-interface SequenceSectionProps {
-    onProgress: (pct: number) => void;
-    onReady: () => void;
-}
+// Phase definitions for the progress indicator
+const phases = [
+    { label: "Consent", start: 0, end: 0.2 },
+    { label: "Token", start: 0.2, end: 0.42 },
+    { label: "Chain", start: 0.42, end: 0.65 },
+    { label: "Verify", start: 0.65, end: 0.85 },
+];
 
-export function SequenceSection({ onProgress, onReady }: SequenceSectionProps) {
+export function SequenceSection() {
     const sectionRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const framesRef = useRef<HTMLImageElement[]>([]);
-    const [ready, setReady] = useState(false);
     const [visiblePanels, setVisiblePanels] = useState<Set<number>>(new Set());
     const currentFrameRef = useRef(-1);
+    const phaseNavRef = useRef<HTMLDivElement>(null);
+    const phaseDotRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const phaseLineRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-    // Generate frames on mount
+    // Scroll engine — renders frames on-demand + controls phase nav
     useEffect(() => {
-        const offscreen = document.createElement("canvas");
-        offscreen.width = CANVAS_W;
-        offscreen.height = CANVAS_H;
-        const offCtx = offscreen.getContext("2d");
-        if (!offCtx) return;
-
-        const frames: HTMLImageElement[] = [];
-        let frameIdx = 0;
-
-        function generateBatch() {
-            const batch = 12;
-            const end = Math.min(frameIdx + batch, TOTAL_FRAMES);
-            for (; frameIdx < end; frameIdx++) {
-                renderFrame(offCtx!, frameIdx, CANVAS_W, CANVAS_H);
-                const img = new Image();
-                img.src = offscreen.toDataURL("image/jpeg", 0.82);
-                frames.push(img);
-            }
-            onProgress((frameIdx / TOTAL_FRAMES) * 100);
-            if (frameIdx < TOTAL_FRAMES) {
-                requestAnimationFrame(generateBatch);
-            } else {
-                framesRef.current = frames;
-                setReady(true);
-                onReady();
-            }
-        }
-        requestAnimationFrame(generateBatch);
-    }, [onProgress, onReady]);
-
-    // Scroll engine
-    useEffect(() => {
-        if (!ready) return;
         const canvas = canvasRef.current;
         const section = sectionRef.current;
         if (!canvas || !section) return;
@@ -462,17 +431,10 @@ export function SequenceSection({ onProgress, onReady }: SequenceSectionProps) {
             const frac = Math.max(0, Math.min(1, scrolled / sH));
             const idx = Math.min(TOTAL_FRAMES - 1, Math.floor(frac * TOTAL_FRAMES));
 
-            if (idx !== currentFrameRef.current && framesRef.current[idx]) {
+            // Render canvas frame
+            if (idx !== currentFrameRef.current) {
                 currentFrameRef.current = idx;
-                const w2 = innerWidth, h2 = innerHeight;
-                ctx!.clearRect(0, 0, w2, h2);
-                const img = framesRef.current[idx];
-                const ia = img.naturalWidth / img.naturalHeight;
-                const va = w2 / h2;
-                let dw: number, dh: number, dx: number, dy: number;
-                if (va > ia) { dw = w2; dh = w2 / ia; dx = 0; dy = (h2 - dh) / 2; }
-                else { dh = h2; dw = h2 * ia; dy = 0; dx = (w2 - dw) / 2; }
-                ctx!.drawImage(img, dx, dy, dw, dh);
+                renderFrame(ctx!, idx, innerWidth, innerHeight);
             }
 
             // Update visible panels
@@ -481,6 +443,27 @@ export function SequenceSection({ onProgress, onReady }: SequenceSectionProps) {
                 if (frac >= panel.start && frac <= panel.end) newVisible.add(i);
             });
             setVisiblePanels(newVisible);
+
+            // Update phase progress indicator
+            const inSection = frac > 0.005 && frac < 0.98;
+            if (phaseNavRef.current) {
+                phaseNavRef.current.classList.toggle("visible", inSection);
+            }
+
+            phases.forEach((phase, i) => {
+                const dot = phaseDotRefs.current[i];
+                const line = phaseLineRefs.current[i];
+                if (dot) {
+                    const isActive = frac >= phase.start && frac <= phase.end;
+                    const isPassed = frac > phase.end;
+                    dot.classList.toggle("active", isActive);
+                    dot.classList.toggle("passed", isPassed && !isActive);
+                }
+                if (line) {
+                    const isPassed = frac > phases[i].end;
+                    line.classList.toggle("active", isPassed);
+                }
+            });
         }
 
         function onScroll() {
@@ -493,47 +476,71 @@ export function SequenceSection({ onProgress, onReady }: SequenceSectionProps) {
             window.removeEventListener("resize", resize);
             window.removeEventListener("scroll", onScroll);
         };
-    }, [ready]);
+    }, []);
 
     return (
-        <section className="seq-sequence-section" id="sequence" ref={sectionRef}>
-            <div className="seq-canvas-wrap">
-                <canvas ref={canvasRef} />
-            </div>
-            <div className="seq-text-panels">
-                {panels.map((panel, i) => (
-                    <div
-                        key={i}
-                        className={`seq-text-panel ${panel.align === "right" ? "right" : panel.align === "center" ? "center" : ""} ${visiblePanels.has(i) ? "visible" : ""}`}
-                        style={{ top: panel.top }}
-                    >
-                        <div className="panel-inner">
-                            <div className={`seq-panel-tag ${panel.tagClass || ""}`}>{panel.tag}</div>
-                            <div className="seq-panel-title">
-                                {panel.title}
-                                {panel.titleSpan && <span>{panel.titleSpan}</span>}
-                            </div>
-                            <div className="seq-panel-desc">{panel.desc}</div>
-                            {panel.code && (
-                                <div
-                                    className="seq-panel-code"
-                                    dangerouslySetInnerHTML={{ __html: panel.code }}
-                                />
-                            )}
-                            {panel.stats && (
-                                <div className="seq-stat-row">
-                                    {panel.stats.map((s) => (
-                                        <div key={s.label}>
-                                            <div className="seq-stat-num">{s.num}</div>
-                                            <div className="seq-stat-label">{s.label}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+        <>
+            {/* Phase progress indicator */}
+            <div className="seq-phase-nav" ref={phaseNavRef}>
+                {phases.map((phase, i) => (
+                    <div key={phase.label} className="seq-phase-item">
+                        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                            <div
+                                className="seq-phase-dot"
+                                ref={el => { phaseDotRefs.current[i] = el; }}
+                            />
+                            <span className="seq-phase-label">{phase.label}</span>
                         </div>
+                        {i < phases.length - 1 && (
+                            <div
+                                className="seq-phase-line"
+                                ref={el => { phaseLineRefs.current[i] = el; }}
+                            />
+                        )}
                     </div>
                 ))}
             </div>
-        </section>
+
+            {/* Sequence section */}
+            <section className="seq-sequence-section" id="sequence" ref={sectionRef}>
+                <div className="seq-canvas-wrap">
+                    <canvas ref={canvasRef} />
+                </div>
+                <div className="seq-text-panels">
+                    {panels.map((panel, i) => (
+                        <div
+                            key={i}
+                            className={`seq-text-panel ${panel.align === "right" ? "right" : panel.align === "center" ? "center" : ""} ${visiblePanels.has(i) ? "visible" : ""}`}
+                            style={{ top: panel.top }}
+                        >
+                            <div className="panel-inner">
+                                <div className={`seq-panel-tag ${panel.tagClass || ""}`}>{panel.tag}</div>
+                                <div className="seq-panel-title">
+                                    {panel.title}
+                                    {panel.titleSpan && <span>{panel.titleSpan}</span>}
+                                </div>
+                                <div className="seq-panel-desc">{panel.desc}</div>
+                                {panel.code && (
+                                    <div
+                                        className="seq-panel-code"
+                                        dangerouslySetInnerHTML={{ __html: panel.code }}
+                                    />
+                                )}
+                                {panel.stats && (
+                                    <div className="seq-stat-row">
+                                        {panel.stats.map((s) => (
+                                            <div key={s.label}>
+                                                <div className="seq-stat-num">{s.num}</div>
+                                                <div className="seq-stat-label">{s.label}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+        </>
     );
 }

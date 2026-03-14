@@ -1,8 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export function Hero() {
   const [copied, setCopied] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const heroContentRef = useRef<HTMLDivElement>(null);
+  const scrollCueRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let ticking = false;
+    function update() {
+      ticking = false;
+      const y = window.scrollY;
+      const vh = window.innerHeight;
+      const docH = document.documentElement.scrollHeight - vh;
+
+      // Hero content parallax
+      if (heroContentRef.current) {
+        const progress = Math.min(1, y / (vh * 0.6));
+        const opacity = Math.max(0, 1 - progress * 1.4);
+        const translateY = y * 0.3;
+        const scale = 1 - progress * 0.06;
+        heroContentRef.current.style.opacity = String(opacity);
+        heroContentRef.current.style.transform = `translateY(-${translateY}px) scale(${scale})`;
+      }
+
+      // Scroll cue fades out fast
+      if (scrollCueRef.current) {
+        scrollCueRef.current.style.opacity = String(Math.max(0, 1 - y / 120));
+      }
+
+      // Nav becomes more opaque as you scroll
+      if (navRef.current) {
+        const alpha = Math.min(0.95, 0.6 + (y / (vh * 0.4)) * 0.35);
+        navRef.current.style.background = `rgba(5, 5, 8, ${alpha})`;
+      }
+
+      // Global scroll progress bar
+      if (progressRef.current && docH > 0) {
+        const pct = Math.min(100, (y / docH) * 100);
+        progressRef.current.style.width = `${pct}%`;
+      }
+    }
+
+    function onScroll() {
+      if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    update();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const handleCopy = () => {
     navigator.clipboard.writeText("npm install @agentauth/sdk");
@@ -13,7 +61,7 @@ export function Hero() {
   return (
     <>
       {/* Navigation */}
-      <nav className="seq-nav">
+      <nav className="seq-nav" ref={navRef}>
         <a href="/" className="seq-logo">
           <svg viewBox="0 0 24 28" fill="none">
             <path
@@ -60,34 +108,39 @@ export function Hero() {
             Join Waitlist →
           </a>
         </div>
+
+        {/* Scroll progress bar */}
+        <div className="seq-scroll-progress" ref={progressRef} />
       </nav>
 
       {/* Hero */}
       <section className="seq-hero">
-        <div className="seq-hero-tag">
-          Cryptographic Authorization Infrastructure
-        </div>
-        <h1>Authorization API for AI Agent Commerce</h1>
-        <p>
-          One API to prove every AI agent purchase was human-approved. Delegation
-          tokens that make chargebacks mathematically impossible.
-        </p>
-        <div className="seq-hero-actions">
-          <a className="seq-btn seq-btn-g" href="#waitlist">
-            Join Waitlist
-          </a>
-          <a className="seq-btn seq-btn-o" href="#sequence">
-            See How It Works ↓
-          </a>
-        </div>
-        <div className="seq-hero-install">
-          <div className="seq-ibar" onClick={handleCopy}>
-            <span className="pr">$</span>
-            <span className="cm">npm install @agentauth/sdk</span>
-            <span className="cp">{copied ? "COPIED!" : "COPY"}</span>
+        <div className="seq-hero-content" ref={heroContentRef}>
+          <div className="seq-hero-tag">
+            Cryptographic Authorization Infrastructure
+          </div>
+          <h1>Authorization API for AI Agent Commerce</h1>
+          <p>
+            One API to prove every AI agent purchase was human-approved. Delegation
+            tokens that make chargebacks mathematically impossible.
+          </p>
+          <div className="seq-hero-actions">
+            <a className="seq-btn seq-btn-g" href="#waitlist">
+              Join Waitlist
+            </a>
+            <a className="seq-btn seq-btn-o" href="#sequence">
+              See How It Works ↓
+            </a>
+          </div>
+          <div className="seq-hero-install">
+            <div className="seq-ibar" onClick={handleCopy}>
+              <span className="pr">$</span>
+              <span className="cm">npm install @agentauth/sdk</span>
+              <span className="cp">{copied ? "COPIED!" : "COPY"}</span>
+            </div>
           </div>
         </div>
-        <div className="seq-scroll-cue">
+        <div className="seq-scroll-cue" ref={scrollCueRef}>
           <span>Scroll</span>
           <div className="arrow" />
         </div>

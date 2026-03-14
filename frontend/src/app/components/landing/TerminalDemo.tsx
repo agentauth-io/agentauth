@@ -186,7 +186,14 @@ export function TerminalDemo() {
 
     return (
         <section className="seq-term-sec" id="demo">
-            <div className="seq-term-header">
+            <div className="seq-term-header seq-section-reveal" ref={(el) => {
+                if (el) {
+                    const obs = new IntersectionObserver((entries) => {
+                        if (entries[0].isIntersecting) el.classList.add("in-view");
+                    }, { threshold: 0.1 });
+                    obs.observe(el);
+                }
+            }}>
                 <div className="seq-panel-tag" style={{ marginBottom: 14, textAlign: "center" }}>
                     Live Demo
                 </div>
