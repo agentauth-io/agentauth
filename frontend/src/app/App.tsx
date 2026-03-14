@@ -1,11 +1,10 @@
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
 import { Contact } from "./components/Contact";
 import { Docs } from "./components/Docs";
 import { GrainOverlay } from "./components/landing/GrainOverlay";
-import { Loader } from "./components/landing/Loader";
 import { SequenceSection } from "./components/landing/SequenceSection";
 import { APISection } from "./components/landing/APISection";
 import { TerminalDemo } from "./components/landing/TerminalDemo";
@@ -15,17 +14,12 @@ import { NotFound } from "./components/NotFound";
 
 // Landing page — sequence design
 function HomePage() {
-  const [progress, setProgress] = useState(0);
-  const [loaded, setLoaded] = useState(false);
-
-  const handleProgress = useCallback((pct: number) => setProgress(pct), []);
-  const handleReady = useCallback(() => { }, []);
-  const handleLoaderComplete = useCallback(() => setLoaded(true), []);
+  const handleProgress = useCallback((pct: number) => {}, []);
+  const handleReady = useCallback(() => {}, []);
 
   return (
     <div style={{ background: "#08080a", minHeight: "100vh" }}>
       <GrainOverlay />
-      {!loaded && <Loader progress={progress} onComplete={handleLoaderComplete} />}
       <Hero />
       <SequenceSection onProgress={handleProgress} onReady={handleReady} />
       <APISection />
